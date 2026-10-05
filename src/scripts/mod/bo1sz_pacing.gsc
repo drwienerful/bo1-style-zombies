@@ -9,7 +9,8 @@
 //
 // Dvars: bo1sz_pacing 0 disables (stock pacing); bo1sz_pacing_test 1 applies the cap
 // from round 1 for testing; bo1sz_pacing_flood 1 (in game, testing only) adds 100
-// zombies to the current round to find the engine's real limit.
+// zombies to the current round to find the engine's real limit; bo1sz_pacing_hud 1
+// shows the live zombie count.
 
 init()
 {
@@ -21,8 +22,13 @@ init()
 	{
 		pace_log_raw( "pacing off (stock)" );
 		level thread pace_round_log();
+		level thread pace_monitor();
 		return;
 	}
+	// Started here, not in pace_start(): round 1's "start_of_round" can fire before
+	// pace_start() finishes waiting for its data.
+	level thread pace_round_log();
+	level thread pace_monitor();
 	level thread pace_start();
 }
 
@@ -47,7 +53,6 @@ pace_start()
 	level.zombie_vars[ "zombie_health_increase_multiplier" ] = pace_bal( "health_growth_mult" );
 	pace_log_raw( "pacing on (cap " + pace_bal( "cap" ) + " from round " + pace_cap_round() + ", stock limit " + level.bo1sz_stock_ai_limit + ")" );
 
-	level thread pace_round_log();
 	level thread pace_flood_command();
 	if ( pace_bal( "supplement" ) == 1 )
 	{
@@ -124,10 +129,6 @@ pace_round_log()
 			if ( n > peak )
 			{
 				peak = n;
-				if ( peak > 24 && peak % 8 == 1 )
-				{
-					pace_log_raw( "peak alive now " + peak );
-				}
 			}
 			wait 0.5;
 		}
@@ -244,6 +245,63 @@ pace_supplement()
 		else
 		{
 			level.bo1sz_pace_fails++;
+		}
+	}
+}
+
+// Live monitor, started from init() so it can't miss round 1 (the round log waits for
+// "start_of_round", which fired before the old start-up finished). Logs every new peak
+// above the stock 24 and, every 10s, supplemental spawn attempts and failures.
+// "set bo1sz_pacing_hud 1" also shows "Zombies alive: N" on screen.
+pace_monitor()
+{
+	peak = 0;
+	last_report = 0;
+	hud = undefined;
+	shown = -1;
+	for ( ;; )
+	{
+		wait 0.5;
+		n = GetAiSpeciesArray( "axis", "all" ).size;
+		if ( n > peak )
+		{
+			peak = n;
+			if ( peak > 24 )
+			{
+				pace_log_raw( "peak alive now " + peak );
+			}
+		}
+		if ( getTime() - last_report >= 10000 && isDefined( level.bo1sz_pace_tries ) && level.bo1sz_pace_tries > 0 )
+		{
+			last_report = getTime();
+			pace_log_raw( "monitor: alive=" + n + " peak=" + peak + " supplement_tries=" + level.bo1sz_pace_tries + " fails=" + level.bo1sz_pace_fails + " queued=" + level.zombie_total );
+		}
+
+		if ( getDvar( "bo1sz_pacing_hud" ) == "1" )
+		{
+			players = GetPlayers();
+			if ( !isDefined( hud ) && players.size > 0 )
+			{
+				hud = NewClientHudElem( players[ 0 ] );
+				hud.horzAlign = "user_center";
+				hud.vertAlign = "middle";
+				hud.alignX = "center";
+				hud.alignY = "middle";
+				hud.y = 160;
+				hud.fontScale = 1.4;
+				hud.foreground = true;
+			}
+			if ( isDefined( hud ) && n != shown )
+			{
+				shown = n;
+				hud SetText( "Zombies alive: " + n + "  (peak " + peak + ")" );
+				hud.alpha = 1;
+			}
+		}
+		else if ( isDefined( hud ) && hud.alpha > 0 )
+		{
+			hud.alpha = 0;
+			shown = -1;
 		}
 	}
 }
