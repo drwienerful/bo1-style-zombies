@@ -88,7 +88,7 @@ At round 25 (or the next normal round), the first zombie becomes **Der Eiserne**
 | 2. Hunt | 66-33% | It sprints; every 6s "PULSE INCOMING" warns of a 60-damage pulse around it |
 | 3. Iron Skin | 33-0% | Only headshots and explosives do full damage; every 12s "ARMOUR DOWN!" gives 4s of x2.0 damage |
 
-No single moment can take more than 10% of its health. Defeating it shows a victory summary and gives the killer 5000 points.
+No single moment can take more than 10% of its health. Defeating it shows VICTORY, gives the killer 5000 points, and ends the game.
 
 ## Augments
 

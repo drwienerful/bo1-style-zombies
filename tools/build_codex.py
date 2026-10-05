@@ -128,7 +128,7 @@ def render():
         ]),
         "",
         f"No single moment can take more than {int(float(boss['hit_cap_frac']) * 100)}% of its health. "
-        f"Defeating it shows a victory summary and gives the killer {boss['kill_points']} points.",
+        f"Defeating it shows VICTORY, gives the killer {boss['kill_points']} points, and ends the game.",
         "",
         "## Augments",
         "",
