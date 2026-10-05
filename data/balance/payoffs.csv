@@ -1,0 +1,18 @@
+key,value,notes
+excluded_weapons,ray_gun thundergun tesla_gun freezegun shrink_ray microwavegun humangun black_hole quantum sniper_explosive,wonder weapons: no pistol/sniper/launcher payoffs (name substrings; space separated)
+pistol_step_mult,0.5,extra damage per pistol headshot-kill streak step
+pistol_max_mult,3.5,cap on the pistol damage multiplier
+pistol_streak_timeout_ms,4000,streak resets after this long without a pistol headshot kill
+pistol_step_points,10,points per streak step on each pistol headshot kill
+pistol_refund,1,bullets refunded to the clip on a pistol headshot kill
+sniper_pierce_mult,0.5,extra damage per additional zombie the same sniper shot passes through
+sniper_pierce_points,20,points per additional pierced zombie
+shotgun_extra_kill_points,25,points per extra kill from one shotgun blast
+shotgun_refund_kills,3,kills from one blast needed for the shell refund
+shotgun_refund,2,shells refunded to the clip
+launcher_hit_points,15,points per zombie caught in a launcher blast (once per zombie per blast)
+style_headshot_points,10,real points for any headshot kill
+style_multi_points,10,real points per extra kill in the same frame
+style_long_range_points,15,real points for a long-range bullet kill
+style_melee_points,20,real points for a melee kill
+ammo_refill_frac,0.1,clip fraction refilled by the rank ammo-on-kill chance (min 1 bullet)
