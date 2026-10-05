@@ -1,6 +1,7 @@
 # Platform findings (Phase 0)
 
-Status: **Batches A and B done (2026-10-05, solo, zombie_theater); B8 needs a rerun. Batch C not run.**
+Status: **A and B done; C run once (2026-10-05, solo, zombie_theater).** A watchdog bug lost
+C6/C7/C9/C10 result lines; those, plus B8 and C3, are being rerun.
 Results come from `[PROBE]` lines in `%LOCALAPPDATA%\Plutonium\storage\t5\main\games.log`,
 cross-checked against Plutonium's loader lines in `main\console.log`. The "Static evidence" column
 is what reading the local reference material suggests. It is a prediction, not a result.
@@ -38,19 +39,19 @@ is what reading the local reference material suggests. It is a prediction, not a
 | B7 perks | PASS (solo) | `B7 \| PASS \| ... \| perk_bought=specialty_quickrevive num_perks 0->1 owned=1 limit=num_perks>=4` | player `"perk_bought"` (with perk name), `player.num_perks` | Stock fires `perk_bought` with the perk name. The limit test is C6. |
 | B8 player dmg/down | BLOCKED (solo) | `B8 \| BLOCKED \| ... \| do in game: let a zombie hit you once` | wrap `level.overridePlayerDamage` | Hook installed (`player_damage_stock=1`); no hit occurred while the probe waited. Rerun together with Batch C. |
 | B9 zombie spawn | PASS (solo) | `B9 \| PASS \| ... \| spawn hp0=150 hp=150 lvl_hp=150 +100 stuck=1` | poll `GetAiSpeciesArray("axis","all")` | **Modifiable:** setting health 0.5s after spawn sticks. |
-| C1 HUD | untested | | `NewClientHudElem`, `SetText`, `SetShader("white")` | needs visual confirm |
-| C2 sound | untested | | `PlayLocalSound` | aliases: zmb_cha_ching, evt_perk_deny, zmb_perks_power_on, zmb_switch_flip |
-| C3 dmg scaling | untested | | B2 hook + `WeaponClass()=="pistol"` | |
-| C4 ammo refund | untested | | `SetWeaponAmmoClip` in kill hook | |
-| C5 multi-kill | untested | | same-`getTime()` kills in kill hook | |
-| C6 perk limit | untested | | offset `num_perks` | full test needs 5+ machines (temple/coast/moon) |
-| C7 perks per map | untested | | `zombie_vending` triggers, `trigger_radius_use` shop + `SetPerk` | engine-only perk; HUD icon/bottle not tested |
-| C8 Double Tap 2.0 | untested | | dvar `perk_weapRateMultiplier` | damage half = B2 hook (trivial if B2 passes) |
-| C9 spawn/cap | untested | | `zombie_spawn_delay`, `zombie_ai_limit`, spawn health | |
-| C10 unused weapons | untested | | `GiveWeapon` | expected: only weapons in the map's fastfile; foreign is opt-in (crash risk) |
-| C11 boss base | untested | | promote a spawned zombie; `Earthquake`, `RadiusDamage`, `moveplaybackrate`, `set_zombie_run_cycle` | |
-| C12 input | untested | | dvar poll `probe_codex`, `AdsButtonPressed+UseButtonPressed` | co-op clients' dvars don't reach the server |
-| C13 round break | untested | | `end_of_round` → `start_of_round` | |
+| C1 HUD | PASS (solo, user-confirmed) | `C1 \| PASS \| ... \| drawn, 7 ranks, hid at round end` + user: "the hud was shown" | `NewClientHudElem`, `SetText`, `SetShader("white")`, `FadeOverTime` | Rank letter, fill bar and pop-up all work and update live; hiding at round end works. Run 1 hit the watchdog bug; run 2 passed. |
+| C2 sound | PASS (solo, user-confirmed) | probe timed out (watchdog bug); user heard all 4 | `PlayLocalSound` | Working aliases: `zmb_cha_ching`, `evt_perk_deny`, `zmb_perks_power_on`, `zmb_switch_flip`. |
+| C3 dmg scaling | BLOCKED (solo) | `C3 \| BLOCKED \| ... \| shoot a zombie in the body with a pistol` | B2 hook + `WeaponClass` | The pistol filter never matched. Suspect `WeaponClass("m1911_zm")` is not `"pistol"`; the rerun logs actual class names. The B2 x2 proof already shows per-hit scaling works. |
+| C4 ammo refund | PASS (solo) | `C4 \| PASS \| ... \| wep=m1911_zm clip 6->7 size=8` (twice) | `GetWeaponAmmoClip`/`SetWeaponAmmoClip` in kill hook | Bullet refund on headshot kill works. |
+| C5 multi-kill | PASS (solo) | `C5 \| PASS \| ... \| 2 kills same frame wep=frag_grenade_zm mod=MOD_GRENADE_SPLASH bonus+50->50` | same-`getTime()` kills in kill hook | Grenade kills sometimes report the **held gun** as weapon (`wep=ak74u_zm mod=MOD_GRENADE_SPLASH`). Payoff code must classify by `mod`, not `weapon`. |
+| C6 perk limit | rerun | data: Kino has **5** machines incl. Mule Kick; `num_perks=0` at spawn | offset `num_perks` | Result line lost to the watchdog bug. Kino can host the full 5-perk test. |
+| C7 perks per map | rerun | data: `quickrevive, fastreload, rof, armorvest, additionalprimaryweapon` on Kino | proximity + `UseButtonPressed` shop, `SetPerk` | Shop rebuilt without `Spawn`; result lost to the watchdog bug. |
+| C8 Double Tap 2.0 | PARTIAL (solo, user felt faster) | user: "Double tap felt faster than normal" | dvar `perk_weapRateMultiplier` | Stock value is **0.75** (from the dvar dump). Run 1 used 0.5. The rerun uses the user's 0.8333 plus x2 bullet damage and the steady-aim perk. Design: `docs/design/double_tap_2.md`. |
+| C9 spawn/cap | rerun | data: `delay=2 max_ai=24 ai_limit=24 zombie_health=150` | `zombie_spawn_delay`, `level.zombie_ai_limit` | **`level.zombie_ai_limit` exists in stock (24)**, so the concurrent cap is a writable level var. Result line lost to the watchdog bug. |
+| C10 unused weapons | rerun | data: 36 weapons in Kino's `level.zombie_weapons` (incl. thundergun, ray gun, crossbow, LAW, China Lake, L96) | `GiveWeapon`/`TakeWeapon` | In-pool give result lost to the watchdog bug. Foreign weapon still opt-in. |
+| C11 boss base | PASS (solo) | `C11 \| PASS \| ... \| hp=4000 phase=2 hazard_ticks=17 ai=dogs` | promoted zombie; `Earthquake`, `RadiusDamage`, `moveplaybackrate`, `set_zombie_run_cycle` via getFunction | Health scaling, a phase change at 50% and a timed area hazard all work. Kino's only special AI is dogs. |
+| C12 input | PASS (solo) | `C12 \| PASS \| ... \| dvar toggle seen after 42s; ads+use combo=no` | poll dvar `probe_codex` | Console/bind toggle works. The ADS+USE combo was not observed (maybe not tried). Co-op clients' dvars untested. |
+| C13 round break | PASS (solo) | `C13 \| PASS \| ... \| shown end_of_round -> hidden start_of_round, break=12s` | `end_of_round` → `start_of_round` | |
 
 ## Feature verdicts (provisional, to be finalised after Batches B and C)
 
@@ -127,3 +128,7 @@ Stop-early gate: **cleared.** B2 and B3 are both hookable and modifiable.
   reuse existing map entities; call stock helper functions that spawn internally via
   `getFunction` (to be tested when needed). C7 is rebuilt this way, and every parked
   test is back in `probe.gsc`.
+- **Batch C run 1 watchdog bug:** tests that wait for the player to spawn were marked
+  "thread died at stage 'start'" because Kino's intro exceeds 20s. Those threads kept
+  running (their `[PROBE-DATA]` lines appear later), but the FAIL had already been recorded.
+  Fixed: the `start` stage is exempt, and the stuck threshold is now 30s.

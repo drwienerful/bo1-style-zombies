@@ -141,7 +141,9 @@ probe_watch( id )
 	{
 		stage = level.probe_stage[ id ];
 		waiting = ( getSubStr( stage + "     ", 0, 5 ) == "wait:" );
-		stuck = ( !waiting && getTime() - level.probe_stage_ms[ id ] > 20000 );
+		// "start" covers waiting for the player to spawn, which on Kino includes a long
+		// intro; counting it as stuck produced false "thread died" results (Batch C, run 1).
+		stuck = ( !waiting && stage != "start" && getTime() - level.probe_stage_ms[ id ] > 30000 );
 		if ( stuck )
 		{
 			probe_result( id, "FAIL", "error: thread died at stage '" + stage + "'" );
@@ -233,7 +235,13 @@ probe_check_batch_done( b )
 
 	next = "done";
 	reason = "none";
-	if ( b == "B" )
+	if ( b == "B" && !level.probe_on[ "B2" ] && !level.probe_on[ "B3" ] )
+	{
+		// Only a partial B rerun this launch; the gate was decided by an earlier run.
+		next = "C";
+		reason = "none (B2/B3 not run this launch)";
+	}
+	else if ( b == "B" )
 	{
 		if ( level.probe_status[ "B2" ] == "PASS" && ( level.probe_status[ "B3" ] == "PASS" || level.probe_status[ "B3" ] == "PARTIAL" ) )
 		{
@@ -574,13 +582,46 @@ probe_on_actor_damage( attacker, dmg, mod, weapon, hitloc )
 	}
 
 	// C3: double damage for the pistol class on one test zombie.
-	if ( level.probe_on[ "C3" ] && !isDefined( level.probe_c3_mod ) && probe_weapon_class( weapon ) == "pistol" && dmg > 0 && dmg * 2 < self.health )
+	// Batch C run 1 never matched "pistol", so log the class of the first weapons seen.
+	cls = probe_weapon_class( weapon );
+	if ( level.probe_on[ "C3" ] )
+	{
+		probe_log_class( weapon, cls, mod );
+	}
+	if ( level.probe_on[ "C3" ] && !isDefined( level.probe_c3_mod ) && cls == "pistol" && dmg > 0 && dmg * 2 < self.health )
 	{
 		level.probe_c3_mod = "pending";
 		self thread probe_verify_drop( "C3", self.health, dmg * 2, dmg );
 		return dmg * 2;
 	}
+
+	// C8 / Double Tap 2.0: x2 bullet damage while the attacker has Double Tap.
+	// Same effect as two bullets per round consumed, without spawning a projectile.
+	if ( level.probe_on[ "C8" ] && isDefined( mod ) && ( mod == "MOD_PISTOL_BULLET" || mod == "MOD_RIFLE_BULLET" ) && attacker HasPerk( "specialty_rof" ) )
+	{
+		if ( !isDefined( level.probe_c8_hits ) )
+		{
+			level.probe_c8_hits = 0;
+		}
+		level.probe_c8_hits++;
+		return dmg * 2;
+	}
 	return dmg;
+}
+
+probe_log_class( weapon, cls, mod )
+{
+	if ( !isDefined( level.probe_class_seen ) )
+	{
+		level.probe_class_seen = [];
+	}
+	key = probe_str( weapon );
+	if ( isDefined( level.probe_class_seen[ key ] ) || level.probe_class_seen.size >= 6 )
+	{
+		return;
+	}
+	level.probe_class_seen[ key ] = true;
+	probe_data( "C3", "class " + key + "=" + probe_str( cls ) + " mod=" + probe_str( mod ) );
 }
 
 probe_verify_drop( id, before, expected, original )
@@ -692,8 +733,15 @@ probe_player_damage( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWe
 	}
 	if ( level.probe_on[ "B8" ] )
 	{
+		// Count every call: B8 was BLOCKED twice, so prove whether the hook fires at all.
+		if ( !isDefined( level.probe_b8_calls ) )
+		{
+			level.probe_b8_calls = 0;
+		}
+		level.probe_b8_calls++;
 		if ( !isDefined( level.probe_b8_spy ) )
 		{
+			probe_data( "B8", "first call dmg=" + dmg + " hp=" + self.health + " mod=" + probe_str( sMeansOfDeath ) );
 			from = "other";
 			if ( isDefined( eAttacker ) && isAI( eAttacker ) )
 			{
@@ -967,6 +1015,23 @@ probe_b8( id )
 	probe_stage( id, "wait:let a zombie hit you once" );
 	while ( !isDefined( level.probe_b8_mod ) || level.probe_b8_mod == "pending" )
 	{
+		if ( getDvar( "probe_finish" ) == "1" )
+		{
+			calls = 0;
+			if ( isDefined( level.probe_b8_calls ) )
+			{
+				calls = level.probe_b8_calls;
+			}
+			if ( calls > 0 )
+			{
+				probe_result( id, "PARTIAL", "hook fired " + calls + "x but no halvable hit: " + probe_str( level.probe_b8_spy ) );
+			}
+			else
+			{
+				probe_result( id, "FAIL", "hook never fired; player damage bypasses level.overridePlayerDamage?" );
+			}
+			return;
+		}
 		wait 0.1;
 	}
 	// Give down/revive a little longer if the user is testing it.
@@ -1429,8 +1494,15 @@ probe_c8( id )
 	{
 		setDvar( "probe_c8_orig", orig );
 	}
-	setDvar( "perk_weapRateMultiplier", "0.5" );
-	p SetClientDvar( "perk_weapRateMultiplier", "0.5" );
+	// Double Tap 2.0 target from the user: +20% fire rate => fire time x 1/1.2.
+	rate = getDvar( "probe_c8_rate" );
+	if ( rate == "" )
+	{
+		rate = "0.8333";
+	}
+	probe_data( id, "stock perk_weapRateMultiplier=" + orig + " perk_weapSpreadMultiplier=" + getDvar( "perk_weapSpreadMultiplier" ) + " target=" + rate );
+	setDvar( "perk_weapRateMultiplier", rate );
+	p SetClientDvar( "perk_weapRateMultiplier", rate );
 	now = getDvar( "perk_weapRateMultiplier" );
 	cur = p GetCurrentWeapon();
 	ft = "n/a";
@@ -1446,8 +1518,29 @@ probe_c8( id )
 		wait 0.5;
 		dt = p HasPerk( "specialty_rof" );
 	}
-	ev = "perk_weapRateMultiplier " + orig + "->" + now + " firetime=" + ft + " dt=" + dt + " - faster?";
-	if ( now == "0.5" )
+	// "Recoil management": no recoil dvar exists; try the engine's steady-aim perk,
+	// which applies perk_weapSpreadMultiplier to hip-fire spread.
+	steady = "n/a";
+	if ( dt )
+	{
+		p SetPerk( "specialty_bulletaccuracy" );
+		wait 0.1;
+		steady = p HasPerk( "specialty_bulletaccuracy" );
+		probe_stage( id, "wait:shoot zombies with Double Tap for ~30s (x2 dmg, hip-fire spread)" );
+		t = 0;
+		while ( t < 30 && getDvar( "probe_finish" ) != "1" )
+		{
+			wait 1;
+			t++;
+		}
+	}
+	hits = 0;
+	if ( isDefined( level.probe_c8_hits ) )
+	{
+		hits = level.probe_c8_hits;
+	}
+	ev = "rate " + orig + "->" + now + " ft=" + ft + " dt=" + dt + " x2hits=" + hits + " steady=" + steady;
+	if ( now == rate )
 	{
 		probe_result( id, "PARTIAL", ev );
 	}
