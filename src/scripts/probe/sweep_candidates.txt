@@ -1,7 +1,7 @@
 # name | one GSC statement using it (e = a player entity; never executed)
 # Order = load order. Files load alphabetically, so the first failing file in
 # console.log proves every file before it compiled.
-spawn | t = Spawn( "trigger_radius_use", e.origin, 0, 48, 72 );
+# FAILED 2026-10-05 (unknown function): spawn | t = Spawn( "trigger_radius_use", e.origin, 0, 48, 72 );
 setcursorhint | e SetCursorHint( "HINT_NOICON" );
 sethintstring | e SetHintString( "x" );
 setperk | e SetPerk( "specialty_rof" );
