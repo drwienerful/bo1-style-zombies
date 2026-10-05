@@ -452,6 +452,12 @@ boss_hud_create()
 		p.bo1sz_boss_phase = boss_elem( p, -144, 1.15 );
 		p.bo1sz_boss_warn = boss_elem( p, -118, 1.6 );
 		p.bo1sz_boss_warn.color = ( 1, 0.85, 0.2 );
+		// Created now, hidden, with its text set: if the game's pool of HUD strings fills up
+		// during a long run, a brand-new string at the very end may draw nothing.
+		p.bo1sz_victory_elem = boss_elem( p, -110, 3 );
+		p.bo1sz_victory_elem.color = ( 1, 0.85, 0.2 );
+		p.bo1sz_victory_elem SetText( "VICTORY" );
+		p.bo1sz_victory_elem.alpha = 0;
 	}
 }
 
@@ -552,22 +558,19 @@ boss_victory( killer )
 boss_victory_screen()
 {
 	self endon( "disconnect" );
-	e = boss_elem( self, -110, 3 );
+	// Fallback through the centre-print channel, which doesn't use HUD string slots.
+	self iPrintLnBold( "VICTORY" );
+	self PlayLocalSound( boss_bal( "victory_sound" ) );
+	e = self.bo1sz_victory_elem;
 	if ( !isDefined( e ) )
 	{
+		boss_log( "victory screen: no pre-made element" );
 		return;
 	}
-	e.color = ( 1, 0.85, 0.2 );
-	e.alpha = 0;
-	e SetText( "VICTORY" );
 	e FadeOverTime( 0.5 );
 	e.alpha = 1;
-	self.bo1sz_victory_elem = e;
-	self PlayLocalSound( boss_bal( "victory_sound" ) );
+	boss_log( "victory screen: shown (pre-made element)" );
 	wait boss_bal( "victory_seconds" ) - 1;
 	e FadeOverTime( 0.8 );
 	e.alpha = 0;
-	wait 1;
-	e Destroy();
-	self.bo1sz_victory_elem = undefined;
 }
