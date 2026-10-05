@@ -15,6 +15,9 @@
 //   Quick Revive II = Scavenger (kills may refill every gun's magazine), Mule Kick II
 //   extra ammo reserve, Deadshot II headshot damage. Name + description shown in game.
 //
+//   Missing-perk shop (Milestone 8): at the spawn point, perks with no machine on this map
+//   (shop.csv), with script effects for PhD Flopper and Deadshot.
+//
 // Dvars: bo1sz_perks 0 disables this module; bo1sz_perks_debug 1 logs perk machines at
 // load and, while USE is held, the nearest machines. Tunables: data/balance/perks.csv.
 
@@ -175,6 +178,7 @@ perks_player()
 	self.bo1sz_perk_hint_shown = -1;
 	self.bo1sz_steady_given = false;
 	self perks_tiers_init();
+	self perks_shop_init();
 
 	self thread perks_on_bought();
 	for ( ;; )
@@ -220,6 +224,7 @@ perks_player()
 		self perks_show_hint( surcharge, cost );
 		self perks_dt2_steady();
 		self perks_tiers_tick();
+		self perks_shop_tick();
 	}
 }
 
@@ -291,7 +296,7 @@ perks_dt2_steady()
 perks_install_hooks()
 {
 	t = 0;
-	while ( ( !isDefined( level.overrideActorDamage ) || !isDefined( level.overrideActorKilled ) ) && t < 300 )
+	while ( ( !isDefined( level.overrideActorDamage ) || !isDefined( level.overrideActorKilled ) || !isDefined( level.overridePlayerDamage ) ) && t < 300 )
 	{
 		wait 0.1;
 		t++;
@@ -304,6 +309,8 @@ perks_install_hooks()
 	level.overrideActorDamage = ::perks_actor_damage;
 	level.bo1sz_perks_orig_killed = level.overrideActorKilled;
 	level.overrideActorKilled = ::perks_actor_killed;
+	level.bo1sz_perks_orig_pdamage = level.overridePlayerDamage;
+	level.overridePlayerDamage = ::perks_player_damage;
 }
 
 perks_actor_killed( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, psOffsetTime )
@@ -371,6 +378,10 @@ perks_actor_damage( inflictor, attacker, damage, flags, meansofdeath, weapon, vp
 	if ( dmg > 0 && isDefined( attacker ) && isPlayer( attacker ) && isDefined( meansofdeath ) && ( meansofdeath == "MOD_PISTOL_BULLET" || meansofdeath == "MOD_RIFLE_BULLET" ) && attacker HasPerk( "specialty_rof" ) )
 	{
 		dmg = int( dmg * perks_bal( "dt2_damage_mult" ) );
+	}
+	if ( dmg > 0 && isDefined( attacker ) && isPlayer( attacker ) && perks_has_shop( attacker, "specialty_deadshot" ) && isDefined( sHitLoc ) && ( sHitLoc == "head" || sHitLoc == "helmet" || sHitLoc == "neck" ) )
+	{
+		dmg = int( dmg * perks_bal( "deadshot_hs_mult" ) );
 	}
 	if ( dmg > 0 && isDefined( attacker ) && isPlayer( attacker ) && perks_has_tier( attacker, "specialty_deadshot" ) && isDefined( sHitLoc ) && ( sHitLoc == "head" || sHitLoc == "helmet" || sHitLoc == "neck" ) )
 	{
@@ -689,4 +700,272 @@ perks_dbg_str( v )
 		return "undef";
 	}
 	return "" + v;
+}
+
+// ---------------------------------------------------------------------------
+// Missing-perk shop (Milestone 8, user choice): at the first spawn point, hold USE to open
+// a menu of perks that have no machine on this map (data/balance/shop.csv). Tap USE cycles,
+// hold USE buys. Price + the usual surcharge. Effects are re-implemented here because a
+// perk flag alone does little without its machine's scripts (Phase 0 C7):
+//   PhD Flopper  no damage from your own explosives (player damage wrapper)
+//   Deadshot     steady aim + headshot damage (actor damage wrapper)
+//   Stamin-Up    engine sprint flag; faster movement waits on SetMoveSpeedScale (sweep)
+// Shop perks are lost when the player goes down, like machine perks.
+// ---------------------------------------------------------------------------
+
+perks_shop_init()
+{
+	if ( !isDefined( level.bo1sz_shop_origin ) )
+	{
+		level.bo1sz_shop_origin = self.origin;
+		perks_log( "perk shop at " + self.origin );
+	}
+	self.bo1sz_shop = [];
+	self.bo1sz_shop_open = false;
+	self.bo1sz_shop_hint = perks_center_elem( self, 90, 1.3 );
+	self.bo1sz_shop_lines = [];
+	for ( i = 0; i < 5; i++ )
+	{
+		self.bo1sz_shop_lines[ i ] = perks_center_elem( self, -40 + i * 22, 1.25 );
+	}
+	self thread perks_shop_downed();
+}
+
+// Shop perks this player can buy now: no machine on this map and not owned.
+perks_shop_offer()
+{
+	machines = [];
+	trigs = GetEntArray( "zombie_vending", "targetname" );
+	for ( i = 0; i < trigs.size; i++ )
+	{
+		if ( isDefined( trigs[ i ].script_noteworthy ) )
+		{
+			machines[ trigs[ i ].script_noteworthy ] = true;
+		}
+	}
+	offer = [];
+	for ( i = 0; i < level.bo1sz_shop_count; i++ )
+	{
+		perk = level.bo1sz_shop_perk[ i ];
+		has = self HasPerk( perk );
+		if ( !isDefined( machines[ perk ] ) && !has )
+		{
+			offer[ offer.size ] = i;
+		}
+	}
+	return offer;
+}
+
+perks_shop_tick()
+{
+	near = ( Distance( self.origin, level.bo1sz_shop_origin ) < perks_bal( "shop_radius" ) );
+	if ( self.bo1sz_shop_open )
+	{
+		return;
+	}
+	if ( !near )
+	{
+		self.bo1sz_shop_hint.alpha = 0;
+		self.bo1sz_shop_use_ms = 0;
+		return;
+	}
+	if ( self.bo1sz_shop_hint.alpha == 0 )
+	{
+		self.bo1sz_shop_hint SetText( "Hold USE: Perk Shop" );
+		self.bo1sz_shop_hint.alpha = 1;
+	}
+	pressed = self UseButtonPressed();
+	if ( !pressed )
+	{
+		self.bo1sz_shop_use_ms = 0;
+		return;
+	}
+	if ( !isDefined( self.bo1sz_shop_use_ms ) || self.bo1sz_shop_use_ms == 0 )
+	{
+		self.bo1sz_shop_use_ms = getTime();
+		return;
+	}
+	if ( getTime() - self.bo1sz_shop_use_ms >= perks_bal( "tier_hold_seconds" ) * 1000 )
+	{
+		self.bo1sz_shop_use_ms = 0;
+		self.bo1sz_shop_hint.alpha = 0;
+		self thread perks_shop_menu();
+	}
+}
+
+perks_shop_menu()
+{
+	self endon( "disconnect" );
+	self.bo1sz_shop_open = true;
+	offer = self perks_shop_offer();
+	if ( offer.size == 0 )
+	{
+		self iPrintLn( "Perk Shop: nothing left to buy on this map" );
+		wait 1;
+		self.bo1sz_shop_open = false;
+		return;
+	}
+	sel = 0;
+	self perks_shop_draw( offer, sel );
+	// Wait for the opening hold to be released.
+	held = self UseButtonPressed();
+	while ( held )
+	{
+		wait 0.05;
+		held = self UseButtonPressed();
+	}
+	press_ms = 0;
+	was_down = false;
+	for ( ;; )
+	{
+		wait 0.05;
+		if ( Distance( self.origin, level.bo1sz_shop_origin ) > perks_bal( "shop_radius" ) * 1.5 )
+		{
+			break;
+		}
+		down = self UseButtonPressed();
+		if ( down && !was_down )
+		{
+			press_ms = getTime();
+		}
+		if ( down && press_ms > 0 && getTime() - press_ms >= perks_bal( "tier_hold_seconds" ) * 1000 )
+		{
+			self perks_shop_buy( offer[ sel ] );
+			break;
+		}
+		if ( !down && was_down && press_ms > 0 )
+		{
+			sel = ( sel + 1 ) % offer.size;
+			self perks_shop_draw( offer, sel );
+			press_ms = 0;
+		}
+		was_down = down;
+	}
+	for ( i = 0; i < self.bo1sz_shop_lines.size; i++ )
+	{
+		self.bo1sz_shop_lines[ i ].alpha = 0;
+	}
+	// Don't reopen until USE is released.
+	held = self UseButtonPressed();
+	while ( held )
+	{
+		wait 0.05;
+		held = self UseButtonPressed();
+	}
+	self.bo1sz_shop_open = false;
+}
+
+perks_shop_draw( offer, sel )
+{
+	surcharge = perks_surcharge( perks_owned( self ) );
+	self.bo1sz_shop_lines[ 0 ] SetText( "Perk Shop  (USE: next, hold USE: buy)" );
+	self.bo1sz_shop_lines[ 0 ].alpha = 1;
+	for ( i = 0; i < 4; i++ )
+	{
+		line = self.bo1sz_shop_lines[ i + 1 ];
+		if ( i >= offer.size )
+		{
+			line.alpha = 0;
+			continue;
+		}
+		k = offer[ i ];
+		price = level.bo1sz_shop_price[ k ] + surcharge;
+		text = level.bo1sz_shop_name[ k ] + " (" + price + "): " + level.bo1sz_shop_desc[ k ];
+		if ( i == sel )
+		{
+			line SetText( "> " + text );
+			line.color = ( 1, 0.85, 0.2 );
+		}
+		else
+		{
+			line SetText( text );
+			line.color = ( 0.8, 0.8, 0.8 );
+		}
+		line.alpha = 1;
+	}
+}
+
+perks_shop_buy( k )
+{
+	perk = level.bo1sz_shop_perk[ k ];
+	price = level.bo1sz_shop_price[ k ] + perks_surcharge( perks_owned( self ) );
+	if ( self.score < price )
+	{
+		self PlayLocalSound( "evt_perk_deny" );
+		self iPrintLn( "Not enough points for " + level.bo1sz_shop_name[ k ] );
+		return;
+	}
+	if ( isDefined( level.bo1sz_perk_minus ) )
+	{
+		self [[ level.bo1sz_perk_minus ]]( price );
+	}
+	else
+	{
+		self.score -= price;
+	}
+	self SetPerk( perk );
+	if ( perk == "specialty_deadshot" )
+	{
+		self SetPerk( perks_bal( "dt2_steady_perk" ) );
+	}
+	self.bo1sz_shop[ perk ] = true;
+	self PlayLocalSound( "zmb_cha_ching" );
+	self iPrintLnBold( level.bo1sz_shop_name[ k ] );
+	perks_log( self.playername + " bought " + level.bo1sz_shop_name[ k ] + " from the shop for " + price );
+}
+
+perks_has_shop( player, perk )
+{
+	return ( isDefined( player.bo1sz_shop ) && isDefined( player.bo1sz_shop[ perk ] ) );
+}
+
+// Going down loses shop perks, like machine perks.
+perks_shop_downed()
+{
+	self endon( "disconnect" );
+	for ( ;; )
+	{
+		self waittill( "player_downed" );
+		keys = getArrayKeys( self.bo1sz_shop );
+		for ( i = 0; i < keys.size; i++ )
+		{
+			self UnsetPerk( keys[ i ] );
+		}
+		self.bo1sz_shop = [];
+	}
+}
+
+// PhD Flopper (shop): chained player-damage wrapper, stock first. The first blocks are
+// logged with the real health change, which also verifies player-damage modification.
+perks_player_damage( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, modelIndex, psOffsetTime )
+{
+	dmg = iDamage;
+	if ( isDefined( level.bo1sz_perks_orig_pdamage ) )
+	{
+		dmg = self [[ level.bo1sz_perks_orig_pdamage ]]( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, modelIndex, psOffsetTime );
+	}
+	if ( !isDefined( dmg ) )
+	{
+		dmg = iDamage;
+	}
+	if ( dmg > 0 && perks_has_shop( self, "specialty_flakjacket" ) && isDefined( eAttacker ) && eAttacker == self && isDefined( sMeansOfDeath ) && ( sMeansOfDeath == "MOD_GRENADE" || sMeansOfDeath == "MOD_GRENADE_SPLASH" || sMeansOfDeath == "MOD_PROJECTILE" || sMeansOfDeath == "MOD_PROJECTILE_SPLASH" || sMeansOfDeath == "MOD_EXPLOSIVE" ) )
+	{
+		if ( !isDefined( self.bo1sz_phd_checks ) )
+		{
+			self.bo1sz_phd_checks = 0;
+		}
+		if ( self.bo1sz_phd_checks < 3 )
+		{
+			self.bo1sz_phd_checks++;
+			self thread perks_phd_verify( self.health, dmg );
+		}
+		return 0;
+	}
+	return dmg;
+}
+
+perks_phd_verify( before, blocked )
+{
+	waittillframeend;
+	perks_log( self.playername + " PhD blocked " + blocked + " self-damage, health change=" + ( before - self.health ) );
 }

@@ -185,7 +185,13 @@ style_tick()
 		// Decay when idle; empty gauge drops one rank.
 		if ( getTime() - self.bo1sz_style_last_ms > grace && ( self.bo1sz_style_gauge > 0 || self.bo1sz_style_rank > 0 ) )
 		{
-			self.bo1sz_style_gauge -= level.bo1sz_style_ranks_decay_per_sec[ self.bo1sz_style_rank ] * 0.1;
+			decay = level.bo1sz_style_ranks_decay_per_sec[ self.bo1sz_style_rank ] * 0.1;
+			// High Roller run modifier drains the meter faster.
+			if ( isDefined( level.bo1sz_style_decay_mult ) )
+			{
+				decay = decay * level.bo1sz_style_decay_mult;
+			}
+			self.bo1sz_style_gauge -= decay;
 			if ( self.bo1sz_style_gauge <= 0 )
 			{
 				if ( self.bo1sz_style_rank > 0 )

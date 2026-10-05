@@ -63,6 +63,29 @@ Hold USE at the machine of a perk you own to buy its tier II:
 | Mule Kick II | 3000 | One more spare ammo reserve on every weapon |
 | Deadshot II | 3000 | +25% headshot damage |
 
+### Perk shop
+
+At your spawn point, hold USE to open the Perk Shop. It sells perks that have no machine on the current map (tap USE to move, hold USE to buy). The usual surcharge applies, and you lose shop perks when you go down.
+
+| Perk | Price | Effect |
+|---|---|---|
+| Stamin-Up | 2000 | Run faster and sprint longer |
+| PhD Flopper | 2000 | Your own explosives can't hurt you |
+| Deadshot Daiquiri | 1500 | Steadier aim and +25% headshot damage |
+
+## Run blessings
+
+Each run gets one random blessing, announced in round 1. It applies to everyone.
+
+| Blessing | Effect |
+|---|---|
+| Discount Cola | Machine perks refund 25% of their price |
+| Deep Pockets | One more spare ammo reserve on every weapon |
+| High Roller | Style rank kill bonuses x2 but the meter drains 30% faster |
+| Thick Skin | +50 max health |
+| Lucky Streak | Kills have a 5% chance to refill 20% of your magazine |
+| Head Start | Start with +2000 points |
+
 ## Archetypes
 
 Your play quietly builds affinity for six archetypes. At round breaks you can earn: **Awakened** (round 5+, 300 affinity), **Ascended** (round 12+, 1500 affinity, at most 2 archetypes, plus a choice of 1 of 3 augments) and the **Capstone** (round 20+, 4000 affinity, at least 50% of all your affinity, one archetype only). If nothing has awakened by round 8 and no archetype has 35% of your affinity, you're a **Generalist**: +5 points per kill. Tiers are never taken away.

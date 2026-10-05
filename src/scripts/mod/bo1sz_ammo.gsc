@@ -148,6 +148,11 @@ ammo_reserves( weapon )
 	{
 		n += self.bo1sz_extra_reserve_bonus;
 	}
+	// Deep Pockets run modifier.
+	if ( isDefined( self.bo1sz_mod_reserve_bonus ) )
+	{
+		n += self.bo1sz_mod_reserve_bonus;
+	}
 	if ( isDefined( self.bo1sz_arch ) && isDefined( self.bo1sz_arch[ "tech" ] ) && self.bo1sz_arch[ "tech" ] >= 2 && isDefined( level.bo1sz_pay_excluded ) )
 	{
 		for ( i = 0; i < level.bo1sz_pay_excluded.size; i++ )

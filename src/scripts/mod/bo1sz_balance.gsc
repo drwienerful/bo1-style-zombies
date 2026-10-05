@@ -298,6 +298,36 @@ init()
 	level.bo1sz_bal[ "boss.test_hp_scale" ] = 0.05;
 	level.bo1sz_bal[ "boss.warn_sound" ] = "zmb_switch_flip";
 	level.bo1sz_bal[ "boss.victory_sound" ] = "zmb_perks_power_on";
+	// modifiers.csv
+	level.bo1sz_modifiers_id = [];
+	level.bo1sz_modifiers_name = [];
+	level.bo1sz_modifiers_desc = [];
+	level.bo1sz_modifiers_value = [];
+	level.bo1sz_modifiers_id[ 0 ] = "discount";
+	level.bo1sz_modifiers_name[ 0 ] = "Discount Cola";
+	level.bo1sz_modifiers_desc[ 0 ] = "Machine perks refund 25% of their price";
+	level.bo1sz_modifiers_value[ 0 ] = 0.25;
+	level.bo1sz_modifiers_id[ 1 ] = "pockets";
+	level.bo1sz_modifiers_name[ 1 ] = "Deep Pockets";
+	level.bo1sz_modifiers_desc[ 1 ] = "One more spare ammo reserve on every weapon";
+	level.bo1sz_modifiers_value[ 1 ] = 1;
+	level.bo1sz_modifiers_id[ 2 ] = "roller";
+	level.bo1sz_modifiers_name[ 2 ] = "High Roller";
+	level.bo1sz_modifiers_desc[ 2 ] = "Style rank kill bonuses x2 but the meter drains 30% faster";
+	level.bo1sz_modifiers_value[ 2 ] = 2;
+	level.bo1sz_modifiers_id[ 3 ] = "skin";
+	level.bo1sz_modifiers_name[ 3 ] = "Thick Skin";
+	level.bo1sz_modifiers_desc[ 3 ] = "+50 max health";
+	level.bo1sz_modifiers_value[ 3 ] = 50;
+	level.bo1sz_modifiers_id[ 4 ] = "lucky";
+	level.bo1sz_modifiers_name[ 4 ] = "Lucky Streak";
+	level.bo1sz_modifiers_desc[ 4 ] = "Kills have a 5% chance to refill 20% of your magazine";
+	level.bo1sz_modifiers_value[ 4 ] = 5;
+	level.bo1sz_modifiers_id[ 5 ] = "headstart";
+	level.bo1sz_modifiers_name[ 5 ] = "Head Start";
+	level.bo1sz_modifiers_desc[ 5 ] = "Start with +2000 points";
+	level.bo1sz_modifiers_value[ 5 ] = 2000;
+	level.bo1sz_modifiers_count = 6;
 	// pacing.csv
 	level.bo1sz_bal[ "pacing.spawn_delay_extra_mult" ] = 0.9;
 	level.bo1sz_bal[ "pacing.spawn_delay_floor" ] = 0.08;
@@ -380,6 +410,29 @@ init()
 	level.bo1sz_bal[ "perks.scavenger_chance" ] = 8;
 	level.bo1sz_bal[ "perks.scavenger_clip_frac" ] = 0.3;
 	level.bo1sz_bal[ "perks.tier_popup_seconds" ] = 3;
+	level.bo1sz_bal[ "perks.shop_radius" ] = 90;
+	level.bo1sz_bal[ "perks.roller_decay_mult" ] = 1.3;
+	level.bo1sz_bal[ "perks.lucky_refill_frac" ] = 0.2;
+	level.bo1sz_bal[ "perks.deadshot_hs_mult" ] = 1.25;
+	level.bo1sz_bal[ "perks.staminup_speed" ] = 1.1;
+	// shop.csv
+	level.bo1sz_shop_perk = [];
+	level.bo1sz_shop_name = [];
+	level.bo1sz_shop_price = [];
+	level.bo1sz_shop_desc = [];
+	level.bo1sz_shop_perk[ 0 ] = "specialty_longersprint";
+	level.bo1sz_shop_name[ 0 ] = "Stamin-Up";
+	level.bo1sz_shop_price[ 0 ] = 2000;
+	level.bo1sz_shop_desc[ 0 ] = "Run faster and sprint longer";
+	level.bo1sz_shop_perk[ 1 ] = "specialty_flakjacket";
+	level.bo1sz_shop_name[ 1 ] = "PhD Flopper";
+	level.bo1sz_shop_price[ 1 ] = 2000;
+	level.bo1sz_shop_desc[ 1 ] = "Your own explosives can't hurt you";
+	level.bo1sz_shop_perk[ 2 ] = "specialty_deadshot";
+	level.bo1sz_shop_name[ 2 ] = "Deadshot Daiquiri";
+	level.bo1sz_shop_price[ 2 ] = 1500;
+	level.bo1sz_shop_desc[ 2 ] = "Steadier aim and +25% headshot damage";
+	level.bo1sz_shop_count = 3;
 	// style.csv
 	level.bo1sz_bal[ "style.gauge_max" ] = 100;
 	level.bo1sz_bal[ "style.idle_grace_ms" ] = 2000;

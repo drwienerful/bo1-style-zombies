@@ -16,3 +16,8 @@ mule2_extra_reserves,1,Mule Kick II extra spare reserves per weapon (ammo module
 scavenger_chance,8,Quick Revive II (Scavenger): percent chance per kill
 scavenger_clip_frac,0.3,Quick Revive II (Scavenger): fraction of each gun's clip size refilled (min 1)
 tier_popup_seconds,3,how long the tier name and description stay on screen after purchase
+shop_radius,90,distance from the spawn point at which the perk shop prompt appears
+roller_decay_mult,1.3,High Roller: style decay multiplier
+lucky_refill_frac,0.2,Lucky Streak: magazine fraction refilled
+deadshot_hs_mult,1.25,Deadshot Daiquiri (shop): headshot damage multiplier
+staminup_speed,1.1,Stamin-Up (shop): movement speed scale (needs SetMoveSpeedScale; see sweep)

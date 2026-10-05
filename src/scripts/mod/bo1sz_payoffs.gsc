@@ -640,6 +640,11 @@ pay_on_kill( attacker, mod, weapon, hitloc )
 	if ( isDefined( level.bo1sz_style_ranks_kill_bonus ) )
 	{
 		bonus = level.bo1sz_style_ranks_kill_bonus[ rank ];
+		// High Roller run modifier doubles rank bonuses.
+		if ( isDefined( level.bo1sz_rank_bonus_mult ) )
+		{
+			bonus = int( bonus * level.bo1sz_rank_bonus_mult );
+		}
 		if ( bonus > 0 )
 		{
 			pts += bonus;

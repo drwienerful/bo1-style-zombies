@@ -39,6 +39,8 @@ def render():
     tiers = rows("perk_tiers")
     archs = rows("archetypes")
     boss = kv("boss")
+    mods = rows("modifiers")
+    shop = rows("shop")
     augs = rows("augments")
     arch_name = {a["id"]: a["name"] for a in archs}
 
@@ -92,6 +94,20 @@ def render():
         "Hold USE at the machine of a perk you own to buy its tier II:",
         "",
         table(["Tier", "Price", "Effect"], [[t["name"], t["price"], t["desc"]] for t in tiers]),
+        "",
+        "### Perk shop",
+        "",
+        "At your spawn point, hold USE to open the Perk Shop. It sells perks that have no machine on "
+        "the current map (tap USE to move, hold USE to buy). The usual surcharge applies, and you lose "
+        "shop perks when you go down.",
+        "",
+        table(["Perk", "Price", "Effect"], [[x["name"], x["price"], x["desc"]] for x in shop]),
+        "",
+        "## Run blessings",
+        "",
+        "Each run gets one random blessing, announced in round 1. It applies to everyone.",
+        "",
+        table(["Blessing", "Effect"], [[m["name"], m["desc"]] for m in mods]),
         "",
         "## Archetypes",
         "",
