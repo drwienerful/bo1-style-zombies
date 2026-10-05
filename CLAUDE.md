@@ -69,6 +69,8 @@ Roguelike-flavoured runs, a style meter, emergent archetypes, weapon payoffs, a 
     follow-up thread *before* the notify (this swallowed the boss victory screen).
   - HUD y at `vertAlign "middle"`: -175 is visible, -212 was not. Not a HUD-count problem:
     a player could take 100 more client HUD elements on top of ours (probe, 2026-10-05).
+  - Keep every HUD element referenced from a player/level field. One held only in a local
+    variable vanished when its thread returned (boss victory text, 2026-10-05).
 - After each milestone: what works, what feels off, one thing to playtest.
 - Install path: `storage\t5\scripts\sp\zom\` (zombies-only; proven by Batch A).
 - The game writes `logprint` output to `%LOCALAPPDATA%\Plutonium\storage\t5\main\games.log`

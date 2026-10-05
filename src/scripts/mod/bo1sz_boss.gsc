@@ -616,6 +616,9 @@ boss_victory_screen()
 		e.alpha = 1;
 		elems[ i ] = e;
 	}
+	// Keep a reference on the player: HUD elements held only by locals of a thread that
+	// ends are freed (the summary vanished when this thread returned, 2026-10-05).
+	self.bo1sz_victory_elems = elems;
 	self PlayLocalSound( boss_bal( "victory_sound" ) );
 	if ( boss_bal( "end_on_victory" ) == 1 )
 	{
