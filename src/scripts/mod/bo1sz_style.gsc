@@ -105,6 +105,7 @@ style_player()
 	self.bo1sz_recent_classes = [];
 	self.bo1sz_kill_ms = -1;
 	self.bo1sz_kill_n = 0;
+	self.bo1sz_hit_total = 0;
 	if ( !isDefined( self.bo1sz_aff ) )
 	{
 		self.bo1sz_aff = [];
@@ -167,7 +168,11 @@ style_tick()
 				gain = pts[ i ] * self style_repetition( tags[ i ] );
 				self style_affinity( archs[ i ], gain );
 				self style_gain( gain, gauge_max, top );
-				if ( getDvar( "bo1sz_style_debug" ) == "1" )
+				if ( tags[ i ] == "hit" )
+				{
+					self.bo1sz_hit_total += gain;
+				}
+				else if ( getDvar( "bo1sz_style_debug" ) == "1" )
 				{
 					style_log( "ev tag=" + tags[ i ] + " arch=" + archs[ i ] + " pts=" + pts[ i ] + " gain=" + gain + " rank=" + self.bo1sz_style_rank );
 				}
@@ -383,6 +388,11 @@ style_queue( points, tag, arch )
 // Repeating the same primary action gives diminishing returns; any other action resets it.
 style_repetition( tag )
 {
+	// Hits are rate-capped instead, and must not reset the penalty for kills.
+	if ( tag == "hit" )
+	{
+		return 1.0;
+	}
 	if ( tag == self.bo1sz_style_last_tag )
 	{
 		self.bo1sz_style_rep = self.bo1sz_style_rep * style_bal( "rep_decay" );
@@ -463,7 +473,7 @@ style_ev_arch( name )
 style_install_hooks()
 {
 	t = 0;
-	while ( ( !isDefined( level.overrideActorKilled ) || !isDefined( level.overridePlayerDamage ) ) && t < 300 )
+	while ( ( !isDefined( level.overrideActorKilled ) || !isDefined( level.overridePlayerDamage ) || !isDefined( level.overrideActorDamage ) ) && t < 300 )
 	{
 		wait 0.1;
 		t++;
@@ -474,9 +484,71 @@ style_install_hooks()
 	}
 	level.bo1sz_style_orig_killed = level.overrideActorKilled;
 	level.bo1sz_style_orig_pdamage = level.overridePlayerDamage;
+	level.bo1sz_style_orig_adamage = level.overrideActorDamage;
 	level.overrideActorKilled = ::style_actor_killed;
 	level.overridePlayerDamage = ::style_player_damage;
-	style_log( "hooks installed (stock killed=" + isDefined( level.bo1sz_style_orig_killed ) + " pdamage=" + isDefined( level.bo1sz_style_orig_pdamage ) + ")" );
+	level.overrideActorDamage = ::style_actor_damage;
+	style_log( "hooks installed (stock killed=" + isDefined( level.bo1sz_style_orig_killed ) + " pdamage=" + isDefined( level.bo1sz_style_orig_pdamage ) + " adamage=" + isDefined( level.bo1sz_style_orig_adamage ) + ")" );
+}
+
+// Zombie damage (spy only, proven in Phase 0 B2): every hit adds a little style and
+// keeps the meter from decaying while the player is fighting.
+style_actor_damage( inflictor, attacker, damage, flags, meansofdeath, weapon, vpoint, vdir, sHitLoc, modelIndex, psOffsetTime )
+{
+	dmg = damage;
+	if ( isDefined( level.bo1sz_style_orig_adamage ) )
+	{
+		dmg = self [[ level.bo1sz_style_orig_adamage ]]( inflictor, attacker, damage, flags, meansofdeath, weapon, vpoint, vdir, sHitLoc, modelIndex, psOffsetTime );
+	}
+	if ( !isDefined( dmg ) )
+	{
+		dmg = damage;
+	}
+	if ( dmg > 0 && isDefined( attacker ) && isPlayer( attacker ) && isDefined( attacker.bo1sz_style_q_pts ) )
+	{
+		attacker style_on_hit( meansofdeath, weapon, sHitLoc );
+	}
+	return dmg;
+}
+
+style_on_hit( mod, weapon, hitloc )
+{
+	now = getTime();
+	// One hit per frame: a shotgun blast or one explosion counts once.
+	if ( isDefined( self.bo1sz_hit_ms ) && self.bo1sz_hit_ms == now )
+	{
+		return;
+	}
+	self.bo1sz_hit_ms = now;
+
+	// Rate cap over a rolling one-second window.
+	if ( !isDefined( self.bo1sz_hit_win_ms ) || now - self.bo1sz_hit_win_ms >= 1000 )
+	{
+		self.bo1sz_hit_win_ms = now;
+		self.bo1sz_hit_win_pts = 0;
+	}
+	if ( !isDefined( mod ) )
+	{
+		mod = "";
+	}
+	pts = style_ev_pts( "hit" );
+	if ( isDefined( hitloc ) && ( hitloc == "head" || hitloc == "helmet" || hitloc == "neck" ) && style_is_bullet( mod ) )
+	{
+		pts = style_ev_pts( "hit_headshot" );
+	}
+	room = style_bal( "hit_cap_per_sec" ) - self.bo1sz_hit_win_pts;
+	if ( room <= 0 )
+	{
+		// Still fighting: keep decay paused even when the cap is reached.
+		self.bo1sz_style_last_ms = now;
+		return;
+	}
+	if ( pts > room )
+	{
+		pts = room;
+	}
+	self.bo1sz_hit_win_pts += pts;
+	self style_queue( pts, "hit", style_class_arch( style_weapon_class( weapon ), mod ) );
 }
 
 style_actor_killed( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, psOffsetTime )
@@ -715,7 +787,7 @@ style_round_report()
 			{
 				continue;
 			}
-			line = "round " + level.round_number + " " + p.playername + " rank=" + p.bo1sz_style_rank + " aff:";
+			line = "round " + level.round_number + " " + p.playername + " rank=" + p.bo1sz_style_rank + " hit_pts=" + int( p.bo1sz_hit_total ) + " aff:";
 			keys = getArrayKeys( p.bo1sz_aff );
 			for ( k = 0; k < keys.size; k++ )
 			{

@@ -9,3 +9,5 @@ explosive,6,demolitions
 clutch,12,none
 variety,8,none
 revive,25,support
+hit,2,auto
+hit_headshot,4,auto

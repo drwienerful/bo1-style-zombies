@@ -15,3 +15,4 @@ clutch_health_frac,0.35,kill while below this fraction of max health counts as c
 hs_streak_cap,5,headshot streak bonus stops growing after this many extra headshots
 hit_drop_cooldown_ms,1500,after taking damage drops a rank this long before another hit can
 variety_window,3,kill with a weapon class not used in the last N kills counts as variety
+hit_cap_per_sec,8,most style points per second that hits alone can give
