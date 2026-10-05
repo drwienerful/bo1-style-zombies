@@ -73,8 +73,8 @@ Roguelike-flavoured runs, a style meter, emergent archetypes, weapon payoffs, a 
 
 ## Current phase
 
-Milestones 0-4 done (2026-10-05). Next: Milestone 5, affinity, archetype tiers, pop-ups, codex.
-Design references: `docs/design/style_meter.md`, `weapon_payoffs.md`, `perks.md`, `double_tap_2.md`.
+Milestones 0-5 done (2026-10-05). Next: Milestone 6, pacing (needs user approval of specific changes).
+Design references: `docs/design/style_meter.md`, `weapon_payoffs.md`, `perks.md`, `archetypes.md`, `double_tap_2.md`; player reference `CODEX.md`.
 
 Mod source lives in `src/scripts/mod/` (files already named `bo1sz_*.gsc`). The installer
 copies them to `storage\t5\scripts\sp\zom\`. The Phase 0 probe in `src/scripts/probe/` is
