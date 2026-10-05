@@ -131,19 +131,21 @@ probe_start()
 	logprint( "[PROBE-INFO] active=" + probe_join( level.probe_active ) + " main_ms=" + probe_str( level.probe_main_ms ) + " init_ms=" + level.probe_init_ms + "\n" );
 }
 
-// Test convenience: "set probe_points 50000" in the console grants that many points
-// to every player through the stock score function (proven by B4).
+// Test convenience: "set probe_points 1" in the console grants 50000 points to every
+// player through the stock score function (proven by B4). Any value but 0 works.
 probe_points_command()
 {
 	setDvar( "probe_points", "0" );
 	for ( ;; )
 	{
 		wait 0.5;
-		n = getDvarInt( "probe_points" );
-		if ( n <= 0 )
+		// getDvarInt returned 0 for console-typed values (rerun 2026-10-05); use the string.
+		v = getDvar( "probe_points" );
+		if ( v == "" || v == "0" )
 		{
 			continue;
 		}
+		n = 50000;
 		setDvar( "probe_points", "0" );
 		players = GetPlayers();
 		for ( i = 0; i < players.size; i++ )
@@ -667,7 +669,13 @@ probe_verify_drop( id, before, expected, original )
 		return;
 	}
 	drop = before - self.health;
-	ok = ( drop >= expected - 1 && drop <= expected + 1 );
+	// Store "yes"/"no", never a bool: GSC compares bool==string numerically
+	// ("pending" -> 0), which made false results look pending forever.
+	ok = "no";
+	if ( drop >= expected - 1 && drop <= expected + 1 )
+	{
+		ok = "yes";
+	}
 	if ( id == "B2" )
 	{
 		level.probe_b2_mod = ok;
@@ -791,7 +799,11 @@ probe_verify_player_drop( before, expected )
 {
 	waittillframeend;
 	drop = before - self.health;
-	level.probe_b8_mod = ( drop >= expected - 1 && drop <= expected + 1 );
+	level.probe_b8_mod = "no";
+	if ( drop >= expected - 1 && drop <= expected + 1 )
+	{
+		level.probe_b8_mod = "yes";
+	}
 	level.probe_b8_drop = "drop=" + drop + " want=" + expected;
 }
 
@@ -866,7 +878,7 @@ probe_b2( id )
 	{
 		wait 0.1;
 	}
-	if ( level.probe_b2_mod )
+	if ( level.probe_b2_mod == "yes" )
 	{
 		probe_mark_modifiable( id );
 		probe_result( id, "PASS", level.probe_b2_spy + " | x2 " + level.probe_b2_drop );
@@ -1069,7 +1081,7 @@ probe_b8( id )
 		t++;
 	}
 	ev = level.probe_b8_spy + " half " + level.probe_b8_drop + " down=" + level.probe_b8_down + " rev=" + level.probe_b8_revive;
-	if ( level.probe_b8_mod )
+	if ( level.probe_b8_mod == "yes" )
 	{
 		probe_mark_modifiable( id );
 		probe_result( id, "PASS", ev );
@@ -1242,9 +1254,14 @@ probe_c3( id )
 	probe_stage( id, "wait:shoot a zombie in the body with a pistol" );
 	while ( !isDefined( level.probe_c3_mod ) || level.probe_c3_mod == "pending" )
 	{
+		if ( getDvar( "probe_finish" ) == "1" )
+		{
+			probe_result( id, "BLOCKED", "no non-lethal pistol body hit seen; state=" + probe_str( level.probe_c3_mod ) );
+			return;
+		}
 		wait 0.1;
 	}
-	if ( level.probe_c3_mod )
+	if ( level.probe_c3_mod == "yes" )
 	{
 		probe_result( id, "PASS", "pistol x2 " + level.probe_c3_drop );
 	}

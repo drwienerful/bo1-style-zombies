@@ -59,6 +59,12 @@ Roguelike-flavoured runs, a style meter, emergent archetypes, weapon payoffs, a 
 - Only use builtins already proven by stock usage in `reference/` or by Plutonium's own
   shipped script (`storage\t5\raw\scripts\sp\zm_spawn_fix.gsc`, read-only).
 - Every feature behind a config dvar. Small commits.
+- GSC gotchas proven in game (Phase 0):
+  - Never compare values of different types: `false == "pending"` is **true** (the string
+    is converted to 0). Keep state variables all-string or all-number.
+  - `getDvarInt` returned 0 for a console-typed value; read `getDvar` and compare strings.
+  - `Spawn` does not compile from our source; `tools/gsc_lint.py` rejects it.
+  - Grenade kills can report the *held gun* as the weapon. Classify by means of death.
 - After each milestone: what works, what feels off, one thing to playtest.
 - Install path: `storage\t5\scripts\sp\zom\` (zombies-only; proven by Batch A).
 - The game writes `logprint` output to `%LOCALAPPDATA%\Plutonium\storage\t5\main\games.log`

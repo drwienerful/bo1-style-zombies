@@ -1,7 +1,7 @@
 # Platform findings (Phase 0)
 
-Status: **A and B done; C run once (2026-10-05, solo, zombie_theater).** A watchdog bug lost
-C6/C7/C9/C10 result lines; those, plus B8 and C3, are being rerun.
+Status: **A, B and C done (2026-10-05, solo, zombie_theater)** except B8/C3 modification checks
+(a probe bug hid their results; fixed, small rerun pending) and the optional off-map weapon test.
 Results come from `[PROBE]` lines in `%LOCALAPPDATA%\Plutonium\storage\t5\main\games.log`,
 cross-checked against Plutonium's loader lines in `main\console.log`. The "Static evidence" column
 is what reading the local reference material suggests. It is a prediction, not a result.
@@ -44,11 +44,11 @@ is what reading the local reference material suggests. It is a prediction, not a
 | C3 dmg scaling | BLOCKED (solo) | `C3 \| BLOCKED \| ... \| shoot a zombie in the body with a pistol` | B2 hook + `WeaponClass` | The pistol filter never matched. Suspect `WeaponClass("m1911_zm")` is not `"pistol"`; the rerun logs actual class names. The B2 x2 proof already shows per-hit scaling works. |
 | C4 ammo refund | PASS (solo) | `C4 \| PASS \| ... \| wep=m1911_zm clip 6->7 size=8` (twice) | `GetWeaponAmmoClip`/`SetWeaponAmmoClip` in kill hook | Bullet refund on headshot kill works. |
 | C5 multi-kill | PASS (solo) | `C5 \| PASS \| ... \| 2 kills same frame wep=frag_grenade_zm mod=MOD_GRENADE_SPLASH bonus+50->50` | same-`getTime()` kills in kill hook | Grenade kills sometimes report the **held gun** as weapon (`wep=ak74u_zm mod=MOD_GRENADE_SPLASH`). Payoff code must classify by `mod`, not `weapon`. |
-| C6 perk limit | rerun | data: Kino has **5** machines incl. Mule Kick; `num_perks=0` at spawn | offset `num_perks` | Result line lost to the watchdog bug. Kino can host the full 5-perk test. |
-| C7 perks per map | rerun | data: `quickrevive, fastreload, rof, armorvest, additionalprimaryweapon` on Kino | proximity + `UseButtonPressed` shop, `SetPerk` | Shop rebuilt without `Spawn`; result lost to the watchdog bug. |
-| C8 Double Tap 2.0 | PARTIAL (solo, user felt faster) | user: "Double tap felt faster than normal" | dvar `perk_weapRateMultiplier` | Stock value is **0.75** (from the dvar dump). Run 1 used 0.5. The rerun uses the user's 0.8333 plus x2 bullet damage and the steady-aim perk. Design: `docs/design/double_tap_2.md`. |
-| C9 spawn/cap | rerun | data: `delay=2 max_ai=24 ai_limit=24 zombie_health=150` | `zombie_spawn_delay`, `level.zombie_ai_limit` | **`level.zombie_ai_limit` exists in stock (24)**, so the concurrent cap is a writable level var. Result line lost to the watchdog bug. |
-| C10 unused weapons | rerun | data: 36 weapons in Kino's `level.zombie_weapons` (incl. thundergun, ray gun, crossbow, LAW, China Lake, L96) | `GiveWeapon`/`TakeWeapon` | In-pool give result lost to the watchdog bug. Foreign weapon still opt-in. |
+| C6 perk limit | PASS (solo) | `C6 \| PASS \| ... \| owned=5 bought_with_offset=3 num_perks=-96 machines=5` | offset `player.num_perks` | **Perk limit removable** by keeping `num_perks` far below 4 (stock check `num_perks >= 4`). Bought a 5th machine perk on Kino. |
+| C7 perks per map | PARTIAL (solo) | `C7 \| PARTIAL \| ... \| machines=5 script shop gave specialty_longersprint has=1` | proximity + `UseButtonPressed` shop, `SetPerk` | Kino machines: QR, Speed Cola, Double Tap, Jugg, Mule Kick. A perk with **no machine on the map** (Stamin-Up) was granted engine-side; awaiting user confirmation of the prompt and its effect. |
+| C8 Double Tap 2.0 | PASS (solo, user-confirmed) | `C8 \| PARTIAL \| ... \| rate 0.75->0.8333 ft=0.096 dt=1 x2hits=14 steady=1` + user: "the double tap feels pretty much perfect" | dvar `perk_weapRateMultiplier`, x2 in damage hook, `SetPerk("specialty_bulletaccuracy")` | The user's DT 2.0 spec works as designed (`docs/design/double_tap_2.md`). |
+| C9 spawn/cap | PASS (solo) | `C9 \| PASS \| ... \| delay 2->0.475 ai_limit=24 peak=8 hp x1.5 150->225` | `zombie_vars["zombie_spawn_delay"]`, `level.zombie_ai_limit`, spawn health | Spawn delay and spawn health are writable, and `level.zombie_ai_limit` exists (24). A concurrent count above 24 was **not observed** (round 2 peak = 8); verify at a later round during Milestone 6. |
+| C10 unused weapons | PARTIAL (solo) | `C10 \| PARTIAL \| ... \| pool=36 give knife_ballistic_bowie_zm:1 \| foreign: not attempted` | `GiveWeapon`/`TakeWeapon` | Giving any weapon in the map's pool works. Off-map weapon not yet attempted (opt-in, may crash). |
 | C11 boss base | PASS (solo) | `C11 \| PASS \| ... \| hp=4000 phase=2 hazard_ticks=17 ai=dogs` | promoted zombie; `Earthquake`, `RadiusDamage`, `moveplaybackrate`, `set_zombie_run_cycle` via getFunction | Health scaling, a phase change at 50% and a timed area hazard all work. Kino's only special AI is dogs. |
 | C12 input | PASS (solo) | `C12 \| PASS \| ... \| dvar toggle seen after 42s; ads+use combo=no` | poll dvar `probe_codex` | Console/bind toggle works. The ADS+USE combo was not observed (maybe not tried). Co-op clients' dvars untested. |
 | C13 round break | PASS (solo) | `C13 \| PASS \| ... \| shown end_of_round -> hidden start_of_round, break=12s` | `end_of_round` → `start_of_round` | |
@@ -132,3 +132,9 @@ Stop-early gate: **cleared.** B2 and B3 are both hookable and modifiable.
   "thread died at stage 'start'" because Kino's intro exceeds 20s. Those threads kept
   running (their `[PROBE-DATA]` lines appear later), but the FAIL had already been recorded.
   Fixed: the `start` stage is exempt, and the stuck threshold is now 30s.
+- **Rerun 2 bug (bool vs string):** B8 and C3 stored a true/false result but the wait loop
+  compared it with `"pending"`; GSC converts `"pending"` to 0, so a *false* result (health
+  drop did not match the expected value) looked pending forever. B8's hook did fire
+  (9 calls, first `dmg=45 hp=100 mod=MOD_EXPLOSIVE from=ai`); C3's class filter matched
+  (`m1911_zm=pistol`). Both now report the measured drop. Class names seen: `m1911_zm=pistol`,
+  `knife_zm=melee`, `ak74u_zm=smg`, `mp40_zm=smg`, `frag_grenade_zm=grenade`.
