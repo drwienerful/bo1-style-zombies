@@ -4,14 +4,26 @@ A script-only (GSC) mod for **Call of Duty: Black Ops Zombies** on the
 [Plutonium](https://plutonium.pw) T5 client. It aims for a roguelike-flavoured run
 with a style meter, emergent archetypes, better weapon variety, and a late-game boss.
 
-**Status:** Phase 0, a feasibility probe. There is no gameplay yet.
+**Status:** Milestone 1. The mod loads and announces itself; no gameplay yet.
+Phase 0 findings: [docs/platform_findings.md](docs/platform_findings.md).
 
 ## Requirements
 
 You need your own legitimate copy of Black Ops and a Plutonium install. This repo
 contains **no game files** of any kind: only scripts and data we wrote ourselves.
 
-## Phase 0 probe
+## Install
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\install.ps1             # install the mod
+powershell -ExecutionPolicy Bypass -File tools\install.ps1 -Uninstall  # remove it
+```
+
+The installer copies only our `bo1sz_*.gsc` files into
+`%LOCALAPPDATA%\Plutonium\storage	5\scripts\sp\zom\` (loaded in Zombies only).
+Disable without uninstalling: `set bo1sz_enable 0` in the console before loading a map.
+
+## Phase 0 probe (re-testing)
 
 ```powershell
 # Batch A: which folders load scripts?

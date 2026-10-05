@@ -139,3 +139,9 @@ Stop-early gate: **cleared.** B2 and B3 are both hookable and modifiable.
   (9 calls, first `dmg=45 hp=100 mod=MOD_EXPLOSIVE from=ai`); C3's class filter matched
   (`m1911_zm=pistol`). Both now report the measured drop. Class names seen: `m1911_zm=pistol`,
   `knife_zm=melee`, `ak74u_zm=smg`, `mp40_zm=smg`, `frag_grenade_zm=grenade`.
+
+## Approval
+
+**2026-10-05: the user approved Phase 0.** The economy/perks ADJUST is accepted: perks with no
+machine on a map get script re-implemented effects. Double Tap 2.0 is accepted as specified in
+`docs/design/double_tap_2.md`. Milestone 1 may start.

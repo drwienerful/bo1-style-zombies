@@ -6,7 +6,9 @@
   Copies only files from this repo's src/ folder. It never reads, copies or
   modifies game files, and it only deletes files whose names start with bo1sz_.
 
-  Phase 0 modes:
+  No arguments: install the mod (src\scripts\mod\bo1sz_*.gsc) to scripts\sp\zom\.
+
+  Phase 0 probe modes (re-testing only):
     -Batch A   One beacon per candidate load folder (A1..A5) to find which load.
     -Batch B   The probe script in the -Target folder (run Batch B tests).
     -Batch C   Same file as B (choose tests with the probe_batch dvar in game).
@@ -16,6 +18,8 @@
   Canonical path (Batch A, 2026-10-05): A2 = scripts\sp\zom\ (loads in zombies only).
   A1/A4 also load in the main menu and campaign; A3 loads on one map only.
 
+.EXAMPLE
+  powershell -ExecutionPolicy Bypass -File tools\install.ps1
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File tools\install.ps1 -Batch A -Map zombie_theater
 .EXAMPLE
@@ -38,6 +42,7 @@ $ErrorActionPreference = 'Stop'
 $Prefix = 'bo1sz_'
 $ModName = 'bo1sz_probe'
 $RepoRoot = Split-Path -Parent $PSScriptRoot
+$ModSrcDir = Join-Path $RepoRoot 'src\scripts\mod'
 $ProbeSrc = Join-Path $RepoRoot 'src\scripts\probe\probe.gsc'
 $BeaconSrc = Join-Path $RepoRoot 'src\scripts\probe\beacon_template.gsc'
 $SweepSrc = Join-Path $RepoRoot 'src\scripts\probe\sweep_template.gsc'
@@ -119,7 +124,18 @@ if ($Uninstall) {
     return
 }
 if (-not $Batch) {
-    throw 'Choose -Batch A, B or C, or -Uninstall.'
+    # Default: install the mod (every bo1sz_*.gsc in src\scripts\mod) to the canonical path.
+    Remove-OurFiles
+    $rel = (Get-Candidates)[$Target]
+    $files = Get-ChildItem -Path $ModSrcDir -File -Filter "$Prefix*.gsc"
+    if ($files.Count -eq 0) { throw "No $Prefix*.gsc files in $ModSrcDir" }
+    foreach ($f in $files) {
+        Write-OurFile $rel $f.Name ([System.IO.File]::ReadAllText($f.FullName))
+    }
+    Write-Host ''
+    Write-Host "Mod installed at $rel ($($files.Count) file(s)). Start any Zombies map."
+    Show-ForeignScripts
+    return
 }
 
 # Always start clean so beacons and probe never load together.

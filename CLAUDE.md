@@ -73,5 +73,9 @@ Roguelike-flavoured runs, a style meter, emergent archetypes, weapon payoffs, a 
 
 ## Current phase
 
-Milestone 0 (feasibility). **No gameplay code until the user approves
-`docs/platform_findings.md`.**
+Milestone 1: minimal mod that loads and prints a message; installer working.
+Phase 0 was approved on 2026-10-05 (see `docs/platform_findings.md`, "Approval").
+
+Mod source lives in `src/scripts/mod/` (files already named `bo1sz_*.gsc`). The installer
+copies them to `storage\t5\scripts\sp\zom\`. The Phase 0 probe in `src/scripts/probe/` is
+kept for re-testing and is installed only with `-Batch`.
