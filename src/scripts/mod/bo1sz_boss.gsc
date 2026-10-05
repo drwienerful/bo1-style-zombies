@@ -546,100 +546,28 @@ boss_victory( killer )
 	}
 }
 
+// User preference (2026-10-05): just "VICTORY" after the kill, then stock's own game-over
+// screen. Layout is the one confirmed visible; held for victory_seconds, then removed
+// before stock's end screen starts.
 boss_victory_screen()
 {
 	self endon( "disconnect" );
-	boss_log( "victory screen: start for " + self.playername );
-	lines = [];
-	lines[ 0 ] = "VICTORY";
-	lines[ 1 ] = boss_bal( "name" ) + " has fallen  -  GAME COMPLETE";
-	lines[ 2 ] = "Round " + level.round_number;
-	if ( isDefined( self.bo1sz_style_max ) && isDefined( level.bo1sz_style_ranks_letter ) )
+	e = boss_elem( self, -110, 3 );
+	if ( !isDefined( e ) )
 	{
-		lines[ lines.size ] = "Highest style rank: " + level.bo1sz_style_ranks_letter[ self.bo1sz_style_max ] + " " + level.bo1sz_style_ranks_word[ self.bo1sz_style_max ];
+		return;
 	}
-	if ( isDefined( self.bo1sz_arch ) && isDefined( level.bo1sz_archetypes_count ) )
-	{
-		s = "";
-		for ( i = 0; i < level.bo1sz_archetypes_count; i++ )
-		{
-			tier = self.bo1sz_arch[ level.bo1sz_archetypes_id[ i ] ];
-			if ( isDefined( tier ) && tier > 0 )
-			{
-				if ( s != "" )
-				{
-					s = s + ", ";
-				}
-				s = s + level.bo1sz_archetypes_name[ i ] + " " + tier;
-			}
-		}
-		if ( s == "" )
-		{
-			s = "none";
-		}
-		lines[ lines.size ] = "Archetypes: " + s;
-	}
-	boss_log( "victory screen: " + lines.size + " lines built" );
-	// Placed below stock's end-screen lines ("GAME OVER" at y -130, rounds at -100) and kept
-	// up through the end sequence, so the ending reads as a victory. Stock has no hook to
-	// change its own text, and stock's end sequence only destroys its own HUD.
-	elems = [];
-	for ( i = 0; i < lines.size; i++ )
-	{
-		scale = 1.3;
-		if ( i == 0 )
-		{
-			scale = 3;
-		}
-		// Same layout as the build where the summary was visible (2026-10-05).
-		e = boss_elem( self, -110 + i * 30, scale );
-		if ( i == 0 )
-		{
-			e.color = ( 1, 0.85, 0.2 );
-		}
-		e.alpha = 0;
-		e SetText( lines[ i ] );
-		e FadeOverTime( 0.5 );
-		e.alpha = 1;
-		elems[ i ] = e;
-	}
-	made = 0;
-	for ( i = 0; i < elems.size; i++ )
-	{
-		if ( isDefined( elems[ i ] ) )
-		{
-			made++;
-		}
-	}
-	boss_log( "victory screen: " + made + " of " + lines.size + " elements created" );
-	// Keep references on the player and keep this thread alive while the summary is up
-	// (the build whose thread waited showed the summary; the one that returned didn't).
-	self.bo1sz_victory_elems = elems;
+	e.color = ( 1, 0.85, 0.2 );
+	e.alpha = 0;
+	e SetText( "VICTORY" );
+	e FadeOverTime( 0.5 );
+	e.alpha = 1;
+	self.bo1sz_victory_elem = e;
 	self PlayLocalSound( boss_bal( "victory_sound" ) );
-	boss_log( "victory screen: shown" );
-	if ( boss_bal( "end_on_victory" ) == 1 )
-	{
-		// When stock's end screen starts, slide the summary below its "GAME OVER" lines.
-		level waittill( "end_game" );
-		wait 1;
-		for ( i = 0; i < elems.size; i++ )
-		{
-			if ( isDefined( elems[ i ] ) )
-			{
-				elems[ i ].y = elems[ i ].y + 120;
-			}
-		}
-		boss_log( "victory screen: moved below the end screen" );
-		for ( ;; )
-		{
-			wait 1;
-		}
-	}
-	// Endless play: fade the summary after a while and bring the style meter back.
-	wait boss_bal( "victory_seconds" );
-	for ( i = 0; i < elems.size; i++ )
-	{
-		elems[ i ] FadeOverTime( 1 );
-		elems[ i ].alpha = 0;
-	}
+	wait boss_bal( "victory_seconds" ) - 1;
+	e FadeOverTime( 0.8 );
+	e.alpha = 0;
+	wait 1;
+	e Destroy();
+	self.bo1sz_victory_elem = undefined;
 }

@@ -38,11 +38,10 @@ Status: **approved by the user on 2026-10-05**, with one change: no screen shake
 
 ## Victory
 
-When it dies: a large **"VICTORY"** screen with a run summary (round, highest style rank,
-archetypes and tiers) and a sound. Then, per `boss.csv`:
-- `end_on_victory 1` (default): the game ends through the stock game-over sequence
-  (`level notify("end_game")`, **unverified**).
-- `end_on_victory 0`: keep playing endlessly.
+When it dies: **"VICTORY"** on screen for `victory_seconds`, +5000 points to the killer, then
+stock's own game-over screen (`level notify("end_game")`, confirmed working). Stock's end
+screen text can't be changed without replacing `end_game`. A longer on-screen run summary was
+tried and dropped: the user preferred a simple "VICTORY". `end_on_victory 0` keeps playing instead.
 
 ## Testing aids
 
