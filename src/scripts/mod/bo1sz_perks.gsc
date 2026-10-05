@@ -709,7 +709,7 @@ perks_dbg_str( v )
 // perk flag alone does little without its machine's scripts (Phase 0 C7):
 //   PhD Flopper  no damage from your own explosives (player damage wrapper)
 //   Deadshot     steady aim + headshot damage (actor damage wrapper)
-//   Stamin-Up    engine sprint flag; faster movement waits on SetMoveSpeedScale (sweep)
+//   Stamin-Up    engine sprint flag + SetMoveSpeedScale (compiled in the sweep, 2026-10-05)
 // Shop perks are lost when the player goes down, like machine perks.
 // ---------------------------------------------------------------------------
 
@@ -908,6 +908,10 @@ perks_shop_buy( k )
 	{
 		self SetPerk( perks_bal( "dt2_steady_perk" ) );
 	}
+	if ( perk == "specialty_longersprint" )
+	{
+		self SetMoveSpeedScale( perks_bal( "staminup_speed" ) );
+	}
 	self.bo1sz_shop[ perk ] = true;
 	self PlayLocalSound( "zmb_cha_ching" );
 	self iPrintLnBold( level.bo1sz_shop_name[ k ] );
@@ -930,6 +934,10 @@ perks_shop_downed()
 		for ( i = 0; i < keys.size; i++ )
 		{
 			self UnsetPerk( keys[ i ] );
+			if ( keys[ i ] == "specialty_longersprint" )
+			{
+				self SetMoveSpeedScale( 1.0 );
+			}
 		}
 		self.bo1sz_shop = [];
 	}

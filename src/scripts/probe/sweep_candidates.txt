@@ -19,4 +19,4 @@ unsetperk | e UnsetPerk( "specialty_rof" );
 playsound | e PlaySound( "zmb_cha_ching" );
 randomint | x = RandomInt( 5 );
 distance | x = Distance( e.origin, e.origin );
-setmovespeedscale | e SetMoveSpeedScale( 1.1 );
+# PASSED 2026-10-05: setmovespeedscale | e SetMoveSpeedScale( 1.1 );

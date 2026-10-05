@@ -36,6 +36,7 @@ VERIFIED_BUILTINS = {
     "playsound", "adsbuttonpressed", "usebuttonpressed", "attackbuttonpressed",
     "setcursorhint", "sethintstring", "delete", "destroy", "settext", "setshader",
     "setvalue", "fadeovertime", "scaleovertime",
+    "setmovespeedscale",
 }
 # Builtins that stock scripts use but Plutonium's compiler rejects from our source
 # ("unknown function"). Using one stops the map from loading.
