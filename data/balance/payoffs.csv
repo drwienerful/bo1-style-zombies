@@ -16,7 +16,7 @@ style_multi_points,10,real points per extra kill in the same frame
 style_long_range_points,15,real points for a long-range bullet kill
 style_melee_points,20,real points for a melee kill
 ammo_refill_frac,0.1,clip fraction refilled by the rank ammo-on-kill chance (min 1 bullet)
-class_overrides,fnfal=sniper,weapon name substring=class pairs (space separated); FN FAL plays as a sniper (user request)
+class_overrides,fnfal=sniper m14=sniper m1garand=sniper kar98k=sniper springfield=sniper type99_rifle=sniper gewehr43=sniper m1carbine=sniper,weapon name substring=class pairs (space separated); bolt and single-action rifles play as snipers (user request)
 sniper_headshot_mult,3.5,extra damage multiplier on sniper headshots (user request)
 launcher_refund_kills,6,kills from one launcher blast needed for the refund (more than 5; user request)
 launcher_refund,1,rounds refunded to the launcher

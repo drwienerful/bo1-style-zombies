@@ -1,7 +1,10 @@
 id,name,awakened,ascended,capstone
 gunslinger,Gunslinger,Pistol streak damage cap x4.5 and streaks last 6s,Pistol headshot kills refund 2 bullets,A 5+ streak refills your magazine on every pistol kill
-marksman,Marksman,Sniper pierce bonus +75% per extra zombie,Long-range kills give double style,Every 3rd sniper headshot kill detonates
+marksman,Marksman,Sniper pierce bonus +75% per extra zombie and faster fire rate while holding a sniper,Long-range kills give double style,Every 3rd sniper headshot kill detonates
 brawler,Brawler,Melee damage x2,Getting hit no longer drops your style rank,All damage taken -50%
 blaster,Blaster,Shotgun damage holds up at range,Shockwave radius +30%,Shockwave kills set off chain reactions
 demolitions,Demolitions,Explosive damage +25%,Explosive kills of 3+ refund a grenade,Launcher kills set off a second blast
-tech,Tech,Wonder weapon kills give +50% style,Wonder weapons get one extra spare ammo reserve,Wonder weapon kills release a mini shockwave
+tech,Tech,Wonder weapon kills give +50% style and PhD explosion resistance,Wonder weapons get one extra spare ammo reserve,Wonder weapon kills release a mini shockwave
+skirmisher,Skirmisher,Steadier hip-fire while holding an SMG,SMG kills refund 3 bullets,SMG bullets penetrate further
+rifleman,Rifleman,Assault rifle headshots +25% damage,Assault rifle headshot kills refund 5 bullets,Assault rifle headshots +75% damage
+gunner,Gunner,Consecutive LMG hits build up to +50% damage,Move 10% faster while holding an LMG,LMG kills refund 5 bullets

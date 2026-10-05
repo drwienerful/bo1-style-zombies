@@ -85,12 +85,16 @@ perks_log( msg )
 	logprint( line + "\n" );
 }
 
+// Perks the player really owns: flags this module grants for archetypes or while holding
+// a weapon (player.bo1sz_grant) don't count toward the limit or the surcharge.
 perks_owned( player )
 {
 	n = 0;
 	for ( i = 0; i < level.bo1sz_perk_list.size; i++ )
 	{
-		if ( player HasPerk( level.bo1sz_perk_list[ i ] ) )
+		perk = level.bo1sz_perk_list[ i ];
+		has = player HasPerk( perk );
+		if ( has && !( isDefined( player.bo1sz_grant ) && isDefined( player.bo1sz_grant[ perk ] ) ) )
 		{
 			n++;
 		}
@@ -176,7 +180,6 @@ perks_player()
 	self.bo1sz_perk_hint.fontScale = 1.3;
 	self.bo1sz_perk_hint.alpha = 0;
 	self.bo1sz_perk_hint_shown = -1;
-	self.bo1sz_steady_given = false;
 	self perks_tiers_init();
 	self perks_shop_init();
 
@@ -222,7 +225,7 @@ perks_player()
 			}
 		}
 		self perks_show_hint( surcharge, cost );
-		self perks_dt2_steady();
+		self perks_handling();
 		self perks_tiers_tick();
 		self perks_shop_tick();
 	}
@@ -273,21 +276,6 @@ perks_on_bought()
 	}
 }
 
-// Steady aim while the player has Double Tap; removed again if Double Tap is lost.
-perks_dt2_steady()
-{
-	has_dt = self HasPerk( "specialty_rof" );
-	if ( has_dt && !self.bo1sz_steady_given )
-	{
-		self SetPerk( perks_bal( "dt2_steady_perk" ) );
-		self.bo1sz_steady_given = true;
-	}
-	else if ( !has_dt && self.bo1sz_steady_given )
-	{
-		self UnsetPerk( perks_bal( "dt2_steady_perk" ) );
-		self.bo1sz_steady_given = false;
-	}
-}
 
 // ---------------------------------------------------------------------------
 // Double Tap 2.0 damage: chained actor damage wrapper (stock first)
@@ -904,14 +892,7 @@ perks_shop_buy( k )
 		self.score -= price;
 	}
 	self SetPerk( perk );
-	if ( perk == "specialty_deadshot" )
-	{
-		self SetPerk( perks_bal( "dt2_steady_perk" ) );
-	}
-	if ( perk == "specialty_longersprint" )
-	{
-		self SetMoveSpeedScale( perks_bal( "staminup_speed" ) );
-	}
+	// Steady aim (Deadshot) and movement speed (Stamin-Up) are applied by perks_handling().
 	self.bo1sz_shop[ perk ] = true;
 	self PlayLocalSound( "zmb_cha_ching" );
 	self iPrintLnBold( level.bo1sz_shop_name[ k ] );
@@ -934,10 +915,6 @@ perks_shop_downed()
 		for ( i = 0; i < keys.size; i++ )
 		{
 			self UnsetPerk( keys[ i ] );
-			if ( keys[ i ] == "specialty_longersprint" )
-			{
-				self SetMoveSpeedScale( 1.0 );
-			}
 		}
 		self.bo1sz_shop = [];
 	}
@@ -976,4 +953,114 @@ perks_phd_verify( before, blocked )
 {
 	waittillframeend;
 	perks_log( self.playername + " PhD blocked " + blocked + " self-damage, health change=" + ( before - self.health ) );
+}
+
+// ---------------------------------------------------------------------------
+// Central "while holding / while owning" handler, every 0.2s. The only place that grants
+// engine perk flags and sets movement speed, so features can't undo each other:
+//   steady aim     Double Tap, Deadshot (shop), any sniper, SMG with Skirmisher
+//   fast ADS       any sniper (user: snipers' slow scoping)
+//   Double Tap's   fire-rate flag while holding a sniper with Marksman Awakened
+//   penetration    SMG with the Skirmisher capstone
+//   PhD flag       Tech Awakened (explosion resistance)
+//   speed          Stamin-Up (shop) x LMG with Gunner Ascended
+// Granted flags are tracked in player.bo1sz_grant and excluded from the perk count.
+// ---------------------------------------------------------------------------
+
+perks_weapon_class( w )
+{
+	if ( !isDefined( w ) || w == "none" || w == "" )
+	{
+		return "none";
+	}
+	if ( isDefined( level.bo1sz_pay_excluded ) )
+	{
+		for ( i = 0; i < level.bo1sz_pay_excluded.size; i++ )
+		{
+			if ( isSubStr( w, level.bo1sz_pay_excluded[ i ] ) )
+			{
+				return "wonder";
+			}
+		}
+	}
+	if ( isDefined( level.bo1sz_pay_ovr_name ) )
+	{
+		for ( i = 0; i < level.bo1sz_pay_ovr_name.size; i++ )
+		{
+			if ( isSubStr( w, level.bo1sz_pay_ovr_name[ i ] ) )
+			{
+				return level.bo1sz_pay_ovr_class[ i ];
+			}
+		}
+	}
+	return WeaponClass( w );
+}
+
+perks_arch( player, id )
+{
+	if ( isDefined( player.bo1sz_arch ) && isDefined( player.bo1sz_arch[ id ] ) )
+	{
+		return player.bo1sz_arch[ id ];
+	}
+	return 0;
+}
+
+perks_rule( key )
+{
+	return level.bo1sz_bal[ "archetype_rules." + key ];
+}
+
+// Grants or removes an engine perk flag that this module manages. A flag the player got
+// some other way (a machine, the shop) is never removed here.
+perks_set_flag( perk, want )
+{
+	if ( !isDefined( self.bo1sz_grant ) )
+	{
+		self.bo1sz_grant = [];
+	}
+	has = self HasPerk( perk );
+	if ( want && !has )
+	{
+		self SetPerk( perk );
+		self.bo1sz_grant[ perk ] = true;
+	}
+	else if ( !want && isDefined( self.bo1sz_grant[ perk ] ) )
+	{
+		if ( has )
+		{
+			self UnsetPerk( perk );
+		}
+		self.bo1sz_grant[ perk ] = undefined;
+	}
+}
+
+perks_handling()
+{
+	cls = perks_weapon_class( self GetCurrentWeapon() );
+	sniper = ( cls == "sniper" );
+
+	// Double Tap's fire-rate flag while holding a sniper (Marksman Awakened).
+	self perks_set_flag( "specialty_rof", sniper && perks_arch( self, "marksman" ) >= 1 && perks_rule( "marksman_t1_rof" ) == 1 );
+
+	has_dt = self HasPerk( "specialty_rof" );
+	steady = ( has_dt || perks_has_shop( self, "specialty_deadshot" ) || sniper || ( cls == "smg" && perks_arch( self, "skirmisher" ) >= 1 ) );
+	self perks_set_flag( perks_bal( "dt2_steady_perk" ), steady );
+	self perks_set_flag( perks_rule( "sniper_fastads_perk" ), sniper );
+	self perks_set_flag( perks_rule( "skirmisher_t3_perk" ), cls == "smg" && perks_arch( self, "skirmisher" ) >= 3 );
+	self perks_set_flag( "specialty_flakjacket", perks_arch( self, "tech" ) >= 1 );
+
+	speed = 1.0;
+	if ( perks_has_shop( self, "specialty_longersprint" ) )
+	{
+		speed = speed * perks_bal( "staminup_speed" );
+	}
+	if ( cls == "mg" && perks_arch( self, "gunner" ) >= 2 )
+	{
+		speed = speed * perks_rule( "gunner_t2_speed" );
+	}
+	if ( !isDefined( self.bo1sz_speed ) || self.bo1sz_speed != speed )
+	{
+		self.bo1sz_speed = speed;
+		self SetMoveSpeedScale( speed );
+	}
 }

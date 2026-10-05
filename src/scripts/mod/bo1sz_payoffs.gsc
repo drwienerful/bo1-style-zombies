@@ -346,6 +346,42 @@ pay_on_damage( attacker, dmg, mod, weapon, hitloc )
 		mult = mult * pay_rule( "demolitions_t1_mult" );
 	}
 
+	// Rifleman: assault rifle headshots (the capstone value replaces the Awakened one).
+	if ( cls == "rifle" && pay_is_head( hitloc, mod ) )
+	{
+		if ( pay_arch( attacker, "rifleman" ) >= 3 )
+		{
+			mult = mult * pay_rule( "rifleman_t3_hs_mult" );
+		}
+		else if ( pay_arch( attacker, "rifleman" ) >= 1 )
+		{
+			mult = mult * pay_rule( "rifleman_t1_hs_mult" );
+		}
+	}
+
+	// Gunner Awakened: suppressive fire, consecutive LMG hits stack damage.
+	if ( cls == "mg" && pay_is_bullet( mod ) && pay_arch( attacker, "gunner" ) >= 1 )
+	{
+		if ( isDefined( attacker.bo1sz_supp_ms ) && now - attacker.bo1sz_supp_ms <= pay_rule( "gunner_t1_window_ms" ) )
+		{
+			if ( now != attacker.bo1sz_supp_ms )
+			{
+				attacker.bo1sz_supp_n++;
+			}
+		}
+		else
+		{
+			attacker.bo1sz_supp_n = 0;
+		}
+		attacker.bo1sz_supp_ms = now;
+		supp = 1.0 + attacker.bo1sz_supp_n * pay_rule( "gunner_t1_step" );
+		if ( supp > pay_rule( "gunner_t1_max_mult" ) )
+		{
+			supp = pay_rule( "gunner_t1_max_mult" );
+		}
+		mult = mult * supp;
+	}
+
 	// Snipers: big headshot multiplier on top of stock headshot damage.
 	if ( cls == "sniper" && pay_is_head( hitloc, mod ) )
 	{
@@ -662,6 +698,22 @@ pay_on_kill( attacker, mod, weapon, hitloc )
 		}
 	}
 
+	// Skirmisher Ascended: SMG kills refund bullets.
+	if ( cls == "smg" && pay_arch( attacker, "skirmisher" ) >= 2 )
+	{
+		pay_refund( attacker, weapon, pay_rule( "skirmisher_t2_refund" ), "skirmisher" );
+	}
+	// Rifleman Ascended: assault rifle headshot kills refund bullets.
+	if ( cls == "rifle" && head && pay_arch( attacker, "rifleman" ) >= 2 )
+	{
+		pay_refund( attacker, weapon, pay_rule( "rifleman_t2_refund" ), "rifleman" );
+	}
+	// Gunner capstone: LMG kills refund bullets.
+	if ( cls == "mg" && pay_arch( attacker, "gunner" ) >= 3 )
+	{
+		pay_refund( attacker, weapon, pay_rule( "gunner_t3_refund" ), "gunner" );
+	}
+
 	// Demolitions Ascended: an explosive blast that kills 3 refunds a grenade.
 	if ( pay_arch( attacker, "demolitions" ) >= 2 && cls != "wonder" && ( pay_is_projectile( mod ) || mod == "MOD_GRENADE" || mod == "MOD_GRENADE_SPLASH" || mod == "MOD_EXPLOSIVE" ) && attacker.bo1sz_pay_kill_n == pay_rule( "demolitions_t2_kills" ) )
 	{
@@ -754,6 +806,18 @@ pay_kill_arch( cls, mod, weapon )
 	if ( cls == "sniper" )
 	{
 		return "marksman";
+	}
+	if ( cls == "smg" )
+	{
+		return "skirmisher";
+	}
+	if ( cls == "rifle" )
+	{
+		return "rifleman";
+	}
+	if ( cls == "mg" )
+	{
+		return "gunner";
 	}
 	return "none";
 }

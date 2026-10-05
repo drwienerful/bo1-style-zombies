@@ -41,3 +41,15 @@ demolitions_t3_radius,100,Demolitions capstone second blast radius
 demolitions_t3_frac,0.5,Demolitions capstone second blast damage (fraction of zombie health)
 tech_t3_radius,90,Tech capstone mini shockwave radius
 tech_t3_frac,0.5,Tech capstone mini shockwave damage (fraction of zombie health)
+marksman_t1_rof,1,Marksman Awakened: Double Tap's fire-rate flag while holding a sniper (1 = on)
+skirmisher_t2_refund,3,Skirmisher Ascended: bullets refunded per SMG kill
+skirmisher_t3_perk,specialty_bulletpenetration,Skirmisher capstone: engine penetration perk while holding an SMG (unproven)
+rifleman_t1_hs_mult,1.25,Rifleman Awakened: assault rifle headshot multiplier
+rifleman_t2_refund,5,Rifleman Ascended: bullets refunded on an assault rifle headshot kill
+rifleman_t3_hs_mult,1.75,Rifleman capstone: assault rifle headshot multiplier (replaces Awakened)
+gunner_t1_window_ms,400,Gunner Awakened: hits closer together than this keep the suppressive stack
+gunner_t1_step,0.02,Gunner Awakened: damage added per stacked hit
+gunner_t1_max_mult,1.5,Gunner Awakened: suppressive fire cap
+gunner_t2_speed,1.1,Gunner Ascended: movement speed while holding an LMG
+gunner_t3_refund,5,Gunner capstone: bullets refunded per LMG kill
+sniper_fastads_perk,specialty_fastads,granted while holding a sniper (faster aim down sights; effect unproven)

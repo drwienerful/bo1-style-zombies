@@ -71,10 +71,10 @@ codex_elems()
 	bg.y = 0;
 	bg.color = ( 0, 0, 0 );
 	bg.alpha = 0;
-	bg SetShader( "white", 460, 280 );
+	bg SetShader( "white", 460, 330 );
 	self.bo1sz_codex_bg = bg;
 	self.bo1sz_codex_lines = [];
-	for ( i = 0; i < 12; i++ )
+	for ( i = 0; i < 14; i++ )
 	{
 		e = NewClientHudElem( self );
 		e.horzAlign = "user_center";
@@ -82,7 +82,7 @@ codex_elems()
 		e.alignX = "left";
 		e.alignY = "middle";
 		e.x = -215;
-		e.y = -120 + i * 21;
+		e.y = -140 + i * 21;
 		e.fontScale = 1.15;
 		e.foreground = true;
 		e.alpha = 0;
@@ -250,15 +250,15 @@ codex_page_augments()
 // Keep room for the footer line.
 codex_clip( lines )
 {
-	if ( lines.size <= 11 )
+	if ( lines.size <= 13 )
 	{
 		return lines;
 	}
 	out = [];
-	for ( i = 0; i < 10; i++ )
+	for ( i = 0; i < 12; i++ )
 	{
 		out[ i ] = lines[ i ];
 	}
-	out[ 10 ] = "... (" + ( lines.size - 10 ) + " more)";
+	out[ 12 ] = "... (" + ( lines.size - 12 ) + " more)";
 	return out;
 }

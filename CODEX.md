@@ -36,6 +36,7 @@ Style points per action (repeating the same action gives less each time):
 | hit | 2 |
 | hit headshot | 4 |
 | hit aoe | 3 |
+| rebuild | 6 |
 
 ## Weapon payoffs
 
@@ -95,13 +96,16 @@ Your play quietly builds affinity for six archetypes. At round breaks you can ea
 | Archetype | Awakened | Ascended | Capstone |
 |---|---|---|---|
 | Gunslinger | Pistol streak damage cap x4.5 and streaks last 6s | Pistol headshot kills refund 2 bullets | A 5+ streak refills your magazine on every pistol kill |
-| Marksman | Sniper pierce bonus +75% per extra zombie | Long-range kills give double style | Every 3rd sniper headshot kill detonates |
+| Marksman | Sniper pierce bonus +75% per extra zombie and faster fire rate while holding a sniper | Long-range kills give double style | Every 3rd sniper headshot kill detonates |
 | Brawler | Melee damage x2 | Getting hit no longer drops your style rank | All damage taken -50% |
 | Blaster | Shotgun damage holds up at range | Shockwave radius +30% | Shockwave kills set off chain reactions |
 | Demolitions | Explosive damage +25% | Explosive kills of 3+ refund a grenade | Launcher kills set off a second blast |
-| Tech | Wonder weapon kills give +50% style | Wonder weapons get one extra spare ammo reserve | Wonder weapon kills release a mini shockwave |
+| Tech | Wonder weapon kills give +50% style and PhD explosion resistance | Wonder weapons get one extra spare ammo reserve | Wonder weapon kills release a mini shockwave |
+| Skirmisher | Steadier hip-fire while holding an SMG | SMG kills refund 3 bullets | SMG bullets penetrate further |
+| Rifleman | Assault rifle headshots +25% damage | Assault rifle headshot kills refund 5 bullets | Assault rifle headshots +75% damage |
+| Gunner | Consecutive LMG hits build up to +50% damage | Move 10% faster while holding an LMG | LMG kills refund 5 bullets |
 
-Affinity comes from: pistols and headshots (Gunslinger), snipers, piercing and range (Marksman), melee (Brawler), shotguns (Blaster), launchers and explosives (Demolitions), wonder weapons, claymores and monkeys (Tech).
+Affinity comes from the weapon you use: pistols (Gunslinger), snipers and bolt or single-action rifles such as the M14 and FN FAL (Marksman), melee (Brawler), shotguns (Blaster), launchers and explosives (Demolitions), wonder weapons, claymores and monkeys (Tech), SMGs (Skirmisher), assault rifles (Rifleman) and LMGs (Gunner). While you hold a sniper you also get faster aiming and steadier hip-fire.
 
 ## Boss
 
@@ -151,3 +155,15 @@ Offered 1 of 3 when an archetype ascends: tap USE to move, hold USE to choose.
 | Tech | Showcase | +50% style from wonder weapon kills |
 | Tech | Capacitor | Wonder weapon kills refill 20% of the magazine |
 | Tech | Gadgeteer | Claymore and monkey kills +50 points |
+| Skirmisher | Hollow Tips | +20% SMG damage |
+| Skirmisher | Spray Pay | +15 points per SMG kill |
+| Skirmisher | Run and Gun | +50% style from SMG kills |
+| Skirmisher | Extended Mags | SMG kills refill 10% of the magazine |
+| Rifleman | Match Grade | +20% assault rifle damage |
+| Rifleman | Marksman Pay | +15 points per assault rifle kill |
+| Rifleman | Clean Shooter | +50% style from assault rifle kills |
+| Rifleman | Fast Mags | Assault rifle kills refill 10% of the magazine |
+| Gunner | Heavy Rounds | +20% LMG damage |
+| Gunner | Suppression Pay | +15 points per LMG kill |
+| Gunner | Bullet Hose | +50% style from LMG kills |
+| Gunner | Belt Feed | LMG kills refill 10% of the magazine |

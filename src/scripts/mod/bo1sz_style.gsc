@@ -218,6 +218,7 @@ style_tick()
 			self style_hud_refresh();
 		}
 		self style_chain_hud();
+		self style_rebuild_watch();
 	}
 }
 
@@ -699,7 +700,8 @@ style_weapon_class( weapon )
 	return WeaponClass( weapon );
 }
 
-// Archetype ids: gunslinger, marksman, brawler (melee), blaster (shotguns), demolitions, tech.
+// Archetype ids: gunslinger, marksman, brawler (melee), blaster (shotguns), demolitions, tech,
+// skirmisher (SMGs), rifleman (assault rifles), gunner (LMGs).
 style_class_arch( cls, mod )
 {
 	// Melee feeds Brawler whatever is in hand (knife, Bowie).
@@ -729,6 +731,18 @@ style_class_arch( cls, mod )
 	if ( cls == "sniper" )
 	{
 		return "marksman";
+	}
+	if ( cls == "smg" )
+	{
+		return "skirmisher";
+	}
+	if ( cls == "rifle" )
+	{
+		return "rifleman";
+	}
+	if ( cls == "mg" )
+	{
+		return "gunner";
 	}
 	return "none";
 }
@@ -1003,5 +1017,27 @@ style_round_report()
 			}
 			style_log( line );
 		}
+	}
+}
+
+// Barricade repairs feed the meter (user request). Stock adds the board's cost to
+// player.rebuild_barrier_reward for every board repaired (also past the per-round
+// points cap), so any increase means boards were repaired. It can reset between rounds.
+style_rebuild_watch()
+{
+	if ( !isDefined( self.rebuild_barrier_reward ) )
+	{
+		return;
+	}
+	now = self.rebuild_barrier_reward;
+	if ( !isDefined( self.bo1sz_rebuild_last ) || now < self.bo1sz_rebuild_last )
+	{
+		self.bo1sz_rebuild_last = now;
+		return;
+	}
+	if ( now > self.bo1sz_rebuild_last )
+	{
+		self.bo1sz_rebuild_last = now;
+		self style_queue( style_ev_pts( "rebuild" ), "rebuild", style_ev_arch( "rebuild" ) );
 	}
 }

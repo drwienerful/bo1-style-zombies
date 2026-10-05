@@ -128,9 +128,11 @@ def render():
         table(["Archetype", "Awakened", "Ascended", "Capstone"],
               [[a["name"], a["awakened"], a["ascended"], a["capstone"]] for a in archs]),
         "",
-        "Affinity comes from: pistols and headshots (Gunslinger), snipers, piercing and range "
-        "(Marksman), melee (Brawler), shotguns (Blaster), launchers and explosives (Demolitions), "
-        "wonder weapons, claymores and monkeys (Tech).",
+        "Affinity comes from the weapon you use: pistols (Gunslinger), snipers and bolt or "
+        "single-action rifles such as the M14 and FN FAL (Marksman), melee (Brawler), shotguns "
+        "(Blaster), launchers and explosives (Demolitions), wonder weapons, claymores and monkeys "
+        "(Tech), SMGs (Skirmisher), assault rifles (Rifleman) and LMGs (Gunner). While you hold a "
+        "sniper you also get faster aiming and steadier hip-fire.",
         "",
         "## Boss",
         "",

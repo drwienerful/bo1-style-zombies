@@ -29,3 +29,15 @@ tech_pts,tech,Patent,+20 points per wonder weapon kill,points,20
 tech_style,tech,Showcase,+50% style from wonder weapon kills,style,1.5
 tech_refund,tech,Capacitor,Wonder weapon kills refill 20% of the magazine,refund,0.2
 tech_gadget,tech,Gadgeteer,Claymore and monkey kills +50 points,special,50
+skirm_dmg,skirmisher,Hollow Tips,+20% SMG damage,dmg,1.2
+skirm_pts,skirmisher,Spray Pay,+15 points per SMG kill,points,15
+skirm_style,skirmisher,Run and Gun,+50% style from SMG kills,style,1.5
+skirm_refund,skirmisher,Extended Mags,SMG kills refill 10% of the magazine,refund,0.1
+rifle_dmg,rifleman,Match Grade,+20% assault rifle damage,dmg,1.2
+rifle_pts,rifleman,Marksman Pay,+15 points per assault rifle kill,points,15
+rifle_style,rifleman,Clean Shooter,+50% style from assault rifle kills,style,1.5
+rifle_refund,rifleman,Fast Mags,Assault rifle kills refill 10% of the magazine,refund,0.1
+gun_lmg_dmg,gunner,Heavy Rounds,+20% LMG damage,dmg,1.2
+gun_lmg_pts,gunner,Suppression Pay,+15 points per LMG kill,points,15
+gun_lmg_style,gunner,Bullet Hose,+50% style from LMG kills,style,1.5
+gun_lmg_refund,gunner,Belt Feed,LMG kills refill 10% of the magazine,refund,0.1
