@@ -289,20 +289,23 @@ boss_watch( boss )
 	boss_log( "watch ended: defined=" + isDefined( boss ) + " killed_by=" + ( isDefined( boss ) && isDefined( boss.bo1sz_boss_killed_by ) ) );
 	if ( isDefined( boss ) && isDefined( boss.bo1sz_boss_killed_by ) )
 	{
-		level notify( "bo1sz_boss_gone" );
+		// Start the next thread BEFORE the notify: this thread has
+		// endon( "bo1sz_boss_gone" ), so the notify ends it immediately (that bug
+		// swallowed the victory screen in the 2026-10-05 test).
 		level thread boss_victory( boss.bo1sz_boss_killed_by );
+		level notify( "bo1sz_boss_gone" );
 		return;
 	}
 	if ( isDefined( boss ) && boss.health <= 0 )
 	{
-		level notify( "bo1sz_boss_gone" );
 		level thread boss_victory( undefined );
+		level notify( "bo1sz_boss_gone" );
 		return;
 	}
 	boss_log( "boss vanished without dying (health " + int( frac * 100 ) + "%); promoting another zombie" );
-	level notify( "bo1sz_boss_gone" );
 	level.bo1sz_boss_armed = false;
 	level thread boss_arm( frac );
+	level notify( "bo1sz_boss_gone" );
 }
 
 // ---------------------------------------------------------------------------
@@ -435,19 +438,19 @@ boss_hud_create()
 			p.bo1sz_boss_phase.alpha = 1;
 			continue;
 		}
-		p.bo1sz_boss_name = boss_elem( p, -212, 1.6 );
+		p.bo1sz_boss_name = boss_elem( p, -175, 1.6 );
 		p.bo1sz_boss_name SetText( boss_bal( "name" ) );
 		p.bo1sz_boss_name.color = ( 1, 0.3, 0.2 );
-		p.bo1sz_boss_bg = boss_elem( p, -194, 1 );
+		p.bo1sz_boss_bg = boss_elem( p, -158, 1 );
 		p.bo1sz_boss_bg.foreground = false;
 		p.bo1sz_boss_bg.color = ( 0.1, 0.1, 0.1 );
 		p.bo1sz_boss_bg.alpha = 0.6;
 		p.bo1sz_boss_bg SetShader( "white", 300, 8 );
-		p.bo1sz_boss_bar = boss_elem( p, -194, 1 );
+		p.bo1sz_boss_bar = boss_elem( p, -158, 1 );
 		p.bo1sz_boss_bar.color = ( 0.9, 0.15, 0.1 );
 		p.bo1sz_boss_bar SetShader( "white", 300, 8 );
-		p.bo1sz_boss_phase = boss_elem( p, -178, 1.15 );
-		p.bo1sz_boss_warn = boss_elem( p, -150, 1.6 );
+		p.bo1sz_boss_phase = boss_elem( p, -144, 1.15 );
+		p.bo1sz_boss_warn = boss_elem( p, -118, 1.6 );
 		p.bo1sz_boss_warn.color = ( 1, 0.85, 0.2 );
 	}
 }

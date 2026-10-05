@@ -65,6 +65,10 @@ Roguelike-flavoured runs, a style meter, emergent archetypes, weapon payoffs, a 
   - `getDvarInt` returned 0 for a console-typed value; read `getDvar` and compare strings.
   - `Spawn` does not compile from our source; `tools/gsc_lint.py` rejects it.
   - Grenade kills can report the *held gun* as the weapon. Classify by means of death.
+  - A thread with `endon( "x" )` that itself does `notify( "x" )` ends on the spot: start any
+    follow-up thread *before* the notify (this swallowed the boss victory screen).
+  - HUD y at `vertAlign "middle"`: -175 is visible, -212 was not. Not a HUD-count problem:
+    a player could take 100 more client HUD elements on top of ours (probe, 2026-10-05).
 - After each milestone: what works, what feels off, one thing to playtest.
 - Install path: `storage\t5\scripts\sp\zom\` (zombies-only; proven by Batch A).
 - The game writes `logprint` output to `%LOCALAPPDATA%\Plutonium\storage\t5\main\games.log`
