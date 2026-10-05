@@ -1,6 +1,6 @@
 # Boss (Milestone 7): design proposal
 
-Status: **approved by the user on 2026-10-05**, with one change: no screen shake in phase 2.
+Status: **built and confirmed in game (2026-10-05).** Approved design with one change: no screen shake in phase 2.
 
 ## Constraints from Phase 0 and later findings
 
