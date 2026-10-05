@@ -506,37 +506,64 @@ style_actor_damage( inflictor, attacker, damage, flags, meansofdeath, weapon, vp
 	}
 	if ( dmg > 0 && isDefined( attacker ) && isPlayer( attacker ) && isDefined( attacker.bo1sz_style_q_pts ) )
 	{
-		attacker style_on_hit( meansofdeath, weapon, sHitLoc );
+		attacker style_on_hit( meansofdeath, weapon, sHitLoc, self );
 	}
 	return dmg;
 }
 
-style_on_hit( mod, weapon, hitloc )
+style_on_hit( mod, weapon, hitloc, victim )
 {
 	now = getTime();
-	// One hit per frame: a shotgun blast or one explosion counts once.
-	if ( isDefined( self.bo1sz_hit_ms ) && self.bo1sz_hit_ms == now )
-	{
-		return;
-	}
-	self.bo1sz_hit_ms = now;
-
-	// Rate cap over a rolling one-second window.
-	if ( !isDefined( self.bo1sz_hit_win_ms ) || now - self.bo1sz_hit_win_ms >= 1000 )
-	{
-		self.bo1sz_hit_win_ms = now;
-		self.bo1sz_hit_win_pts = 0;
-	}
 	if ( !isDefined( mod ) )
 	{
 		mod = "";
 	}
-	pts = style_ev_pts( "hit" );
-	if ( isDefined( hitloc ) && ( hitloc == "head" || hitloc == "helmet" || hitloc == "neck" ) && style_is_bullet( mod ) )
+	cls = style_weapon_class( weapon );
+	head = ( isDefined( hitloc ) && ( hitloc == "head" || hitloc == "helmet" || hitloc == "neck" ) && style_is_bullet( mod ) );
+
+	// Shotguns and explosives score once per zombie hit (user request: give the weaker
+	// area weapons a fast way to build style). Other weapons score once per frame.
+	aoe = ( cls == "spread" || style_is_explosive( mod ) );
+	if ( aoe )
+	{
+		// Several pellets on the same zombie in one frame still count once.
+		if ( isDefined( victim.bo1sz_hit_ms ) && victim.bo1sz_hit_ms == now && isDefined( victim.bo1sz_hit_by ) && victim.bo1sz_hit_by == self )
+		{
+			return;
+		}
+		victim.bo1sz_hit_ms = now;
+		victim.bo1sz_hit_by = self;
+		pts = style_ev_pts( "hit_aoe" );
+		cap = style_bal( "hit_cap_per_sec_aoe" );
+		if ( !isDefined( self.bo1sz_aoe_win_ms ) || now - self.bo1sz_aoe_win_ms >= 1000 )
+		{
+			self.bo1sz_aoe_win_ms = now;
+			self.bo1sz_aoe_win_pts = 0;
+		}
+		used = self.bo1sz_aoe_win_pts;
+	}
+	else
+	{
+		if ( isDefined( self.bo1sz_hit_ms ) && self.bo1sz_hit_ms == now )
+		{
+			return;
+		}
+		self.bo1sz_hit_ms = now;
+		pts = style_ev_pts( "hit" );
+		cap = style_bal( "hit_cap_per_sec" );
+		if ( !isDefined( self.bo1sz_hit_win_ms ) || now - self.bo1sz_hit_win_ms >= 1000 )
+		{
+			self.bo1sz_hit_win_ms = now;
+			self.bo1sz_hit_win_pts = 0;
+		}
+		used = self.bo1sz_hit_win_pts;
+	}
+	if ( head && style_ev_pts( "hit_headshot" ) > pts )
 	{
 		pts = style_ev_pts( "hit_headshot" );
 	}
-	room = style_bal( "hit_cap_per_sec" ) - self.bo1sz_hit_win_pts;
+
+	room = cap - used;
 	if ( room <= 0 )
 	{
 		// Still fighting: keep decay paused even when the cap is reached.
@@ -547,8 +574,15 @@ style_on_hit( mod, weapon, hitloc )
 	{
 		pts = room;
 	}
-	self.bo1sz_hit_win_pts += pts;
-	self style_queue( pts, "hit", style_class_arch( style_weapon_class( weapon ), mod ) );
+	if ( aoe )
+	{
+		self.bo1sz_aoe_win_pts += pts;
+	}
+	else
+	{
+		self.bo1sz_hit_win_pts += pts;
+	}
+	self style_queue( pts, "hit", style_class_arch( cls, mod ) );
 }
 
 style_actor_killed( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, psOffsetTime )

@@ -11,3 +11,4 @@ variety,8,none
 revive,25,support
 hit,2,auto
 hit_headshot,4,auto
+hit_aoe,3,auto

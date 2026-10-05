@@ -16,3 +16,4 @@ hs_streak_cap,5,headshot streak bonus stops growing after this many extra headsh
 hit_drop_cooldown_ms,1500,after taking damage drops a rank this long before another hit can
 variety_window,3,kill with a weapon class not used in the last N kills counts as variety
 hit_cap_per_sec,8,most style points per second that hits alone can give
+hit_cap_per_sec_aoe,20,cap for shotgun and explosive hits (scored per zombie hit)

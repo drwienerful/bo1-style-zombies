@@ -22,6 +22,7 @@ init()
 	level.bo1sz_bal[ "style.hit_drop_cooldown_ms" ] = 1500;
 	level.bo1sz_bal[ "style.variety_window" ] = 3;
 	level.bo1sz_bal[ "style.hit_cap_per_sec" ] = 8;
+	level.bo1sz_bal[ "style.hit_cap_per_sec_aoe" ] = 20;
 	// style_events.csv
 	level.bo1sz_style_events_name = [];
 	level.bo1sz_style_events_points = [];
@@ -62,7 +63,10 @@ init()
 	level.bo1sz_style_events_name[ 11 ] = "hit_headshot";
 	level.bo1sz_style_events_points[ 11 ] = 4;
 	level.bo1sz_style_events_archetype[ 11 ] = "auto";
-	level.bo1sz_style_events_count = 12;
+	level.bo1sz_style_events_name[ 12 ] = "hit_aoe";
+	level.bo1sz_style_events_points[ 12 ] = 3;
+	level.bo1sz_style_events_archetype[ 12 ] = "auto";
+	level.bo1sz_style_events_count = 13;
 	// style_ranks.csv
 	level.bo1sz_style_ranks_letter = [];
 	level.bo1sz_style_ranks_word = [];
