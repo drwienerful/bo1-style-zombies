@@ -12,12 +12,13 @@
     -Batch C   Same file as B (choose tests with the probe_batch dvar in game).
     -Uninstall Remove every bo1sz_* file this installer could have placed.
 
-  Canonical path: unknown until Batch A reports. -Target defaults to A1.
+  Canonical path (Batch A, 2026-10-05): A2 = scripts\sp\zom\ (loads in zombies only).
+  A1/A4 also load in the main menu and campaign; A3 loads on one map only.
 
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File tools\install.ps1 -Batch A -Map zombie_theater
 .EXAMPLE
-  powershell -ExecutionPolicy Bypass -File tools\install.ps1 -Batch B -Target A1
+  powershell -ExecutionPolicy Bypass -File tools\install.ps1 -Batch B
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File tools\install.ps1 -Uninstall
 #>
@@ -26,7 +27,7 @@ param(
     [ValidateSet('A', 'B', 'C')]
     [string]$Batch,
     [ValidateSet('A1', 'A2', 'A3', 'A4', 'A5')]
-    [string]$Target = 'A1',
+    [string]$Target = 'A2',
     [string]$Map = 'zombie_theater',
     [string]$StorageRoot = (Join-Path $env:LOCALAPPDATA 'Plutonium\storage\t5'),
     [switch]$Uninstall
@@ -95,13 +96,12 @@ function Show-ForeignScripts {
         $dir = Join-Path $StorageRoot $rel
         if (-not (Test-Path $dir)) { continue }
         $found += Get-ChildItem -Path $dir -File -Filter '*.gsc' |
-            Where-Object { -not $_.Name.StartsWith($Prefix) -and $_.Length -gt 0 } |
+            Where-Object { -not $_.Name.StartsWith($Prefix) -and $_.Name -ne 'zm_spawn_fix.gsc' } |
             ForEach-Object { Join-Path $rel $_.Name }
     }
     if ($found.Count -gt 0) {
         Write-Warning 'Other scripts are installed that may affect probe results:'
         $found | ForEach-Object { Write-Warning "  $_" }
-        Write-Warning 'Plutonium ships raw\scripts\sp\zm_spawn_fix.gsc itself; leave that one in place.'
     }
 }
 

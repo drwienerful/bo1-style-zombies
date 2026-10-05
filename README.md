@@ -17,13 +17,15 @@ contains **no game files** of any kind: only scripts and data we wrote ourselves
 # Batch A: which folders load scripts?
 powershell -ExecutionPolicy Bypass -File tools\install.ps1 -Batch A -Map zombie_theater
 # Batch B / C: hook and capability tests (enable in console: set probe_batch b)
-powershell -ExecutionPolicy Bypass -File tools\install.ps1 -Batch B -Target A1
+powershell -ExecutionPolicy Bypass -File tools\install.ps1 -Batch B
 # Remove everything we installed
 powershell -ExecutionPolicy Bypass -File tools\install.ps1 -Uninstall
 ```
 
 Results print as `[PROBE] ...` lines on screen, in the console, in
-`%LOCALAPPDATA%\Plutonium\storage\t5\games_sp.log`, and in the `probe_log` dvar.
+`%LOCALAPPDATA%\Plutonium\storage\t5\main\games.log`, and in the `probe_log` dvar.
+
+Our scripts install to `storage\t5\scripts\sp\zom\`, which Plutonium loads only in Zombies.
 
 ## Development
 

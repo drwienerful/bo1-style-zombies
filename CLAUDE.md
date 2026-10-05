@@ -60,7 +60,9 @@ Roguelike-flavoured runs, a style meter, emergent archetypes, weapon payoffs, a 
   shipped script (`storage\t5\raw\scripts\sp\zm_spawn_fix.gsc`, read-only).
 - Every feature behind a config dvar. Small commits.
 - After each milestone: what works, what feels off, one thing to playtest.
-- The game writes `logprint` output to `%LOCALAPPDATA%\Plutonium\storage\t5\games_sp.log`;
+- Install path: `storage\t5\scripts\sp\zom\` (zombies-only; proven by Batch A).
+- The game writes `logprint` output to `%LOCALAPPDATA%\Plutonium\storage\t5\main\games.log`
+  and loader/compile messages to `main\console.log`;
   read it after a session instead of asking the user to transcribe.
 
 ## Current phase

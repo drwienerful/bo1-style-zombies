@@ -6,7 +6,7 @@
 //   set probe_c10 1                     -> enables one test without its batch
 //   set probe_finish 1                  -> stop waiting; resolve everything now
 //   set probe_timeout 900               -> seconds before an unanswered test resolves
-// Results: on screen, console, games_sp.log, and the dvar probe_log.
+// Results: on screen, console, main/games.log, and the dvar probe_log.
 //
 // Rules this file follows (see CLAUDE.md):
 // - Hooks wrap stock level callbacks; the stock function is always still called.
@@ -125,7 +125,7 @@ probe_start()
 
 	p = probe_player();
 	wait 5;
-	p iPrintLnBold( "[PROBE] " + level.probe_active.size + " tests running - see console / games_sp.log" );
+	p iPrintLnBold( "[PROBE] " + level.probe_active.size + " tests running - see console / main/games.log" );
 	logprint( "[PROBE-INFO] active=" + probe_join( level.probe_active ) + " main_ms=" + probe_str( level.probe_main_ms ) + " init_ms=" + level.probe_init_ms + "\n" );
 }
 

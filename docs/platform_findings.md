@@ -24,11 +24,11 @@ is what reading the local reference material suggests. It is a prediction, not a
 
 | ID | Result | Evidence (pasted `[PROBE]` text) | Function / hook | Notes |
 |---|---|---|---|---|
-| A1 `scripts\sp\` | untested | | `init()` / `main()` | user's own perks script loads from here (S10) |
-| A2 `scripts\sp\zom\` | untested | | | Plutonium left a blank stub here ("moved the location") |
-| A3 `scripts\sp\<map>\` | untested | | | |
-| A4 `raw\scripts\sp\` | untested | | | S1 suggests PASS |
-| A5 mods folder | untested | | | needs Mods menu launch; folder only has our scripts |
+| A1 `scripts\sp\` | PASS (solo) | `A1 \| PASS \| zombie_theater \| solo \| loaded scripts/sp/ init@0 main=yes@0` | `main()` then `init()`, both at level time 0 | Also loads on the **main menu and in campaign** (console.log). Not canonical. |
+| A2 `scripts\sp\zom\` | PASS (solo) | `A2 \| PASS \| zombie_theater \| solo \| loaded scripts/sp/zom/ init@0 main=yes@0` | `main()` then `init()` | **Canonical.** Loads only in zombies maps. Plutonium's blank stub here logs "has no 'main' or 'init'" (harmless). |
+| A3 `scripts\sp\<map>\` | PASS (solo) | `A3 \| PASS \| zombie_theater \| solo \| loaded scripts/sp/zombie_theater/ init@0 main=yes@0` | `main()` then `init()` | Loads only on that map. Useful for per-map add-ons. |
+| A4 `raw\scripts\sp\` | PASS (solo) | `A4 \| PASS \| zombie_theater \| solo \| loaded raw/scripts/sp/ init@0 main=yes@0` | `main()` then `init()` | Merged into the same virtual `scripts/sp/` as A1 (same-name files would shadow each other). Menu and campaign too. |
+| A5 mods folder | SKIPPED | `A5 \| SKIPPED \| ... \| prereq: load mods/bo1sz_probe from the Mods menu` | | Not needed now that A2 works. Co-op and dedicated loading are untested for every A row. |
 | B1 connect/spawn | untested | | `"connecting"`/`"connected"`, `"spawned_player"` | |
 | B2 zombie damage | untested | | wrap `level.overrideActorDamage` | mod = x2 one hit, health drop verified |
 | B3 zombie death | untested | | wrap `level.overrideActorKilled` | mod = +10 bonus on headshot kill |
@@ -66,7 +66,10 @@ is what reading the local reference material suggests. It is a prediction, not a
 
 ## Canonical install path
 
-`unknown` until Batch A. Installer default `-Target A1` (`scripts\sp\`).
+`storage	5\scripts\sp\zom\` (A2). It loads in Zombies only, so the mod can never run in
+campaign or the frontend. The Batch A summary printed `canonical_path=scripts/sp/` because
+it picks the first PASS in list order; A2 is chosen deliberately over it. `tools/install.ps1`
+now defaults to `-Target A2`.
 
 ## Recommendation (provisional)
 
