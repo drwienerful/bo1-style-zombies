@@ -1,6 +1,6 @@
 # Boss (Milestone 7): design proposal
 
-Status: **proposal, awaiting user approval.** Nothing below is built.
+Status: **approved by the user on 2026-10-05**, with one change: no screen shake in phase 2.
 
 ## Constraints from Phase 0 and later findings
 
@@ -8,7 +8,7 @@ Status: **proposal, awaiting user approval.** Nothing below is built.
   (the first zombie spawned in the boss round), as proven in Phase 0 C11 (4000 HP, phase change at
   50%, sprint, timed area hazard all worked).
 - No new models, textures or sounds: the boss is identified by a HUD name and health bar,
-  screen shake, existing sound aliases and its behaviour.
+  existing sound aliases and its behaviour.
 - All boss damage passes through our actor-damage hooks, so per-phase damage rules are possible.
 
 ## Encounter
@@ -26,7 +26,7 @@ Status: **proposal, awaiting user approval.** Nothing below is built.
 | Phase | HP | Check | Behaviour |
 |---|---|---|---|
 | 1. **Onslaught** | 100–66% | Damage race | Walks toward you. 45s timer: if you haven't pushed it below 66% by then it **enrages** (sprints, and phase 2's pulses start early). |
-| 2. **Hunt** | 66–33% | Mobility | Sprints. Every 6s a **telegraphed pulse**: a screen-shake warning, then 1s later area damage around it (radius 220, capped at 60 damage per pulse). Keep moving and keep distance. |
+| 2. **Hunt** | 66–33% | Mobility | Sprints. Every 6s a **telegraphed pulse**: an on-screen "PULSE INCOMING" warning and a sound, then 1s later area damage around it (radius 220, capped at 60 damage per pulse). No screen shake (user). Keep moving and keep distance. |
 | 3. **Iron Skin** | 33–0% | Armour / burst | Takes **25% damage** from everything except headshots and explosives. Every 12s its armour cracks for 4s ("ARMOUR DOWN!"): all damage x2. |
 
 ### Safeguards

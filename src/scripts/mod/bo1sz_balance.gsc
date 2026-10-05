@@ -275,6 +275,29 @@ init()
 	level.bo1sz_augments_kind[ 29 ] = "special";
 	level.bo1sz_augments_value[ 29 ] = 50;
 	level.bo1sz_augments_count = 30;
+	// boss.csv
+	level.bo1sz_bal[ "boss.round" ] = 25;
+	level.bo1sz_bal[ "boss.name" ] = "Der Eiserne";
+	level.bo1sz_bal[ "boss.hp_mult" ] = 40;
+	level.bo1sz_bal[ "boss.phase2_at" ] = 0.66;
+	level.bo1sz_bal[ "boss.phase3_at" ] = 0.33;
+	level.bo1sz_bal[ "boss.p1_timer" ] = 45;
+	level.bo1sz_bal[ "boss.sprint_rate" ] = 1.4;
+	level.bo1sz_bal[ "boss.p2_pulse_interval" ] = 6;
+	level.bo1sz_bal[ "boss.p2_warn_seconds" ] = 1;
+	level.bo1sz_bal[ "boss.p2_pulse_radius" ] = 220;
+	level.bo1sz_bal[ "boss.p2_pulse_damage" ] = 60;
+	level.bo1sz_bal[ "boss.p3_damage_mult" ] = 0.25;
+	level.bo1sz_bal[ "boss.p3_crack_interval" ] = 12;
+	level.bo1sz_bal[ "boss.p3_crack_seconds" ] = 4;
+	level.bo1sz_bal[ "boss.p3_crack_mult" ] = 2.0;
+	level.bo1sz_bal[ "boss.hit_cap_frac" ] = 0.10;
+	level.bo1sz_bal[ "boss.kill_points" ] = 5000;
+	level.bo1sz_bal[ "boss.victory_seconds" ] = 10;
+	level.bo1sz_bal[ "boss.end_on_victory" ] = 1;
+	level.bo1sz_bal[ "boss.test_hp_scale" ] = 0.05;
+	level.bo1sz_bal[ "boss.warn_sound" ] = "zmb_switch_flip";
+	level.bo1sz_bal[ "boss.victory_sound" ] = "zmb_perks_power_on";
 	// pacing.csv
 	level.bo1sz_bal[ "pacing.spawn_delay_extra_mult" ] = 0.9;
 	level.bo1sz_bal[ "pacing.spawn_delay_floor" ] = 0.08;

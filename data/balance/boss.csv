@@ -1,0 +1,23 @@
+key,value,notes
+round,25,boss round (the next normal round if this one is a dog round)
+name,Der Eiserne,boss name shown on the HUD
+hp_mult,40,boss health = hp_mult x the round's zombie health x players
+phase2_at,0.66,health fraction where phase 2 (Hunt) starts
+phase3_at,0.33,health fraction where phase 3 (Iron Skin) starts
+p1_timer,45,seconds to push the boss below phase2_at before it enrages
+sprint_rate,1.4,movement rate while sprinting (enraged or phase 2+)
+p2_pulse_interval,6,seconds between phase 2 pulses
+p2_warn_seconds,1,warning time before each pulse
+p2_pulse_radius,220,pulse radius
+p2_pulse_damage,60,pulse damage (players inside the radius)
+p3_damage_mult,0.25,phase 3 damage taken except headshots and explosives
+p3_crack_interval,12,seconds between armour cracks in phase 3
+p3_crack_seconds,4,armour crack duration
+p3_crack_mult,2.0,damage multiplier while the armour is cracked
+hit_cap_frac,0.10,most of the boss's max health one hit can remove
+kill_points,5000,points for the player who kills the boss
+victory_seconds,10,victory screen duration before the game ends
+end_on_victory,1,1 = end the game after victory (stock game over); 0 = keep playing
+test_hp_scale,0.05,with bo1sz_boss_test 1: boss health multiplier for quick tests
+warn_sound,zmb_switch_flip,sound for the pulse warning (stock alias)
+victory_sound,zmb_perks_power_on,sound on victory (stock alias)
