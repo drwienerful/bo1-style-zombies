@@ -4,6 +4,7 @@
 // Dvars (set in the console before loading a map):
 //   bo1sz_enable 0   disables the whole mod (default: enabled)
 //   bo1sz_debug_points 1   (in game) grant 50000 points to every player; testing aid
+//   bo1sz_hud_probe 1      (before load) log how many more HUD elements a player can get
 //
 // Installed to storage\t5\scripts\sp\zom\, which Plutonium loads only in Zombies.
 
@@ -48,6 +49,36 @@ bo1sz_greet()
 	wait 3;
 	self iPrintLnBold( "bo1-style-zombies v" + level.bo1sz_version );
 	bo1sz_log( "greeted " + self.playername );
+	if ( getDvar( "bo1sz_hud_probe" ) == "1" )
+	{
+		wait 5;
+		self bo1sz_hud_probe();
+	}
+}
+
+// Diagnostic: how many more client HUD elements can this player get? Creates them one at
+// a time (logging progress, in case a failure ends the thread), then destroys them.
+bo1sz_hud_probe()
+{
+	made = [];
+	for ( i = 0; i < 100; i++ )
+	{
+		e = NewClientHudElem( self );
+		if ( !isDefined( e ) )
+		{
+			break;
+		}
+		made[ made.size ] = e;
+		if ( made.size % 4 == 0 )
+		{
+			bo1sz_log( "hud probe: " + made.size + " extra elements so far" );
+		}
+	}
+	bo1sz_log( "hud probe: " + made.size + " extra client HUD elements available" );
+	for ( i = 0; i < made.size; i++ )
+	{
+		made[ i ] Destroy();
+	}
 }
 
 bo1sz_log( msg )

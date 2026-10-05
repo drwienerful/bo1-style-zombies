@@ -179,7 +179,9 @@ boss_arm( health_frac )
 	level.bo1sz_boss_crack = false;
 	boss_log( "promoted at round " + level.round_number + " hp=" + boss.health + "/" + hp );
 
+	boss_log( "creating HUD" );
 	boss_hud_create();
+	boss_log( "HUD created" );
 	boss_hud_text( "phase", "Phase 1: Onslaught" );
 	level thread boss_hud_loop( boss );
 	level thread boss_phases( boss );
@@ -284,6 +286,7 @@ boss_watch( boss )
 		frac = boss.health / boss.maxhealth;
 		wait 0.1;
 	}
+	boss_log( "watch ended: defined=" + isDefined( boss ) + " killed_by=" + ( isDefined( boss ) && isDefined( boss.bo1sz_boss_killed_by ) ) );
 	if ( isDefined( boss ) && isDefined( boss.bo1sz_boss_killed_by ) )
 	{
 		level notify( "bo1sz_boss_gone" );
@@ -387,6 +390,7 @@ boss_actor_killed( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, 
 	if ( isDefined( self.bo1sz_boss ) )
 	{
 		self.bo1sz_boss_killed_by = attacker;
+		boss_log( "killed hook: boss died" );
 	}
 	if ( isDefined( level.bo1sz_boss_orig_killed ) )
 	{
@@ -401,6 +405,11 @@ boss_actor_killed( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, 
 boss_elem( player, y, scale )
 {
 	e = NewClientHudElem( player );
+	if ( !isDefined( e ) )
+	{
+		boss_log( "HUD element could not be created (limit reached?)" );
+		return e;
+	}
 	e.horzAlign = "user_center";
 	e.vertAlign = "middle";
 	e.alignX = "center";
@@ -511,8 +520,8 @@ boss_hud_hide()
 boss_victory( killer )
 {
 	level.bo1sz_boss_done = true;
-	boss_hud_hide();
 	boss_log( "defeated at round " + level.round_number );
+	boss_hud_hide();
 	if ( isDefined( killer ) && isPlayer( killer ) )
 	{
 		fn = getFunction( "maps/_zombiemode_score", "add_to_player_score" );
