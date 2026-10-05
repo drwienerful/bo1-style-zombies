@@ -71,6 +71,8 @@ Roguelike-flavoured runs, a style meter, emergent archetypes, weapon payoffs, a 
     a player could take 100 more client HUD elements on top of ours (probe, 2026-10-05).
   - A HUD title made visible at the boss's death never rendered (cause unknown, see
     platform findings). For one-off announcements, `iPrintLnBold` works.
+  - Dvars keep their values between matches in one game session. Never read a "stock" value
+    from a dvar the mod changes; keep stock values as constants in the balance CSVs.
 - After each milestone: what works, what feels off, one thing to playtest.
 - Install path: `storage\t5\scripts\sp\zom\` (zombies-only; proven by Batch A).
 - The game writes `logprint` output to `%LOCALAPPDATA%\Plutonium\storage\t5\main\games.log`

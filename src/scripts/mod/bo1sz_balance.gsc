@@ -535,6 +535,8 @@ init()
 	level.bo1sz_bal[ "perks.lucky_refill_frac" ] = 0.2;
 	level.bo1sz_bal[ "perks.deadshot_hs_mult" ] = 1.25;
 	level.bo1sz_bal[ "perks.staminup_speed" ] = 1.1;
+	level.bo1sz_bal[ "perks.stock_spread_mult" ] = 0.65;
+	level.bo1sz_bal[ "perks.stock_reload_mult" ] = 0.5;
 	// shop.csv
 	level.bo1sz_shop_perk = [];
 	level.bo1sz_shop_name = [];

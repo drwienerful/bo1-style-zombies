@@ -21,3 +21,5 @@ roller_decay_mult,1.3,High Roller: style decay multiplier
 lucky_refill_frac,0.2,Lucky Streak: magazine fraction refilled
 deadshot_hs_mult,1.25,Deadshot Daiquiri (shop): headshot damage multiplier
 staminup_speed,1.1,Stamin-Up (shop): movement speed scale
+stock_spread_mult,0.65,stock perk_weapSpreadMultiplier (constant: dvars survive between matches, so the live value can't be trusted)
+stock_reload_mult,0.5,stock perk_weapReloadMultiplier (constant, same reason)

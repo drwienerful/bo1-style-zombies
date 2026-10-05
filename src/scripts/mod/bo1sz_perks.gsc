@@ -595,7 +595,9 @@ perks_buy_tier( perk )
 // Fire-rate and reload multipliers are game-wide dvars: use the best tier any player holds.
 perks_global_dvars()
 {
-	level.bo1sz_stock_reload = getDvar( "perk_weapReloadMultiplier" );
+	// A constant, not the live dvar: dvars survive between matches in one session, so a
+	// match that ended with a tier II active would otherwise poison the next one.
+	level.bo1sz_stock_reload = "" + perks_bal( "stock_reload_mult" );
 	for ( ;; )
 	{
 		wait 0.5;
@@ -1159,7 +1161,7 @@ perks_panel_tick()
 // player holds a sniper; otherwise the stock value is restored.
 perks_sniper_spread()
 {
-	stock = getDvar( "perk_weapSpreadMultiplier" );
+	stock = "" + perks_bal( "stock_spread_mult" );
 	tight = "" + perks_rule( "sniper_spread_mult" );
 	for ( ;; )
 	{
