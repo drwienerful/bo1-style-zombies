@@ -1,0 +1,46 @@
+# Local-only reference material (Reimagined clone, stock script reference). NEVER commit.
+/reference/
+
+# Game / engine asset types. These must never enter the repo.
+*.ff
+*.iwd
+*.iwi
+*.xpak
+*.sabl
+*.sabs
+*.xmodel*
+*.xanim*
+*.flac
+*.wav
+*.mp3
+*.ogg
+*.bik
+*.dll
+*.exe
+*.gscbin
+*.csc
+*.str
+*.d3dbsp
+*.zip
+*.7z
+*.rar
+
+# Stock script folders as they appear in extracted game/mod trees
+/maps/
+/clientscripts/
+/animscripts/
+/common_scripts/
+/raw/
+/zone_source/
+/mods/
+
+# Build output / tooling noise
+/build/
+/dist/
+__pycache__/
+*.pyc
+.vscode/
+.idea/
+*.log
+Thumbs.db
+.DS_Store

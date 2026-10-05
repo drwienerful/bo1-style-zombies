@@ -1,0 +1,11 @@
+#!/bin/sh
+# Blocks commits containing game files or anything outside our allowlist.
+# Enable once per clone:  git config core.hooksPath .githooks
+# Pick the first interpreter that actually runs (Windows has a python3 Store stub).
+for PY in python3 python py; do
+  if "$PY" -c "import sys" >/dev/null 2>&1; then
+    exec "$PY" tools/check_no_game_files.py
+  fi
+done
+echo "pre-commit: no working Python found; cannot verify no game files are staged." >&2
+exit 1
