@@ -281,6 +281,8 @@ init()
 	level.bo1sz_bal[ "pacing.spawn_delay_extra_mult" ] = 0.9;
 	level.bo1sz_bal[ "pacing.spawn_delay_floor" ] = 0.08;
 	level.bo1sz_bal[ "pacing.health_growth_mult" ] = 0.07;
+	level.bo1sz_bal[ "pacing.supplement" ] = 1;
+	level.bo1sz_bal[ "pacing.stock_fixed_limit" ] = 24;
 	// payoffs.csv
 	level.bo1sz_bal[ "payoffs.excluded_weapons" ] = "ray_gun thundergun tesla_gun freezegun shrink_ray microwavegun humangun black_hole quantum sniper_explosive";
 	level.bo1sz_bal[ "payoffs.pistol_step_mult" ] = 0.5;

@@ -49,6 +49,10 @@ pace_start()
 
 	level thread pace_round_log();
 	level thread pace_flood_command();
+	if ( pace_bal( "supplement" ) == 1 )
+	{
+		level thread pace_supplement();
+	}
 	pace_apply();
 	for ( ;; )
 	{
@@ -120,6 +124,10 @@ pace_round_log()
 			if ( n > peak )
 			{
 				peak = n;
+				if ( peak > 24 && peak % 8 == 1 )
+				{
+					pace_log_raw( "peak alive now " + peak );
+				}
 			}
 			wait 0.5;
 		}
@@ -128,7 +136,14 @@ pace_round_log()
 		{
 			limit = "" + level.zombie_ai_limit;
 		}
-		pace_log_raw( "round " + level.round_number + " length=" + int( ( getTime() - start_ms ) / 1000 ) + "s peak_alive=" + peak + " limit=" + limit + " zombie_health=" + level.zombie_health + " spawn_delay=" + level.zombie_vars[ "zombie_spawn_delay" ] );
+		extra = "";
+		if ( isDefined( level.bo1sz_pace_tries ) )
+		{
+			extra = " supplement_tries=" + level.bo1sz_pace_tries + " fails=" + level.bo1sz_pace_fails;
+			level.bo1sz_pace_tries = 0;
+			level.bo1sz_pace_fails = 0;
+		}
+		pace_log_raw( "round " + level.round_number + " length=" + int( ( getTime() - start_ms ) / 1000 ) + "s peak_alive=" + peak + " limit=" + limit + " zombie_health=" + level.zombie_health + " spawn_delay=" + level.zombie_vars[ "zombie_spawn_delay" ] + extra );
 	}
 }
 
@@ -155,6 +170,80 @@ pace_flood_command()
 		{
 			level.zombie_total += 100;
 			pace_log_raw( "flood: +100 zombies this round (zombie_total=" + level.zombie_total + ")" );
+		}
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Supplemental spawner. Playtest 2026-10-05: with level.zombie_ai_limit at 128,
+// spawning still stopped at 24, so stock's loop has its own fixed limit. This thread
+// spawns the extra zombies (stock_fixed_limit .. cap) the way stock does: stock's
+// spawn_zombie on a random active spawner, one off level.zombie_total, and stock's
+// stuck-zombie failsafe. It never runs during special rounds or while stock spawning
+// is paused. Attempts and failures are logged per round to find the engine's limit.
+// ---------------------------------------------------------------------------
+
+pace_flag( name )
+{
+	return ( isDefined( level.flag ) && isDefined( level.flag[ name ] ) && level.flag[ name ] );
+}
+
+pace_supplement()
+{
+	spawn_fn = getFunction( "maps/_zombiemode_utility", "spawn_zombie" );
+	failsafe = getFunction( "maps/_zombiemode", "round_spawn_failsafe" );
+	pace_log_raw( "supplemental spawner (spawn fn=" + isDefined( spawn_fn ) + " failsafe=" + isDefined( failsafe ) + ")" );
+	if ( !isDefined( spawn_fn ) )
+	{
+		return;
+	}
+	level.bo1sz_pace_tries = 0;
+	level.bo1sz_pace_fails = 0;
+	for ( ;; )
+	{
+		delay = 0.5;
+		if ( isDefined( level.zombie_vars[ "zombie_spawn_delay" ] ) )
+		{
+			delay = level.zombie_vars[ "zombie_spawn_delay" ];
+		}
+		wait delay;
+		wait 0.05;
+
+		if ( level.round_number < pace_cap_round() || !isDefined( level.zombie_total ) || level.zombie_total <= 0 )
+		{
+			continue;
+		}
+		if ( pace_flag( "dog_round" ) || pace_flag( "thief_round" ) || pace_flag( "monkey_round" ) || pace_flag( "enter_nml" ) )
+		{
+			continue;
+		}
+		if ( isDefined( level.flag ) && isDefined( level.flag[ "spawn_zombies" ] ) && !level.flag[ "spawn_zombies" ] )
+		{
+			continue;
+		}
+		alive = GetAiSpeciesArray( "axis", "all" ).size;
+		if ( alive < pace_bal( "stock_fixed_limit" ) || alive >= pace_bal( "cap" ) )
+		{
+			continue;
+		}
+		if ( !isDefined( level.enemy_spawns ) || level.enemy_spawns.size == 0 )
+		{
+			continue;
+		}
+		spawner = level.enemy_spawns[ RandomInt( level.enemy_spawns.size ) ];
+		level.bo1sz_pace_tries++;
+		ai = [[ spawn_fn ]]( spawner );
+		if ( isDefined( ai ) )
+		{
+			level.zombie_total--;
+			if ( isDefined( failsafe ) )
+			{
+				ai thread [[ failsafe ]]();
+			}
+		}
+		else
+		{
+			level.bo1sz_pace_fails++;
 		}
 	}
 }
