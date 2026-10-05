@@ -145,7 +145,8 @@ style_tick()
 		if ( self.bo1sz_style_hit )
 		{
 			self.bo1sz_style_hit = false;
-			if ( self.bo1sz_style_rank > 0 && getTime() - self.bo1sz_style_hit_ms > style_bal( "hit_drop_cooldown_ms" ) )
+			// Brawler Ascended: getting hit no longer drops the style rank (user request).
+			if ( self.bo1sz_style_rank > 0 && style_arch_tier( self, "brawler" ) < 2 && getTime() - self.bo1sz_style_hit_ms > style_bal( "hit_drop_cooldown_ms" ) )
 			{
 				self.bo1sz_style_hit_ms = getTime();
 				self.bo1sz_style_rank--;
@@ -666,13 +667,13 @@ style_weapon_class( weapon )
 	return WeaponClass( weapon );
 }
 
-// Archetype ids: gunslinger, marksman, jackie (melee), blaster (shotguns), demolitions, tech.
+// Archetype ids: gunslinger, marksman, brawler (melee), blaster (shotguns), demolitions, tech.
 style_class_arch( cls, mod )
 {
-	// Melee feeds Jackie Chan whatever is in hand (knife, Bowie).
+	// Melee feeds Brawler whatever is in hand (knife, Bowie).
 	if ( mod == "MOD_MELEE" )
 	{
-		return "jackie";
+		return "brawler";
 	}
 	// Wonder weapons and equipment (claymores, monkeys) feed Tech; checked before
 	// explosives because claymore kills are explosive.

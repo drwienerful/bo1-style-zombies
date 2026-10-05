@@ -9,11 +9,11 @@ mark_pts,marksman,Collector,+20 points per sniper kill,points,20
 mark_style,marksman,Long Game,+50% style from sniper kills,style,1.5
 mark_refund,marksman,Chamber,Sniper kills refill 20% of the magazine,refund,0.2
 mark_eye,marksman,Eagle Eye,Long range starts at half the distance,special,0.5
-jackie_dmg,jackie,Iron Fist,+50% melee damage,dmg,1.5
-jackie_pts,jackie,Prize Fighter,+30 points per melee kill,points,30
-jackie_style,jackie,Crowd Pleaser,+50% style from melee kills,style,1.5
-jackie_refund,jackie,Quick Hands,Melee kills refill 20% of your gun's magazine,refund,0.2
-jackie_wave,jackie,Shockfist,Melee kills release a small shockwave,special,0.25
+brawler_dmg,brawler,Iron Fist,+50% melee damage,dmg,1.5
+brawler_pts,brawler,Prize Fighter,+30 points per melee kill,points,30
+brawler_style,brawler,Crowd Pleaser,+50% style from melee kills,style,1.5
+brawler_refund,brawler,Quick Hands,Melee kills refill 20% of your gun's magazine,refund,0.2
+brawler_wave,brawler,Shockfist,Melee kills release a small shockwave,special,0.25
 blast_dmg,blaster,Buckshot,+25% shotgun damage,dmg,1.25
 blast_pts,blaster,Scrap Value,+20 points per shotgun kill,points,20
 blast_style,blaster,Loud and Proud,+50% style from shotgun kills,style,1.5

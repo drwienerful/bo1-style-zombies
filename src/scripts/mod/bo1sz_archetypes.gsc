@@ -10,8 +10,7 @@
 // >= generalist_focus gives a flat bonus per kill (payoffs module).
 //
 // Ascended also offers a pick-1-of-3 augment (augments.csv) during the round break:
-// USE cycles the highlight, holding USE chooses; a random one is chosen if the next
-// round starts first. Jackie Chan Ascended grants a faster-melee engine perk here.
+// USE cycles the highlight, holding USE chooses. The menu stays up until the player chooses.
 //
 // Dvars: bo1sz_archetypes 0 disables; bo1sz_arch_test 1 (before load) scales gates
 // down for testing; bo1sz_arch_eval 1 (in game) evaluates immediately.
@@ -135,7 +134,6 @@ arch_player()
 	self.bo1sz_arch_pop2 = arch_center_elem( self, -148, 1.2 );
 	self thread arch_popup_loop();
 	self thread arch_augment_loop();
-	self thread arch_jackie_loop();
 }
 
 arch_center_elem( player, y, scale )
@@ -497,11 +495,11 @@ arch_augment_loop()
 	}
 }
 
-// Shows the offer; USE cycles, holding USE picks. Random pick if the next round starts.
+// Shows the offer until the player picks: USE cycles, holding USE picks.
+// (Auto-picking at round start closed the menu before it could be read.)
 arch_choose( arch, offer )
 {
 	self endon( "disconnect" );
-	start_count = level.bo1sz_round_start_count;
 	sel = 0;
 	hold_ms = 0;
 	was_down = self UseButtonPressed();
@@ -513,11 +511,6 @@ arch_choose( arch, offer )
 	while ( choice < 0 )
 	{
 		wait 0.05;
-		if ( level.bo1sz_round_start_count != start_count )
-		{
-			choice = RandomInt( offer.size );
-			break;
-		}
 		down = self UseButtonPressed();
 		if ( down && !was_down )
 		{
@@ -570,30 +563,3 @@ arch_draw_offer( offer, sel )
 	}
 }
 
-// Jackie Chan Ascended: faster melee through the engine's melee perk. Granted in its own
-// thread so an unknown perk name can only end this thread; the log shows whether it held.
-arch_jackie_loop()
-{
-	self endon( "disconnect" );
-	given = false;
-	for ( ;; )
-	{
-		wait 1;
-		if ( self.bo1sz_arch[ "jackie" ] < 2 )
-		{
-			continue;
-		}
-		perk = level.bo1sz_bal[ "archetype_rules.jackie_t2_perk" ];
-		has = self HasPerk( perk );
-		if ( !has )
-		{
-			self SetPerk( perk );
-			has = self HasPerk( perk );
-			if ( !given )
-			{
-				arch_log( self.playername + " jackie melee perk " + perk + " granted=" + has );
-			}
-			given = true;
-		}
-	}
-}

@@ -12,7 +12,7 @@
 // Wonder weapons (payoffs.excluded_weapons) get none of the class payoffs.
 // Archetype traits (bo1sz_archetypes.gsc sets player.bo1sz_arch[id]) and augments
 // (player.bo1sz_aug[augment id]) are applied here too. Awakened: Gunslinger cap/timeout,
-// Marksman pierce, Jackie Chan melee, Blaster range, Demolitions explosive damage.
+// Marksman pierce, Brawler melee, Blaster range, Demolitions explosive damage.
 // Ascended: Gunslinger 2-bullet refund, Blaster shockwave radius, Demolitions grenade
 // refund. Augments (augments.csv): dmg / points / refund kinds plus the specials.
 //
@@ -315,10 +315,10 @@ pay_on_damage( attacker, dmg, mod, weapon, hitloc )
 		}
 	}
 
-	// Jackie Chan Awakened: melee damage.
-	if ( mod == "MOD_MELEE" && pay_arch( attacker, "jackie" ) >= 1 )
+	// Brawler Awakened: melee damage.
+	if ( mod == "MOD_MELEE" && pay_arch( attacker, "brawler" ) >= 1 )
 	{
-		mult = mult * pay_rule( "jackie_t1_melee_mult" );
+		mult = mult * pay_rule( "brawler_t1_melee_mult" );
 	}
 
 	// Blaster Awakened: shotgun damage holds up at range (offsets the weapon's falloff).
@@ -693,7 +693,7 @@ pay_on_kill( attacker, mod, weapon, hitloc )
 		}
 	}
 	// Shockfist: melee kills release a small shockwave.
-	if ( mod == "MOD_MELEE" && isDefined( attacker.bo1sz_aug ) && isDefined( attacker.bo1sz_aug[ "jackie_wave" ] ) )
+	if ( mod == "MOD_MELEE" && isDefined( attacker.bo1sz_aug ) && isDefined( attacker.bo1sz_aug[ "brawler_wave" ] ) )
 	{
 		self pay_shockfist( attacker );
 	}
@@ -715,7 +715,7 @@ pay_kill_arch( cls, mod, weapon )
 {
 	if ( mod == "MOD_MELEE" )
 	{
-		return "jackie";
+		return "brawler";
 	}
 	if ( cls == "wonder" )
 	{
@@ -817,7 +817,7 @@ pay_shockfist( player )
 	{
 		return;
 	}
-	amount = int( level.zombie_health * pay_aug_value( player, "jackie", "special", 0.25 ) );
+	amount = int( level.zombie_health * pay_aug_value( player, "brawler", "special", 0.25 ) );
 	if ( amount < 1 )
 	{
 		amount = 1;
