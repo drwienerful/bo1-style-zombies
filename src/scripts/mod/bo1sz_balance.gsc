@@ -283,6 +283,7 @@ init()
 	level.bo1sz_bal[ "pacing.health_growth_mult" ] = 0.07;
 	level.bo1sz_bal[ "pacing.supplement" ] = 1;
 	level.bo1sz_bal[ "pacing.stock_fixed_limit" ] = 24;
+	level.bo1sz_bal[ "pacing.force_spawn" ] = 1;
 	// payoffs.csv
 	level.bo1sz_bal[ "payoffs.excluded_weapons" ] = "ray_gun thundergun tesla_gun freezegun shrink_ray microwavegun humangun black_hole quantum sniper_explosive";
 	level.bo1sz_bal[ "payoffs.pistol_step_mult" ] = 0.5;

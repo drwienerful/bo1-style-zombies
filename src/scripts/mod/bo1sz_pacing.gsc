@@ -233,7 +233,15 @@ pace_supplement()
 		}
 		spawner = level.enemy_spawns[ RandomInt( level.enemy_spawns.size ) ];
 		level.bo1sz_pace_tries++;
+		// Test: every DoSpawn failed at 24 alive (2026-10-05). Stock's spawn_zombie uses
+		// the engine force-spawn when the spawner has script_forcespawn set.
+		old_force = spawner.script_forcespawn;
+		if ( pace_bal( "force_spawn" ) == 1 )
+		{
+			spawner.script_forcespawn = true;
+		}
 		ai = [[ spawn_fn ]]( spawner );
+		spawner.script_forcespawn = old_force;
 		if ( isDefined( ai ) )
 		{
 			level.zombie_total--;

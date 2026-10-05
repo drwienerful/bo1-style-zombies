@@ -6,3 +6,4 @@ spawn_delay_floor,0.08,never go below the stock floor
 health_growth_mult,0.07,zombie health growth per round after round 10 (stock 0.1)
 supplement,1,1 = our spawner fills from stock's fixed 24 up to cap (stock's loop ignores level.zombie_ai_limit)
 stock_fixed_limit,24,where stock's own spawn loop stops
+force_spawn,1,supplemental spawns use the engine force-spawn (StalingradSpawn via script_forcespawn) to test whether DoSpawn or the engine stops at 24
