@@ -105,7 +105,7 @@ pace_round_log()
 		{
 			limit = "" + level.zombie_ai_limit;
 		}
-		pace_log_raw( "round " + level.round_number + " length=" + int( ( getTime() - start_ms ) / 1000 ) + "s peak_alive=" + peak + " limit=" + limit + " zombie_health=" + level.zombie_health + " spawn_delay=" + level.zombie_vars[ "zombie_spawn_delay" ] );
+		pace_log_raw( "round " + level.round_number + " length=" + int( ( getTime() - start_ms ) / 1000 ) + "s peak_alive=" + peak + " limit=" + limit + " zombie_health=" + level.zombie_health + " spawn_delay=" + level.zombie_vars[ "zombie_spawn_delay" ] + " stock_round_counter=" + isDefined( level.chalk_hud1 ) );
 	}
 }
 

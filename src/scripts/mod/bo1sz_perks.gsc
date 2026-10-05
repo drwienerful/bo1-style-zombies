@@ -182,6 +182,7 @@ perks_player()
 	self.bo1sz_perk_hint_shown = -1;
 	self perks_tiers_init();
 	self perks_shop_init();
+	self perks_panel_init();
 
 	self thread perks_on_bought();
 	for ( ;; )
@@ -228,6 +229,7 @@ perks_player()
 		self perks_handling();
 		self perks_tiers_tick();
 		self perks_shop_tick();
+		self perks_panel_tick();
 	}
 }
 
@@ -1065,5 +1067,76 @@ perks_handling()
 	{
 		self.bo1sz_speed = speed;
 		self SetMoveSpeedScale( speed );
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Info panel, top left (user request): "Round N" and the perks the player owns, with
+// tier II marked. Archetype-granted flags (player.bo1sz_grant) are left out. Text is
+// only re-set when it changes.
+// ---------------------------------------------------------------------------
+
+perks_panel_init()
+{
+	self.bo1sz_panel_round = NewClientHudElem( self );
+	self.bo1sz_panel_perks = NewClientHudElem( self );
+	elems = [];
+	elems[ 0 ] = self.bo1sz_panel_round;
+	elems[ 1 ] = self.bo1sz_panel_perks;
+	for ( i = 0; i < elems.size; i++ )
+	{
+		e = elems[ i ];
+		e.horzAlign = "user_left";
+		e.vertAlign = "middle";
+		e.alignX = "left";
+		e.alignY = "middle";
+		e.x = 12;
+		e.foreground = true;
+		e.alpha = 1;
+	}
+	self.bo1sz_panel_round.y = -170;
+	self.bo1sz_panel_round.fontScale = 1.4;
+	self.bo1sz_panel_perks.y = -150;
+	self.bo1sz_panel_perks.fontScale = 1.1;
+	self.bo1sz_panel_round_text = "";
+	self.bo1sz_panel_perks_text = "";
+}
+
+perks_panel_tick()
+{
+	r = "Round " + level.round_number;
+	if ( r != self.bo1sz_panel_round_text )
+	{
+		self.bo1sz_panel_round_text = r;
+		self.bo1sz_panel_round SetText( r );
+	}
+	s = "";
+	for ( i = 0; i < level.bo1sz_perk_names_count; i++ )
+	{
+		perk = level.bo1sz_perk_names_perk[ i ];
+		has = self HasPerk( perk );
+		if ( !has || ( isDefined( self.bo1sz_grant ) && isDefined( self.bo1sz_grant[ perk ] ) ) )
+		{
+			continue;
+		}
+		name = level.bo1sz_perk_names_short[ i ];
+		if ( perks_has_tier( self, perk ) )
+		{
+			name = name + " II";
+		}
+		if ( s != "" )
+		{
+			s = s + ", ";
+		}
+		s = s + name;
+	}
+	if ( s != "" )
+	{
+		s = "Perks: " + s;
+	}
+	if ( s != self.bo1sz_panel_perks_text )
+	{
+		self.bo1sz_panel_perks_text = s;
+		self.bo1sz_panel_perks SetText( s );
 	}
 }

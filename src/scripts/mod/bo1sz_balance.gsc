@@ -461,6 +461,26 @@ init()
 	level.bo1sz_bal[ "payoffs.shotgun_knockdown_cooldown_ms" ] = 2500;
 	level.bo1sz_bal[ "payoffs.shotgun_stagger_rate" ] = 0.4;
 	level.bo1sz_bal[ "payoffs.shotgun_stagger_seconds" ] = 1.2;
+	// perk_names.csv
+	level.bo1sz_perk_names_perk = [];
+	level.bo1sz_perk_names_short = [];
+	level.bo1sz_perk_names_perk[ 0 ] = "specialty_quickrevive";
+	level.bo1sz_perk_names_short[ 0 ] = "Quick Revive";
+	level.bo1sz_perk_names_perk[ 1 ] = "specialty_armorvest";
+	level.bo1sz_perk_names_short[ 1 ] = "Jugg";
+	level.bo1sz_perk_names_perk[ 2 ] = "specialty_fastreload";
+	level.bo1sz_perk_names_short[ 2 ] = "Speed Cola";
+	level.bo1sz_perk_names_perk[ 3 ] = "specialty_rof";
+	level.bo1sz_perk_names_short[ 3 ] = "Double Tap";
+	level.bo1sz_perk_names_perk[ 4 ] = "specialty_longersprint";
+	level.bo1sz_perk_names_short[ 4 ] = "Stamin-Up";
+	level.bo1sz_perk_names_perk[ 5 ] = "specialty_flakjacket";
+	level.bo1sz_perk_names_short[ 5 ] = "PhD";
+	level.bo1sz_perk_names_perk[ 6 ] = "specialty_deadshot";
+	level.bo1sz_perk_names_short[ 6 ] = "Deadshot";
+	level.bo1sz_perk_names_perk[ 7 ] = "specialty_additionalprimaryweapon";
+	level.bo1sz_perk_names_short[ 7 ] = "Mule Kick";
+	level.bo1sz_perk_names_count = 8;
 	// perk_tiers.csv
 	level.bo1sz_perk_tiers_perk = [];
 	level.bo1sz_perk_tiers_name = [];
