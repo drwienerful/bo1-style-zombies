@@ -145,3 +145,17 @@ Stop-early gate: **cleared.** B2 and B3 are both hookable and modifiable.
 **2026-10-05: the user approved Phase 0.** The economy/perks ADJUST is accepted: perks with no
 machine on a map get script re-implemented effects. Double Tap 2.0 is accepted as specified in
 `docs/design/double_tap_2.md`. Milestone 1 may start.
+
+## Later findings (Milestone 3)
+
+- **No script-triggered knockdown (2026-10-05):** calling a zombie's stock
+  `self.thundergun_knockdown_func` from a shotgun hit runs without error on Kino (logged), but
+  no fall animation plays. The animation needs damage the game attributes to the Thundergun.
+  Crowd control must use damage (shotgun shockwave) rather than animation.
+- **`moveplaybackrate` works on zombies:** a shotgun slowdown to 0.4 was visible in game. It
+  was dropped because slowing zombies breaks trains (user).
+- **Double ammo works via a spare reserve:** `GiveMaxAmmo` refills a weapon's reserve on
+  demand (Max Ammo and wall ammo are detected as reserve increases).
+- **Weapon names on Kino:** `fnfal_zm`, `l96a1_zm`, `dragunov_zm`, `m72_law_zm`, `china_lake_zm`,
+  `rottweil72_zm` (Olympia), `hs10_zm`, `spas_zm`, `ithaca_zm`, `cz75dw_zm`. Shotgun class
+  is `spread`.
