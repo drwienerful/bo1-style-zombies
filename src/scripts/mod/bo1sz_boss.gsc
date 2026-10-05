@@ -549,9 +549,25 @@ boss_victory( killer )
 boss_victory_screen()
 {
 	self endon( "disconnect" );
+	// Hide the style meter so the ending screen is clean.
+	style_elems = [];
+	style_elems[ 0 ] = self.bo1sz_hud_letter;
+	style_elems[ 1 ] = self.bo1sz_hud_word;
+	style_elems[ 2 ] = self.bo1sz_hud_arch;
+	style_elems[ 3 ] = self.bo1sz_hud_bg;
+	style_elems[ 4 ] = self.bo1sz_hud_bar;
+	for ( i = 0; i < style_elems.size; i++ )
+	{
+		if ( isDefined( style_elems[ i ] ) )
+		{
+			style_elems[ i ].alpha = 0;
+		}
+	}
+	self.bo1sz_style_hidden = true;
+
 	lines = [];
 	lines[ 0 ] = "VICTORY";
-	lines[ 1 ] = boss_bal( "name" ) + " has fallen";
+	lines[ 1 ] = boss_bal( "name" ) + " has fallen  -  GAME COMPLETE";
 	lines[ 2 ] = "Round " + level.round_number;
 	if ( isDefined( self.bo1sz_style_max ) && isDefined( level.bo1sz_style_ranks_letter ) )
 	{
@@ -578,15 +594,18 @@ boss_victory_screen()
 		}
 		lines[ lines.size ] = "Archetypes: " + s;
 	}
+	// Placed below stock's end-screen lines ("GAME OVER" at y -130, rounds at -100) and kept
+	// up through the end sequence, so the ending reads as a victory. Stock has no hook to
+	// change its own text, and stock's end sequence only destroys its own HUD.
 	elems = [];
 	for ( i = 0; i < lines.size; i++ )
 	{
 		scale = 1.3;
 		if ( i == 0 )
 		{
-			scale = 3;
+			scale = 2.5;
 		}
-		e = boss_elem( self, -110 + i * 30, scale );
+		e = boss_elem( self, -50 + i * 26, scale );
 		if ( i == 0 )
 		{
 			e.color = ( 1, 0.85, 0.2 );
@@ -598,10 +617,23 @@ boss_victory_screen()
 		elems[ i ] = e;
 	}
 	self PlayLocalSound( boss_bal( "victory_sound" ) );
+	if ( boss_bal( "end_on_victory" ) == 1 )
+	{
+		return;
+	}
+	// Endless play: fade the summary after a while and bring the style meter back.
 	wait boss_bal( "victory_seconds" );
 	for ( i = 0; i < elems.size; i++ )
 	{
 		elems[ i ] FadeOverTime( 1 );
 		elems[ i ].alpha = 0;
+	}
+	self.bo1sz_style_hidden = undefined;
+	for ( i = 0; i < style_elems.size; i++ )
+	{
+		if ( isDefined( style_elems[ i ] ) )
+		{
+			style_elems[ i ].alpha = 1;
+		}
 	}
 }

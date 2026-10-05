@@ -276,6 +276,11 @@ style_hud_create()
 
 style_hud_refresh()
 {
+	// The boss victory screen hides the meter (ending screen).
+	if ( isDefined( self.bo1sz_style_hidden ) )
+	{
+		return;
+	}
 	r = self.bo1sz_style_rank;
 	if ( r != self.bo1sz_hud_shown_rank )
 	{
