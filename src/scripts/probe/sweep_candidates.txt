@@ -1,0 +1,21 @@
+# name | one GSC statement using it (e = a player entity; never executed)
+# Order = load order. Files load alphabetically, so the first failing file in
+# console.log proves every file before it compiled.
+spawn | t = Spawn( "trigger_radius_use", e.origin, 0, 48, 72 );
+setcursorhint | e SetCursorHint( "HINT_NOICON" );
+sethintstring | e SetHintString( "x" );
+setperk | e SetPerk( "specialty_rof" );
+delete | e Delete();
+setclientdvar | e SetClientDvar( "x", "1" );
+weaponfiretime | x = WeaponFireTime( "m1911_zm" );
+giveweapon | e GiveWeapon( "m1911_zm" );
+takeweapon | e TakeWeapon( "m1911_zm" );
+switchtoweapon | e SwitchToWeapon( "m1911_zm" );
+earthquake | Earthquake( 0.3, 1, e.origin, 500 );
+radiusdamage | RadiusDamage( e.origin, 100, 10, 5 );
+adsbuttonpressed | x = e AdsButtonPressed();
+usebuttonpressed | x = e UseButtonPressed();
+unsetperk | e UnsetPerk( "specialty_rof" );
+playsound | e PlaySound( "zmb_cha_ching" );
+randomint | x = RandomInt( 5 );
+distance | x = Distance( e.origin, e.origin );

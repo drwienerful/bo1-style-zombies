@@ -10,6 +10,7 @@
     -Batch A   One beacon per candidate load folder (A1..A5) to find which load.
     -Batch B   The probe script in the -Target folder (run Batch B tests).
     -Batch C   Same file as B (choose tests with the probe_batch dvar in game).
+    -Batch Sweep  Compile-only files, one per uncertain builtin (see sweep_candidates.txt).
     -Uninstall Remove every bo1sz_* file this installer could have placed.
 
   Canonical path (Batch A, 2026-10-05): A2 = scripts\sp\zom\ (loads in zombies only).
@@ -24,7 +25,7 @@
 #>
 [CmdletBinding(SupportsShouldProcess = $true)]
 param(
-    [ValidateSet('A', 'B', 'C')]
+    [ValidateSet('A', 'B', 'C', 'Sweep')]
     [string]$Batch,
     [ValidateSet('A1', 'A2', 'A3', 'A4', 'A5')]
     [string]$Target = 'A2',
@@ -39,6 +40,8 @@ $ModName = 'bo1sz_probe'
 $RepoRoot = Split-Path -Parent $PSScriptRoot
 $ProbeSrc = Join-Path $RepoRoot 'src\scripts\probe\probe.gsc'
 $BeaconSrc = Join-Path $RepoRoot 'src\scripts\probe\beacon_template.gsc'
+$SweepSrc = Join-Path $RepoRoot 'src\scripts\probe\sweep_template.gsc'
+$SweepList = Join-Path $RepoRoot 'src\scripts\probe\sweep_candidates.txt'
 
 if (-not (Test-Path $StorageRoot)) {
     throw "Plutonium T5 storage folder not found: $StorageRoot (run Plutonium T5 once, or pass -StorageRoot)."
@@ -127,6 +130,22 @@ if ($Batch -eq 'A') {
     Write-Host ''
     Write-Host "Batch A installed. Start a SOLO custom game on $Map from the main game (not the Mods menu)."
     Write-Host 'Optional second launch: load mods > bo1sz_probe, then the same map, to test A5.'
+}
+elseif ($Batch -eq 'Sweep') {
+    # One compile-only file per candidate builtin, numbered so load order = list order.
+    $rel = (Get-Candidates)[$Target]
+    $template = [System.IO.File]::ReadAllText($SweepSrc)
+    $n = 0
+    foreach ($line in [System.IO.File]::ReadAllLines($SweepList)) {
+        if ($line.Trim() -eq '' -or $line.TrimStart().StartsWith('#')) { continue }
+        $parts = $line.Split('|', 2)
+        $name = $parts[0].Trim()
+        $n++
+        $body = $template.Replace('__NAME__', $name).Replace('__CALL__', $parts[1].Trim())
+        Write-OurFile $rel ('{0}sweep_{1:D2}_{2}.gsc' -f $Prefix, $n, $name) $body
+    }
+    Write-Host ''
+    Write-Host "Sweep installed ($n files). Load any zombies map once; it may fail to load. Then tell Claude."
 }
 else {
     $rel = (Get-Candidates)[$Target]

@@ -88,3 +88,20 @@ surprising given S4.
 4. **Co-op / dedicated server:** not testable right now. Every `coop` and `server`
    result stays `untested` until a second player or a server is available.
    Solo results must not be generalised to co-op.
+
+## Compile notes
+
+- **2026-10-05, first Batch B attempt:** the map failed to load with
+  `Server script compile error / unknown function: @ scripts/sp/zom/bo1sz_probe::probe_c7`
+  (from `main\console.log`). The name of the unresolved call is blank. Every builtin in
+  `probe_c7` appears in stock BO1 scripts, so "used by stock" does **not** prove that
+  Plutonium's T5 compiler accepts it from our source. Working theory: the compiler
+  stops at the first unresolved call in file order, so everything above `probe_c7`
+  compiled.
+- Action: C7, C8, C10, C11 and C12 are parked in `src/scripts/probe/parked_c_tests.txt`
+  (not loaded) and report SKIPPED. `tools/install.ps1 -Batch Sweep` installs one
+  compile-only file per uncertain builtin (`sweep_candidates.txt`) so we can tell which
+  names the compiler knows.
+- **Rule from now on:** a builtin counts as proven only after our own file using it has
+  compiled in game. `tools/gsc_lint.py` checking against stock usage is a first filter,
+  not proof.
