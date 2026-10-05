@@ -123,10 +123,36 @@ probe_start()
 		level thread [[ level.probe_fn[ id ] ]]( id );
 	}
 
+	level thread probe_points_command();
+
 	p = probe_player();
 	wait 5;
 	p iPrintLnBold( "[PROBE] " + level.probe_active.size + " tests running - see console / main/games.log" );
 	logprint( "[PROBE-INFO] active=" + probe_join( level.probe_active ) + " main_ms=" + probe_str( level.probe_main_ms ) + " init_ms=" + level.probe_init_ms + "\n" );
+}
+
+// Test convenience: "set probe_points 50000" in the console grants that many points
+// to every player through the stock score function (proven by B4).
+probe_points_command()
+{
+	setDvar( "probe_points", "0" );
+	for ( ;; )
+	{
+		wait 0.5;
+		n = getDvarInt( "probe_points" );
+		if ( n <= 0 )
+		{
+			continue;
+		}
+		setDvar( "probe_points", "0" );
+		players = GetPlayers();
+		for ( i = 0; i < players.size; i++ )
+		{
+			got = probe_add_points( players[ i ], n );
+			players[ i ] iPrintLnBold( "[PROBE] +" + got + " points" );
+		}
+		logprint( "[PROBE-INFO] probe_points granted " + n + "\n" );
+	}
 }
 
 probe_watch( id )
