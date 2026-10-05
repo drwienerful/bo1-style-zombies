@@ -229,6 +229,10 @@ style_gain( points, gauge_max, top )
 	{
 		self.bo1sz_style_gauge -= gauge_max;
 		self.bo1sz_style_rank++;
+		if ( !isDefined( self.bo1sz_style_round_peak ) || self.bo1sz_style_rank > self.bo1sz_style_round_peak )
+		{
+			self.bo1sz_style_round_peak = self.bo1sz_style_rank;
+		}
 		self thread style_popup( true );
 	}
 	if ( self.bo1sz_style_rank == top && self.bo1sz_style_gauge > gauge_max )
@@ -1009,7 +1013,13 @@ style_round_report()
 			{
 				continue;
 			}
-			line = "round " + level.round_number + " " + p.playername + " rank=" + p.bo1sz_style_rank + " hit_pts=" + int( p.bo1sz_hit_total ) + " aff:";
+			peak = 0;
+			if ( isDefined( p.bo1sz_style_round_peak ) )
+			{
+				peak = p.bo1sz_style_round_peak;
+			}
+			p.bo1sz_style_round_peak = p.bo1sz_style_rank;
+			line = "round " + level.round_number + " " + p.playername + " rank=" + p.bo1sz_style_rank + " peak=" + peak + " hit_pts=" + int( p.bo1sz_hit_total ) + " aff:";
 			keys = getArrayKeys( p.bo1sz_aff );
 			for ( k = 0; k < keys.size; k++ )
 			{

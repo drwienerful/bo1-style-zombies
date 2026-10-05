@@ -15,7 +15,7 @@ Status: **built and confirmed in game (2026-10-05).** Approved design with one c
 
 | Item | Proposal |
 |---|---|
-| When | Round 25 (`boss.csv`); if that's a dog round, the next normal round |
+| When | Round 25 (`boss.csv`); if that's a dog round, the next normal round. Kept at 25 after the round-20 playtest: the user wants reaching it to be difficult. |
 | Name | **Der Eiserne** ("the Iron One"); original name, editable in the CSV |
 | Health | 40 x that round's zombie health x number of players (≈ 116,000 solo at round 25 with Milestone 6 pacing) |
 | Adds | The round's normal zombies keep spawning; the round can't end while the boss lives |
