@@ -147,6 +147,7 @@ perks_player()
 		owned = perks_owned( self );
 		limit = perks_bal( "stock_limit" );
 		surcharge = 0;
+		cost = 0;
 		if ( owned < limit )
 		{
 			// Below the limit: behave exactly like stock.
@@ -169,29 +170,32 @@ perks_player()
 			{
 				self.num_perks = limit;
 			}
-			if ( !isDefined( machine ) )
+			// Only prompt at a machine selling a perk the player doesn't own yet: stock never
+			// sells an owned perk, and showing a surcharge there looked like a broken machine.
+			if ( !isDefined( machine ) || ( isDefined( machine.script_noteworthy ) && self HasPerk( machine.script_noteworthy ) ) )
 			{
 				surcharge = 0;
 			}
 		}
-		self perks_show_hint( surcharge );
+		self perks_show_hint( surcharge, cost );
 		self perks_dt2_steady();
 	}
 }
 
-perks_show_hint( surcharge )
+perks_show_hint( surcharge, cost )
 {
-	if ( surcharge == self.bo1sz_perk_hint_shown )
+	key = surcharge * 100000 + cost;
+	if ( key == self.bo1sz_perk_hint_shown )
 	{
 		return;
 	}
-	self.bo1sz_perk_hint_shown = surcharge;
+	self.bo1sz_perk_hint_shown = key;
 	if ( surcharge <= 0 )
 	{
 		self.bo1sz_perk_hint.alpha = 0;
 		return;
 	}
-	self.bo1sz_perk_hint SetText( "Extra perk surcharge: " + surcharge );
+	self.bo1sz_perk_hint SetText( "Extra perk: " + cost + " + " + surcharge + " surcharge" );
 	self.bo1sz_perk_hint.alpha = 1;
 }
 
