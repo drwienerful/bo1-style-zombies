@@ -794,8 +794,14 @@ style_on_kill( attacker, mod, weapon, hitloc )
 		}
 	}
 
-	// Long-range kill (bullets only).
-	if ( style_is_bullet( mod ) && Distance( attacker.origin, self.origin ) > style_bal( "long_range_units" ) )
+	// Long-range kill (bullets only). Eagle Eye augment halves the distance.
+	long_units = style_bal( "long_range_units" );
+	if ( isDefined( attacker.bo1sz_aug ) && isDefined( attacker.bo1sz_aug[ "mark_eye" ] ) )
+	{
+		long_units = long_units * 0.5;
+	}
+	long_kill = ( style_is_bullet( mod ) && Distance( attacker.origin, self.origin ) > long_units );
+	if ( long_kill )
 	{
 		pts = style_ev_pts( "long_range" );
 		total += pts;
@@ -852,7 +858,42 @@ style_on_kill( attacker, mod, weapon, hitloc )
 		total = total * level.bo1sz_bal[ "archetype_rules.tech_t1_style_mult" ];
 	}
 
+	// Marksman Ascended: long-range kills give double style.
+	if ( long_kill && style_arch_tier( attacker, "marksman" ) >= 2 )
+	{
+		total = total * level.bo1sz_bal[ "archetype_rules.marksman_t2_long_style_mult" ];
+	}
+	// Augments: style multiplier for the archetype this kill belongs to.
+	total = total * style_aug_style( attacker, style_class_arch( cls, mod ) );
+
 	attacker style_queue( total, best_tag, best_arch );
+}
+
+style_arch_tier( player, id )
+{
+	if ( isDefined( player.bo1sz_arch ) && isDefined( player.bo1sz_arch[ id ] ) )
+	{
+		return player.bo1sz_arch[ id ];
+	}
+	return 0;
+}
+
+// Product of the player's "style" augments for one archetype (1.0 if none).
+style_aug_style( player, arch )
+{
+	m = 1.0;
+	if ( !isDefined( player.bo1sz_aug ) || !isDefined( level.bo1sz_augments_count ) )
+	{
+		return m;
+	}
+	for ( i = 0; i < level.bo1sz_augments_count; i++ )
+	{
+		if ( isDefined( player.bo1sz_aug[ level.bo1sz_augments_id[ i ] ] ) && level.bo1sz_augments_arch[ i ] == arch && level.bo1sz_augments_kind[ i ] == "style" )
+		{
+			m = m * level.bo1sz_augments_value[ i ];
+		}
+	}
+	return m;
 }
 
 // Logs each player's rank and hidden affinity at every round end (tuning aid).

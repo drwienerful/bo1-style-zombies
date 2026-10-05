@@ -10,9 +10,11 @@
 //   Any       real bonus points for headshot / multi-kill / long-range / melee kills,
 //             plus a per-kill bonus and an ammo-on-kill chance from the style rank
 // Wonder weapons (payoffs.excluded_weapons) get none of the class payoffs.
-// Archetype Awakened traits (bo1sz_archetypes.gsc sets player.bo1sz_arch[id]) are applied
-// here too: Gunslinger cap/timeout, Marksman pierce, Jackie Chan melee, Blaster range,
-// Demolitions explosive damage.
+// Archetype traits (bo1sz_archetypes.gsc sets player.bo1sz_arch[id]) and augments
+// (player.bo1sz_aug[augment id]) are applied here too. Awakened: Gunslinger cap/timeout,
+// Marksman pierce, Jackie Chan melee, Blaster range, Demolitions explosive damage.
+// Ascended: Gunslinger 2-bullet refund, Blaster shockwave radius, Demolitions grenade
+// refund. Augments (augments.csv): dmg / points / refund kinds plus the specials.
 //
 // Dvars: bo1sz_payoffs 0 disables this module; bo1sz_payoff_debug 1 logs every award.
 // Tunables: data/balance/payoffs.csv, style_ranks.csv (kill_bonus, ammo_chance).
@@ -179,6 +181,11 @@ pay_pistol_max( player )
 
 pay_pistol_timeout( player )
 {
+	// Steady Hand augment: streaks never time out.
+	if ( isDefined( player.bo1sz_aug ) && isDefined( player.bo1sz_aug[ "gun_steady" ] ) )
+	{
+		return 99999999;
+	}
 	if ( pay_arch( player, "gunslinger" ) >= 1 )
 	{
 		return pay_rule( "gunslinger_t1_timeout_ms" );
@@ -372,6 +379,9 @@ pay_on_damage( attacker, dmg, mod, weapon, hitloc )
 		}
 	}
 
+	// Augments: class damage.
+	mult = mult * pay_aug_value( attacker, pay_kill_arch( cls, mod, weapon ), "dmg", 1.0 );
+
 	if ( mult > 1.0 )
 	{
 		return int( dmg * mult );
@@ -410,12 +420,16 @@ pay_shockwave( player )
 	}
 	off = pay_bal( "shockwave_offset" );
 	r = pay_bal( "shockwave_radius" );
+	if ( pay_arch( player, "blaster" ) >= 2 )
+	{
+		r = r * pay_rule( "blaster_t2_radius_mult" );
+	}
 	centre = self.origin + ( dx / flat * off, dy / flat * off, 30 );
 	if ( Distance( player.origin, centre ) < r + pay_bal( "shockwave_player_margin" ) )
 	{
 		return;
 	}
-	amount = int( level.zombie_health * pay_bal( "shockwave_health_frac" ) );
+	amount = int( level.zombie_health * pay_bal( "shockwave_health_frac" ) * pay_aug_value( player, "blaster", "special", 1.0 ) );
 	if ( amount < 1 )
 	{
 		amount = 1;
@@ -558,7 +572,12 @@ pay_on_kill( attacker, mod, weapon, hitloc )
 		}
 		pts += steps * pay_bal( "pistol_step_points" );
 		why = why + " pistol_streak" + attacker.bo1sz_pistol_streak;
-		pay_refund( attacker, weapon, pay_bal( "pistol_refund" ), "pistol headshot" );
+		bullets = pay_bal( "pistol_refund" );
+		if ( pay_arch( attacker, "gunslinger" ) >= 2 )
+		{
+			bullets = pay_rule( "gunslinger_t2_refund" );
+		}
+		pay_refund( attacker, weapon, bullets, "pistol headshot" );
 	}
 	else
 	{
@@ -576,8 +595,13 @@ pay_on_kill( attacker, mod, weapon, hitloc )
 		}
 	}
 
-	// Launcher blasts that kill more than 5 refund a round.
-	if ( cls != "wonder" && cls != "none" && cls != "pistol" && pay_is_projectile( mod ) && attacker.bo1sz_pay_kill_n == pay_bal( "launcher_refund_kills" ) )
+	// Launcher blasts that kill more than 5 refund a round (Short Fuse augment: fewer).
+	need = pay_bal( "launcher_refund_kills" );
+	if ( isDefined( attacker.bo1sz_aug ) && isDefined( attacker.bo1sz_aug[ "demo_fuse" ] ) )
+	{
+		need = pay_aug_value( attacker, "demolitions", "special", need );
+	}
+	if ( cls != "wonder" && cls != "none" && cls != "pistol" && pay_is_projectile( mod ) && attacker.bo1sz_pay_kill_n == need )
 	{
 		pay_refund( attacker, weapon, pay_bal( "launcher_refund" ), "launcher " + attacker.bo1sz_pay_kill_n + " kills" );
 	}
@@ -593,7 +617,7 @@ pay_on_kill( attacker, mod, weapon, hitloc )
 		pts += pay_bal( "style_multi_points" );
 		why = why + " multi";
 	}
-	if ( pay_is_bullet( mod ) && Distance( attacker.origin, self.origin ) > level.bo1sz_bal[ "style.long_range_units" ] )
+	if ( pay_is_bullet( mod ) && Distance( attacker.origin, self.origin ) > pay_long_range( attacker ) )
 	{
 		pts += pay_bal( "style_long_range_points" );
 		why = why + " long_range";
@@ -626,6 +650,54 @@ pay_on_kill( attacker, mod, weapon, hitloc )
 		}
 	}
 
+	// Demolitions Ascended: an explosive blast that kills 3 refunds a grenade.
+	if ( pay_arch( attacker, "demolitions" ) >= 2 && cls != "wonder" && ( pay_is_projectile( mod ) || mod == "MOD_GRENADE" || mod == "MOD_GRENADE_SPLASH" || mod == "MOD_EXPLOSIVE" ) && attacker.bo1sz_pay_kill_n == pay_rule( "demolitions_t2_kills" ) )
+	{
+		attacker pay_give_grenade();
+	}
+
+	// Augments: points and magazine refunds for the archetype this kill belongs to.
+	karch = pay_kill_arch( cls, mod, weapon );
+	aug_pts = pay_aug_value( attacker, karch, "points", 0 );
+	if ( aug_pts > 0 )
+	{
+		pts += aug_pts;
+		why = why + " aug";
+	}
+	frac = pay_aug_value( attacker, karch, "refund", 0 );
+	if ( frac > 0 )
+	{
+		gun = weapon;
+		if ( mod == "MOD_MELEE" )
+		{
+			gun = attacker GetCurrentWeapon();
+		}
+		if ( isDefined( gun ) && gun != "none" )
+		{
+			n = int( WeaponClipSize( gun ) * frac );
+			if ( n < 1 )
+			{
+				n = 1;
+			}
+			pay_refund( attacker, gun, n, "augment" );
+		}
+	}
+	// Gadgeteer: claymore and monkey kills.
+	if ( isDefined( weapon ) && ( isSubStr( weapon, "claymore" ) || isSubStr( weapon, "cymbal_monkey" ) ) )
+	{
+		gadget = pay_aug_value( attacker, "tech", "special", 0 );
+		if ( gadget > 0 && isDefined( attacker.bo1sz_aug[ "tech_gadget" ] ) )
+		{
+			pts += gadget;
+			why = why + " gadget";
+		}
+	}
+	// Shockfist: melee kills release a small shockwave.
+	if ( mod == "MOD_MELEE" && isDefined( attacker.bo1sz_aug ) && isDefined( attacker.bo1sz_aug[ "jackie_wave" ] ) )
+	{
+		self pay_shockfist( attacker );
+	}
+
 	if ( isDefined( attacker.bo1sz_generalist ) && attacker.bo1sz_generalist )
 	{
 		pts += pay_rule( "generalist_kill_points" );
@@ -633,4 +705,122 @@ pay_on_kill( attacker, mod, weapon, hitloc )
 	}
 
 	pay_points( attacker, pts, "kill:" + why );
+}
+
+// ---------------------------------------------------------------------------
+// Archetype helpers: which archetype a hit or kill belongs to, augment values
+// ---------------------------------------------------------------------------
+
+pay_kill_arch( cls, mod, weapon )
+{
+	if ( mod == "MOD_MELEE" )
+	{
+		return "jackie";
+	}
+	if ( cls == "wonder" )
+	{
+		return "tech";
+	}
+	if ( isDefined( weapon ) && ( isSubStr( weapon, "claymore" ) || isSubStr( weapon, "cymbal_monkey" ) ) )
+	{
+		return "tech";
+	}
+	if ( pay_is_projectile( mod ) || mod == "MOD_GRENADE" || mod == "MOD_GRENADE_SPLASH" || mod == "MOD_EXPLOSIVE" || cls == "rocketlauncher" || cls == "grenade" )
+	{
+		return "demolitions";
+	}
+	if ( cls == "pistol" )
+	{
+		return "gunslinger";
+	}
+	if ( cls == "spread" )
+	{
+		return "blaster";
+	}
+	if ( cls == "sniper" )
+	{
+		return "marksman";
+	}
+	return "none";
+}
+
+// Value of the player's augment of `kind` for `arch`; `fallback` if they don't have one.
+// "dmg" and "style" values multiply; "points", "refund" and "special" are taken as-is.
+pay_aug_value( player, arch, kind, fallback )
+{
+	if ( !isDefined( player.bo1sz_aug ) || !isDefined( level.bo1sz_augments_count ) )
+	{
+		return fallback;
+	}
+	for ( i = 0; i < level.bo1sz_augments_count; i++ )
+	{
+		if ( isDefined( player.bo1sz_aug[ level.bo1sz_augments_id[ i ] ] ) && level.bo1sz_augments_arch[ i ] == arch && level.bo1sz_augments_kind[ i ] == kind )
+		{
+			return level.bo1sz_augments_value[ i ];
+		}
+	}
+	return fallback;
+}
+
+pay_long_range( player )
+{
+	units = level.bo1sz_bal[ "style.long_range_units" ];
+	if ( isDefined( player.bo1sz_aug ) && isDefined( player.bo1sz_aug[ "mark_eye" ] ) )
+	{
+		units = units * 0.5;
+	}
+	return units;
+}
+
+// Demolitions Ascended: one lethal grenade back (never above grenade_cap).
+pay_give_grenade()
+{
+	list = self GetWeaponsList();
+	for ( i = 0; i < list.size; i++ )
+	{
+		w = list[ i ];
+		if ( isSubStr( w, "claymore" ) || isSubStr( w, "cymbal_monkey" ) )
+		{
+			continue;
+		}
+		if ( WeaponClass( w ) == "grenade" )
+		{
+			n = self GetWeaponAmmoClip( w );
+			if ( n < pay_rule( "grenade_cap" ) )
+			{
+				self SetWeaponAmmoClip( w, n + 1 );
+				pay_debug( self, "grenade refund " + w + " " + n + "->" + ( n + 1 ) );
+			}
+			return;
+		}
+	}
+}
+
+// Shockfist augment: a small shockwave just beyond a zombie killed by melee.
+pay_shockfist( player )
+{
+	if ( !isDefined( level.zombie_health ) )
+	{
+		return;
+	}
+	dx = self.origin[ 0 ] - player.origin[ 0 ];
+	dy = self.origin[ 1 ] - player.origin[ 1 ];
+	flat = Distance( ( dx, dy, 0 ), ( 0, 0, 0 ) );
+	if ( flat < 1 )
+	{
+		return;
+	}
+	off = 70;
+	r = 60;
+	centre = self.origin + ( dx / flat * off, dy / flat * off, 30 );
+	if ( Distance( player.origin, centre ) < r + pay_bal( "shockwave_player_margin" ) )
+	{
+		return;
+	}
+	amount = int( level.zombie_health * pay_aug_value( player, "jackie", "special", 0.25 ) );
+	if ( amount < 1 )
+	{
+		amount = 1;
+	}
+	level thread pay_shockwave_fire( centre, r, amount, player );
 }

@@ -9,6 +9,10 @@
 // Generalist: from generalist_round, no archetype Awakened and none with a share
 // >= generalist_focus gives a flat bonus per kill (payoffs module).
 //
+// Ascended also offers a pick-1-of-3 augment (augments.csv) during the round break:
+// USE cycles the highlight, holding USE chooses; a random one is chosen if the next
+// round starts first. Jackie Chan Ascended grants a faster-melee engine perk here.
+//
 // Dvars: bo1sz_archetypes 0 disables; bo1sz_arch_test 1 (before load) scales gates
 // down for testing; bo1sz_arch_eval 1 (in game) evaluates immediately.
 // Tunables: data/balance/archetypes.csv, archetype_rules.csv.
@@ -43,6 +47,8 @@ arch_start()
 	setDvar( "bo1sz_arch_eval", "0" );
 	arch_log( "archetypes on (count=" + level.bo1sz_archetypes_count + " test=" + level.bo1sz_arch_test + " max tier=" + arch_rule( "enabled_tier" ) + ")" );
 
+	level.bo1sz_round_start_count = 0;
+	level thread arch_round_start_watch();
 	level thread arch_round_watch();
 	level thread arch_eval_command();
 	players = GetPlayers();
@@ -117,10 +123,19 @@ arch_player()
 	self.bo1sz_arch_shown = "";
 	self.bo1sz_pop_title = [];
 	self.bo1sz_pop_desc = [];
+	self.bo1sz_aug = [];
+	self.bo1sz_aug_pending = [];
+	self.bo1sz_aug_lines = [];
+	for ( i = 0; i < 4; i++ )
+	{
+		self.bo1sz_aug_lines[ i ] = arch_center_elem( self, -40 + i * 22, 1.25 );
+	}
 
 	self.bo1sz_arch_pop1 = arch_center_elem( self, -170, 1.7 );
 	self.bo1sz_arch_pop2 = arch_center_elem( self, -148, 1.2 );
 	self thread arch_popup_loop();
+	self thread arch_augment_loop();
+	self thread arch_jackie_loop();
 }
 
 arch_center_elem( player, y, scale )
@@ -271,6 +286,7 @@ arch_grant( id, tier )
 	else if ( tier == 2 )
 	{
 		self arch_queue_popup( "Ascended: " + name, level.bo1sz_archetypes_ascended[ i ] );
+		self.bo1sz_aug_pending[ self.bo1sz_aug_pending.size ] = id;
 	}
 	else
 	{
@@ -405,5 +421,179 @@ arch_popup_loop()
 		self.bo1sz_arch_pop1.alpha = 0;
 		self.bo1sz_arch_pop2.alpha = 0;
 		wait 0.5;
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Augments: pick 1 of 3 at Ascended (augments.csv)
+// ---------------------------------------------------------------------------
+
+arch_round_start_watch()
+{
+	for ( ;; )
+	{
+		level waittill( "start_of_round" );
+		level.bo1sz_round_start_count++;
+	}
+}
+
+// Three distinct random augment indexes from one archetype's pool.
+arch_offer( arch )
+{
+	pool = [];
+	for ( i = 0; i < level.bo1sz_augments_count; i++ )
+	{
+		if ( level.bo1sz_augments_arch[ i ] == arch && !isDefined( self.bo1sz_aug[ level.bo1sz_augments_id[ i ] ] ) )
+		{
+			pool[ pool.size ] = i;
+		}
+	}
+	offer = [];
+	while ( offer.size < 3 && pool.size > 0 )
+	{
+		k = RandomInt( pool.size );
+		offer[ offer.size ] = pool[ k ];
+		rest = [];
+		for ( j = 0; j < pool.size; j++ )
+		{
+			if ( j != k )
+			{
+				rest[ rest.size ] = pool[ j ];
+			}
+		}
+		pool = rest;
+	}
+	return offer;
+}
+
+arch_augment_loop()
+{
+	self endon( "disconnect" );
+	for ( ;; )
+	{
+		wait 0.25;
+		// Wait until there is a pending choice and the pop-ups have finished.
+		if ( self.bo1sz_aug_pending.size == 0 || self.bo1sz_pop_title.size > 0 || self.bo1sz_arch_pop1.alpha > 0 )
+		{
+			continue;
+		}
+		arch = self.bo1sz_aug_pending[ 0 ];
+		rest = [];
+		for ( i = 1; i < self.bo1sz_aug_pending.size; i++ )
+		{
+			rest[ rest.size ] = self.bo1sz_aug_pending[ i ];
+		}
+		self.bo1sz_aug_pending = rest;
+
+		offer = self arch_offer( arch );
+		if ( offer.size == 0 )
+		{
+			continue;
+		}
+		pick = self arch_choose( arch, offer );
+		self.bo1sz_aug[ level.bo1sz_augments_id[ pick ] ] = true;
+		self arch_queue_popup( "Augment: " + level.bo1sz_augments_name[ pick ], level.bo1sz_augments_desc[ pick ] );
+		arch_log( self.playername + " augment " + level.bo1sz_augments_id[ pick ] );
+	}
+}
+
+// Shows the offer; USE cycles, holding USE picks. Random pick if the next round starts.
+arch_choose( arch, offer )
+{
+	self endon( "disconnect" );
+	start_count = level.bo1sz_round_start_count;
+	sel = 0;
+	hold_ms = 0;
+	was_down = self UseButtonPressed();
+	self.bo1sz_aug_lines[ 0 ] SetText( "Choose an augment: " + level.bo1sz_archetypes_name[ arch_index( arch ) ] + "  (USE: next, hold USE: pick)" );
+	self.bo1sz_aug_lines[ 0 ].alpha = 1;
+	self arch_draw_offer( offer, sel );
+	self PlayLocalSound( "zmb_perks_power_on" );
+	choice = -1;
+	while ( choice < 0 )
+	{
+		wait 0.05;
+		if ( level.bo1sz_round_start_count != start_count )
+		{
+			choice = RandomInt( offer.size );
+			break;
+		}
+		down = self UseButtonPressed();
+		if ( down && !was_down )
+		{
+			hold_ms = getTime();
+		}
+		if ( down && hold_ms > 0 && getTime() - hold_ms >= level.bo1sz_bal[ "archetype_rules.aug_hold_seconds" ] * 1000 )
+		{
+			choice = sel;
+			break;
+		}
+		if ( !down && was_down && hold_ms > 0 )
+		{
+			// Short press: next option.
+			sel = ( sel + 1 ) % offer.size;
+			self arch_draw_offer( offer, sel );
+			hold_ms = 0;
+		}
+		was_down = down;
+	}
+	for ( i = 0; i < self.bo1sz_aug_lines.size; i++ )
+	{
+		self.bo1sz_aug_lines[ i ].alpha = 0;
+	}
+	self PlayLocalSound( "zmb_cha_ching" );
+	return offer[ choice ];
+}
+
+arch_draw_offer( offer, sel )
+{
+	for ( i = 0; i < 3; i++ )
+	{
+		line = self.bo1sz_aug_lines[ i + 1 ];
+		if ( i >= offer.size )
+		{
+			line.alpha = 0;
+			continue;
+		}
+		idx = offer[ i ];
+		if ( i == sel )
+		{
+			line SetText( "> " + level.bo1sz_augments_name[ idx ] + ": " + level.bo1sz_augments_desc[ idx ] );
+			line.color = ( 1, 0.85, 0.2 );
+		}
+		else
+		{
+			line SetText( level.bo1sz_augments_name[ idx ] + ": " + level.bo1sz_augments_desc[ idx ] );
+			line.color = ( 0.8, 0.8, 0.8 );
+		}
+		line.alpha = 1;
+	}
+}
+
+// Jackie Chan Ascended: faster melee through the engine's melee perk. Granted in its own
+// thread so an unknown perk name can only end this thread; the log shows whether it held.
+arch_jackie_loop()
+{
+	self endon( "disconnect" );
+	given = false;
+	for ( ;; )
+	{
+		wait 1;
+		if ( self.bo1sz_arch[ "jackie" ] < 2 )
+		{
+			continue;
+		}
+		perk = level.bo1sz_bal[ "archetype_rules.jackie_t2_perk" ];
+		has = self HasPerk( perk );
+		if ( !has )
+		{
+			self SetPerk( perk );
+			has = self HasPerk( perk );
+			if ( !given )
+			{
+				arch_log( self.playername + " jackie melee perk " + perk + " granted=" + has );
+			}
+			given = true;
+		}
 	}
 }

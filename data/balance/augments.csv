@@ -1,0 +1,31 @@
+id,arch,name,desc,kind,value
+gun_dmg,gunslinger,Hot Barrel,+25% pistol damage,dmg,1.25
+gun_pts,gunslinger,Bounty,+20 points per pistol kill,points,20
+gun_style,gunslinger,Showboat,+50% style from pistol kills,style,1.5
+gun_refund,gunslinger,Speed Loader,Pistol kills refill 20% of the magazine,refund,0.2
+gun_steady,gunslinger,Steady Hand,Pistol streaks never time out,special,0
+mark_dmg,marksman,Hollow Points,+25% sniper damage,dmg,1.25
+mark_pts,marksman,Collector,+20 points per sniper kill,points,20
+mark_style,marksman,Long Game,+50% style from sniper kills,style,1.5
+mark_refund,marksman,Chamber,Sniper kills refill 20% of the magazine,refund,0.2
+mark_eye,marksman,Eagle Eye,Long range starts at half the distance,special,0.5
+jackie_dmg,jackie,Iron Fist,+50% melee damage,dmg,1.5
+jackie_pts,jackie,Prize Fighter,+30 points per melee kill,points,30
+jackie_style,jackie,Crowd Pleaser,+50% style from melee kills,style,1.5
+jackie_refund,jackie,Quick Hands,Melee kills refill 20% of your gun's magazine,refund,0.2
+jackie_wave,jackie,Shockfist,Melee kills release a small shockwave,special,0.25
+blast_dmg,blaster,Buckshot,+25% shotgun damage,dmg,1.25
+blast_pts,blaster,Scrap Value,+20 points per shotgun kill,points,20
+blast_style,blaster,Loud and Proud,+50% style from shotgun kills,style,1.5
+blast_refund,blaster,Shell Belt,Shotgun kills refill 20% of the magazine,refund,0.2
+blast_after,blaster,Aftershock,Shockwave damage +50%,special,1.5
+demo_dmg,demolitions,Bigger Boom,+25% explosive damage,dmg,1.25
+demo_pts,demolitions,Demolition Pay,+20 points per explosive kill,points,20
+demo_style,demolitions,Fireworks,+50% style from explosive kills,style,1.5
+demo_refund,demolitions,Bandolier,Explosive kills refill 20% of the magazine,refund,0.2
+demo_fuse,demolitions,Short Fuse,Launcher refund at 4 kills instead of 6,special,4
+tech_dmg,tech,Overclock,+25% wonder weapon damage,dmg,1.25
+tech_pts,tech,Patent,+20 points per wonder weapon kill,points,20
+tech_style,tech,Showcase,+50% style from wonder weapon kills,style,1.5
+tech_refund,tech,Capacitor,Wonder weapon kills refill 20% of the magazine,refund,0.2
+tech_gadget,tech,Gadgeteer,Claymore and monkey kills +50 points,special,50
