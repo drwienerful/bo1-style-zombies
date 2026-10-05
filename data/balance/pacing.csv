@@ -2,3 +2,5 @@ key,value,notes
 spawn_delay_extra_mult,0.9,extra per-round multiplier on the stock spawn delay (stock already x0.95 per round)
 spawn_delay_floor,0.08,never go below the stock floor
 health_growth_mult,0.07,zombie health growth per round after round 10 (stock 0.1)
+start_spawn_delay,1.2,spawn delay at round 1 (stock 2.0): quicker early rounds (user request)
+move_speed_mult,10,zombie speed = round x this (stock 8: walk to ~round 5; 10: run from 5, sprint from 8)

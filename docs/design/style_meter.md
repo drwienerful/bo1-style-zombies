@@ -44,6 +44,12 @@ this penalty because they are rate-capped instead.
 - Kills within 3s of the previous kill extend a chain; kill style is multiplied by
   1 + 0.1 x (links - 1), capped at x3, and "Chain xN" shows under the meter.
 
+## Retune for easier S-SSS (user, after the round-7 playtest, 2026-10-05)
+
+Gain multipliers C..SSS 0.95/0.9/0.85/0.8/0.75/0.7 (were 0.9..0.4), decay per second
+5/6/8/10/12/14 (were 6..22), kill-chain window 4s (was 3s). The rank table above shows the
+original values; `style_ranks.csv` is the source of truth.
+
 ## Penalties
 
 - Taking damage drops one rank (1.5s cooldown). The gauge is kept.

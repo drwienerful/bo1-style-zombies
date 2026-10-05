@@ -1,6 +1,8 @@
 // bo1-style-zombies: pacing (Milestone 6). Approved by the user on 2026-10-05:
 //   - spawn delay: an extra x0.9 per round on top of stock's x0.95 (same 0.08 floor)
 //   - zombie health growth after round 10: x1.07 per round instead of x1.10
+//   - quicker early rounds: spawn delay starts at 1.2 (stock 2.0), zombie speed = round x 10
+//     (stock x8)
 // Zombies per round are unchanged. Values: data/balance/pacing.csv.
 //
 // Max zombies alive stays at 24: the user asked for 128, but the engine refuses any
@@ -44,6 +46,16 @@ pace_start()
 		return;
 	}
 	level.zombie_vars[ "zombie_health_increase_multiplier" ] = pace_bal( "health_growth_mult" );
+	// Quicker early rounds (user request after the round-7 playtest): zombies spawn sooner
+	// and reach running/sprinting speed a few rounds earlier. The late-game floor is unchanged.
+	if ( level.zombie_vars[ "zombie_spawn_delay" ] > pace_bal( "start_spawn_delay" ) )
+	{
+		level.zombie_vars[ "zombie_spawn_delay" ] = pace_bal( "start_spawn_delay" );
+	}
+	if ( isDefined( level.zombie_vars[ "zombie_move_speed_multiplier" ] ) )
+	{
+		level.zombie_vars[ "zombie_move_speed_multiplier" ] = pace_bal( "move_speed_mult" );
+	}
 	pace_log_raw( "pacing on (spawn delay x" + pace_bal( "spawn_delay_extra_mult" ) + "/round, health growth " + pace_bal( "health_growth_mult" ) + ")" );
 
 	level thread pace_flood_command();

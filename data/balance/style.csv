@@ -17,7 +17,7 @@ hit_drop_cooldown_ms,1500,after taking damage drops a rank this long before anot
 variety_window,3,kill with a weapon class not used in the last N kills counts as variety
 hit_cap_per_sec,8,most style points per second that hits alone can give
 hit_cap_per_sec_aoe,20,cap for shotgun and explosive hits (scored per zombie hit)
-chain_window_ms,3000,kills within this long of the previous kill extend the kill chain
+chain_window_ms,4000,kills within this long of the previous kill extend the kill chain
 chain_step,0.1,style multiplier added per chain link (kill awards only)
 chain_max_mult,3.0,highest kill-chain multiplier
 pause_between_rounds,1,1 = the meter doesn't drain between rounds

@@ -92,7 +92,6 @@ codex_elems()
 
 codex_show( page )
 {
-	self codex_elems();
 	lines = [];
 	if ( page == "1" )
 	{
@@ -108,13 +107,20 @@ codex_show( page )
 	}
 	if ( lines.size == 0 )
 	{
-		self.bo1sz_codex_bg.alpha = 0;
-		for ( i = 0; i < self.bo1sz_codex_lines.size; i++ )
+		// Closed: destroy the panel (HUD draw limit) rather than hide it.
+		if ( isDefined( self.bo1sz_codex_lines ) )
 		{
-			self.bo1sz_codex_lines[ i ].alpha = 0;
+			self.bo1sz_codex_bg Destroy();
+			for ( i = 0; i < self.bo1sz_codex_lines.size; i++ )
+			{
+				self.bo1sz_codex_lines[ i ] Destroy();
+			}
+			self.bo1sz_codex_bg = undefined;
+			self.bo1sz_codex_lines = undefined;
 		}
 		return;
 	}
+	self codex_elems();
 	lines[ lines.size ] = "bo1sz_codex 1 / 2 / 3: pages   0: close";
 	self.bo1sz_codex_bg.alpha = 0.7;
 	for ( i = 0; i < self.bo1sz_codex_lines.size; i++ )

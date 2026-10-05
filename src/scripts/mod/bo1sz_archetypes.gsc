@@ -125,14 +125,8 @@ arch_player()
 	self.bo1sz_pop_desc = [];
 	self.bo1sz_aug = [];
 	self.bo1sz_aug_pending = [];
-	self.bo1sz_aug_lines = [];
-	for ( i = 0; i < 4; i++ )
-	{
-		self.bo1sz_aug_lines[ i ] = arch_center_elem( self, -40 + i * 22, 1.25 );
-	}
-
-	self.bo1sz_arch_pop1 = arch_center_elem( self, -170, 1.7 );
-	self.bo1sz_arch_pop2 = arch_center_elem( self, -148, 1.2 );
+	// Pop-ups and the augment menu are created only while shown (HUD draw limit).
+	self.bo1sz_pop_showing = false;
 	self thread arch_popup_loop();
 	self thread arch_augment_loop();
 }
@@ -407,6 +401,9 @@ arch_popup_loop()
 		self.bo1sz_pop_title = rest_t;
 		self.bo1sz_pop_desc = rest_d;
 
+		self.bo1sz_pop_showing = true;
+		self.bo1sz_arch_pop1 = arch_center_elem( self, -170, 1.7 );
+		self.bo1sz_arch_pop2 = arch_center_elem( self, -148, 1.2 );
 		self.bo1sz_arch_pop1 SetText( title );
 		self.bo1sz_arch_pop2 SetText( desc );
 		self.bo1sz_arch_pop1 FadeOverTime( 0.2 );
@@ -420,6 +417,11 @@ arch_popup_loop()
 		self.bo1sz_arch_pop1.alpha = 0;
 		self.bo1sz_arch_pop2.alpha = 0;
 		wait 0.5;
+		self.bo1sz_arch_pop1 Destroy();
+		self.bo1sz_arch_pop2 Destroy();
+		self.bo1sz_arch_pop1 = undefined;
+		self.bo1sz_arch_pop2 = undefined;
+		self.bo1sz_pop_showing = false;
 	}
 }
 
@@ -472,7 +474,7 @@ arch_augment_loop()
 	{
 		wait 0.25;
 		// Wait until there is a pending choice and the pop-ups have finished.
-		if ( self.bo1sz_aug_pending.size == 0 || self.bo1sz_pop_title.size > 0 || self.bo1sz_arch_pop1.alpha > 0 )
+		if ( self.bo1sz_aug_pending.size == 0 || self.bo1sz_pop_title.size > 0 || self.bo1sz_pop_showing )
 		{
 			continue;
 		}
@@ -504,6 +506,11 @@ arch_choose( arch, offer )
 	sel = 0;
 	hold_ms = 0;
 	was_down = self UseButtonPressed();
+	self.bo1sz_aug_lines = [];
+	for ( i = 0; i < 4; i++ )
+	{
+		self.bo1sz_aug_lines[ i ] = arch_center_elem( self, -40 + i * 22, 1.25 );
+	}
 	self.bo1sz_aug_lines[ 0 ] SetText( "Choose an augment: " + level.bo1sz_archetypes_name[ arch_index( arch ) ] + "  (USE: next, hold USE: pick)" );
 	self.bo1sz_aug_lines[ 0 ].alpha = 1;
 	self arch_draw_offer( offer, sel );
@@ -533,8 +540,9 @@ arch_choose( arch, offer )
 	}
 	for ( i = 0; i < self.bo1sz_aug_lines.size; i++ )
 	{
-		self.bo1sz_aug_lines[ i ].alpha = 0;
+		self.bo1sz_aug_lines[ i ] Destroy();
 	}
+	self.bo1sz_aug_lines = undefined;
 	self PlayLocalSound( "zmb_cha_ching" );
 	return offer[ choice ];
 }

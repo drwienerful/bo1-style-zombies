@@ -181,14 +181,7 @@ perks_player()
 	self.bo1sz_perks_started = true;
 	self waittill( "spawned_player" );
 
-	self.bo1sz_perk_hint = NewClientHudElem( self );
-	self.bo1sz_perk_hint.horzAlign = "user_center";
-	self.bo1sz_perk_hint.vertAlign = "middle";
-	self.bo1sz_perk_hint.alignX = "center";
-	self.bo1sz_perk_hint.alignY = "middle";
-	self.bo1sz_perk_hint.y = 90;
-	self.bo1sz_perk_hint.fontScale = 1.3;
-	self.bo1sz_perk_hint.alpha = 0;
+	// Prompts, pop-ups and menus are created only while shown (HUD draw limit, see style).
 	self.bo1sz_perk_hint_shown = -1;
 	self perks_tiers_init();
 	self perks_shop_init();
@@ -253,8 +246,12 @@ perks_show_hint( surcharge, cost )
 	self.bo1sz_perk_hint_shown = key;
 	if ( surcharge <= 0 )
 	{
-		self.bo1sz_perk_hint.alpha = 0;
+		self.bo1sz_perk_hint = perks_free( self.bo1sz_perk_hint );
 		return;
+	}
+	if ( !isDefined( self.bo1sz_perk_hint ) )
+	{
+		self.bo1sz_perk_hint = perks_center_elem( self, 90, 1.3 );
 	}
 	self.bo1sz_perk_hint SetText( "Extra perk: " + cost + " + " + surcharge + " surcharge" );
 	self.bo1sz_perk_hint.alpha = 1;
@@ -418,19 +415,18 @@ perks_has_tier( player, perk )
 perks_tiers_init()
 {
 	self.bo1sz_tier = [];
-	self.bo1sz_tier_hint = NewClientHudElem( self );
-	self.bo1sz_tier_hint.horzAlign = "user_center";
-	self.bo1sz_tier_hint.vertAlign = "middle";
-	self.bo1sz_tier_hint.alignX = "center";
-	self.bo1sz_tier_hint.alignY = "middle";
-	self.bo1sz_tier_hint.y = 110;
-	self.bo1sz_tier_hint.fontScale = 1.3;
-	self.bo1sz_tier_hint.alpha = 0;
-	self.bo1sz_tier_hint_desc = perks_center_elem( self, 128, 1.1 );
-	self.bo1sz_tier_pop_name = perks_center_elem( self, -110, 1.8 );
-	self.bo1sz_tier_pop_desc = perks_center_elem( self, -86, 1.2 );
 	self.bo1sz_tier_hint_perk = "";
 	self.bo1sz_use_ms = 0;
+}
+
+// Destroys a HUD element if it exists; always returns undefined (assign the result back).
+perks_free( e )
+{
+	if ( isDefined( e ) )
+	{
+		e Destroy();
+	}
+	return undefined;
 }
 
 perks_center_elem( player, y, scale )
@@ -453,6 +449,11 @@ perks_tier_popup( perk )
 	self endon( "disconnect" );
 	self notify( "bo1sz_tier_popup" );
 	self endon( "bo1sz_tier_popup" );
+	if ( !isDefined( self.bo1sz_tier_pop_name ) )
+	{
+		self.bo1sz_tier_pop_name = perks_center_elem( self, -110, 1.8 );
+		self.bo1sz_tier_pop_desc = perks_center_elem( self, -86, 1.2 );
+	}
 	self.bo1sz_tier_pop_name SetText( level.bo1sz_tier_name[ perk ] );
 	self.bo1sz_tier_pop_desc SetText( level.bo1sz_tier_desc[ perk ] );
 	self.bo1sz_tier_pop_name FadeOverTime( 0.2 );
@@ -464,6 +465,9 @@ perks_tier_popup( perk )
 	self.bo1sz_tier_pop_desc FadeOverTime( 0.5 );
 	self.bo1sz_tier_pop_name.alpha = 0;
 	self.bo1sz_tier_pop_desc.alpha = 0;
+	wait 0.55;
+	self.bo1sz_tier_pop_name = perks_free( self.bo1sz_tier_pop_name );
+	self.bo1sz_tier_pop_desc = perks_free( self.bo1sz_tier_pop_desc );
 }
 
 perks_tiers_tick()
@@ -511,11 +515,16 @@ perks_tiers_tick()
 		self.bo1sz_tier_hint_perk = perk;
 		if ( perk == "" )
 		{
-			self.bo1sz_tier_hint.alpha = 0;
-			self.bo1sz_tier_hint_desc.alpha = 0;
+			self.bo1sz_tier_hint = perks_free( self.bo1sz_tier_hint );
+			self.bo1sz_tier_hint_desc = perks_free( self.bo1sz_tier_hint_desc );
 		}
 		else
 		{
+			if ( !isDefined( self.bo1sz_tier_hint ) )
+			{
+				self.bo1sz_tier_hint = perks_center_elem( self, 110, 1.3 );
+				self.bo1sz_tier_hint_desc = perks_center_elem( self, 128, 1.1 );
+			}
 			self.bo1sz_tier_hint SetText( "Hold USE: " + level.bo1sz_tier_name[ perk ] + " (" + level.bo1sz_tier_price[ perk ] + ")" );
 			self.bo1sz_tier_hint_desc SetText( level.bo1sz_tier_desc[ perk ] );
 			self.bo1sz_tier_hint.alpha = 1;
@@ -724,12 +733,6 @@ perks_shop_init()
 	}
 	self.bo1sz_shop = [];
 	self.bo1sz_shop_open = false;
-	self.bo1sz_shop_hint = perks_center_elem( self, 90, 1.3 );
-	self.bo1sz_shop_lines = [];
-	for ( i = 0; i < 5; i++ )
-	{
-		self.bo1sz_shop_lines[ i ] = perks_center_elem( self, -40 + i * 22, 1.25 );
-	}
 	self thread perks_shop_downed();
 }
 
@@ -767,12 +770,13 @@ perks_shop_tick()
 	}
 	if ( !near )
 	{
-		self.bo1sz_shop_hint.alpha = 0;
+		self.bo1sz_shop_hint = perks_free( self.bo1sz_shop_hint );
 		self.bo1sz_shop_use_ms = 0;
 		return;
 	}
-	if ( self.bo1sz_shop_hint.alpha == 0 )
+	if ( !isDefined( self.bo1sz_shop_hint ) )
 	{
+		self.bo1sz_shop_hint = perks_center_elem( self, 90, 1.3 );
 		self.bo1sz_shop_hint SetText( "Hold USE: Perk Shop" );
 		self.bo1sz_shop_hint.alpha = 1;
 	}
@@ -790,7 +794,7 @@ perks_shop_tick()
 	if ( getTime() - self.bo1sz_shop_use_ms >= perks_bal( "tier_hold_seconds" ) * 1000 )
 	{
 		self.bo1sz_shop_use_ms = 0;
-		self.bo1sz_shop_hint.alpha = 0;
+		self.bo1sz_shop_hint = perks_free( self.bo1sz_shop_hint );
 		self thread perks_shop_menu();
 	}
 }
@@ -808,6 +812,11 @@ perks_shop_menu()
 		return;
 	}
 	sel = 0;
+	self.bo1sz_shop_lines = [];
+	for ( i = 0; i < 5; i++ )
+	{
+		self.bo1sz_shop_lines[ i ] = perks_center_elem( self, -40 + i * 22, 1.25 );
+	}
 	self perks_shop_draw( offer, sel );
 	// Wait for the opening hold to be released.
 	held = self UseButtonPressed();
@@ -845,8 +854,9 @@ perks_shop_menu()
 	}
 	for ( i = 0; i < self.bo1sz_shop_lines.size; i++ )
 	{
-		self.bo1sz_shop_lines[ i ].alpha = 0;
+		self.bo1sz_shop_lines[ i ] Destroy();
 	}
+	self.bo1sz_shop_lines = undefined;
 	// Don't reopen until USE is released.
 	held = self UseButtonPressed();
 	while ( held )

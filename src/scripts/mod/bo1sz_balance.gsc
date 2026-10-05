@@ -432,6 +432,8 @@ init()
 	level.bo1sz_bal[ "pacing.spawn_delay_extra_mult" ] = 0.9;
 	level.bo1sz_bal[ "pacing.spawn_delay_floor" ] = 0.08;
 	level.bo1sz_bal[ "pacing.health_growth_mult" ] = 0.07;
+	level.bo1sz_bal[ "pacing.start_spawn_delay" ] = 1.2;
+	level.bo1sz_bal[ "pacing.move_speed_mult" ] = 10;
 	// payoffs.csv
 	level.bo1sz_bal[ "payoffs.excluded_weapons" ] = "ray_gun thundergun tesla_gun freezegun shrink_ray microwavegun humangun black_hole quantum sniper_explosive";
 	level.bo1sz_bal[ "payoffs.pistol_step_mult" ] = 0.5;
@@ -574,7 +576,7 @@ init()
 	level.bo1sz_bal[ "style.variety_window" ] = 3;
 	level.bo1sz_bal[ "style.hit_cap_per_sec" ] = 8;
 	level.bo1sz_bal[ "style.hit_cap_per_sec_aoe" ] = 20;
-	level.bo1sz_bal[ "style.chain_window_ms" ] = 3000;
+	level.bo1sz_bal[ "style.chain_window_ms" ] = 4000;
 	level.bo1sz_bal[ "style.chain_step" ] = 0.1;
 	level.bo1sz_bal[ "style.chain_max_mult" ] = 3.0;
 	level.bo1sz_bal[ "style.pause_between_rounds" ] = 1;
@@ -646,8 +648,8 @@ init()
 	level.bo1sz_style_ranks_ammo_chance[ 0 ] = 0;
 	level.bo1sz_style_ranks_letter[ 1 ] = "C";
 	level.bo1sz_style_ranks_word[ 1 ] = "Cold-Blooded";
-	level.bo1sz_style_ranks_gain_mult[ 1 ] = 0.9;
-	level.bo1sz_style_ranks_decay_per_sec[ 1 ] = 6;
+	level.bo1sz_style_ranks_gain_mult[ 1 ] = 0.95;
+	level.bo1sz_style_ranks_decay_per_sec[ 1 ] = 5;
 	level.bo1sz_style_ranks_r[ 1 ] = 0.55;
 	level.bo1sz_style_ranks_g[ 1 ] = 0.80;
 	level.bo1sz_style_ranks_b[ 1 ] = 1.00;
@@ -655,8 +657,8 @@ init()
 	level.bo1sz_style_ranks_ammo_chance[ 1 ] = 0;
 	level.bo1sz_style_ranks_letter[ 2 ] = "B";
 	level.bo1sz_style_ranks_word[ 2 ] = "Butcher";
-	level.bo1sz_style_ranks_gain_mult[ 2 ] = 0.8;
-	level.bo1sz_style_ranks_decay_per_sec[ 2 ] = 8;
+	level.bo1sz_style_ranks_gain_mult[ 2 ] = 0.9;
+	level.bo1sz_style_ranks_decay_per_sec[ 2 ] = 6;
 	level.bo1sz_style_ranks_r[ 2 ] = 0.45;
 	level.bo1sz_style_ranks_g[ 2 ] = 1.00;
 	level.bo1sz_style_ranks_b[ 2 ] = 0.55;
@@ -664,8 +666,8 @@ init()
 	level.bo1sz_style_ranks_ammo_chance[ 2 ] = 3;
 	level.bo1sz_style_ranks_letter[ 3 ] = "A";
 	level.bo1sz_style_ranks_word[ 3 ] = "Annihilator";
-	level.bo1sz_style_ranks_gain_mult[ 3 ] = 0.7;
-	level.bo1sz_style_ranks_decay_per_sec[ 3 ] = 11;
+	level.bo1sz_style_ranks_gain_mult[ 3 ] = 0.85;
+	level.bo1sz_style_ranks_decay_per_sec[ 3 ] = 8;
 	level.bo1sz_style_ranks_r[ 3 ] = 1.00;
 	level.bo1sz_style_ranks_g[ 3 ] = 0.90;
 	level.bo1sz_style_ranks_b[ 3 ] = 0.30;
@@ -673,8 +675,8 @@ init()
 	level.bo1sz_style_ranks_ammo_chance[ 3 ] = 5;
 	level.bo1sz_style_ranks_letter[ 4 ] = "S";
 	level.bo1sz_style_ranks_word[ 4 ] = "Slaughterhouse";
-	level.bo1sz_style_ranks_gain_mult[ 4 ] = 0.6;
-	level.bo1sz_style_ranks_decay_per_sec[ 4 ] = 14;
+	level.bo1sz_style_ranks_gain_mult[ 4 ] = 0.8;
+	level.bo1sz_style_ranks_decay_per_sec[ 4 ] = 10;
 	level.bo1sz_style_ranks_r[ 4 ] = 1.00;
 	level.bo1sz_style_ranks_g[ 4 ] = 0.60;
 	level.bo1sz_style_ranks_b[ 4 ] = 0.15;
@@ -682,8 +684,8 @@ init()
 	level.bo1sz_style_ranks_ammo_chance[ 4 ] = 8;
 	level.bo1sz_style_ranks_letter[ 5 ] = "SS";
 	level.bo1sz_style_ranks_word[ 5 ] = "Spine-Shattering";
-	level.bo1sz_style_ranks_gain_mult[ 5 ] = 0.5;
-	level.bo1sz_style_ranks_decay_per_sec[ 5 ] = 18;
+	level.bo1sz_style_ranks_gain_mult[ 5 ] = 0.75;
+	level.bo1sz_style_ranks_decay_per_sec[ 5 ] = 12;
 	level.bo1sz_style_ranks_r[ 5 ] = 1.00;
 	level.bo1sz_style_ranks_g[ 5 ] = 0.30;
 	level.bo1sz_style_ranks_b[ 5 ] = 0.20;
@@ -691,8 +693,8 @@ init()
 	level.bo1sz_style_ranks_ammo_chance[ 5 ] = 12;
 	level.bo1sz_style_ranks_letter[ 6 ] = "SSS";
 	level.bo1sz_style_ranks_word[ 6 ] = "Schutzstaffel Slayer";
-	level.bo1sz_style_ranks_gain_mult[ 6 ] = 0.4;
-	level.bo1sz_style_ranks_decay_per_sec[ 6 ] = 22;
+	level.bo1sz_style_ranks_gain_mult[ 6 ] = 0.7;
+	level.bo1sz_style_ranks_decay_per_sec[ 6 ] = 14;
 	level.bo1sz_style_ranks_r[ 6 ] = 0.85;
 	level.bo1sz_style_ranks_g[ 6 ] = 0.25;
 	level.bo1sz_style_ranks_b[ 6 ] = 1.00;

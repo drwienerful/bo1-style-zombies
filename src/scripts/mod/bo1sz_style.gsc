@@ -267,8 +267,9 @@ style_hud_create()
 	// Archetype name sits beside the letter; filled in at Milestone 5.
 	self.bo1sz_hud_arch = self style_hud_elem( 70, -70, 1.2 );
 	self.bo1sz_hud_arch SetText( "" );
-	self.bo1sz_hud_chain = self style_hud_elem( 14, -12, 1.2 );
-	self.bo1sz_hud_chain.alpha = 0;
+	// The chain counter and rank pop-up are created only while shown: the engine draws a
+	// limited number of HUD elements per player, and idle ones crowded out stock's round
+	// counter and perk icons (playtest 2026-10-05).
 	self.bo1sz_hud_chain_shown = 0;
 
 	self.bo1sz_hud_bg = self style_hud_elem( 12, -28, 1 );
@@ -279,17 +280,6 @@ style_hud_create()
 
 	self.bo1sz_hud_bar = self style_hud_elem( 12, -28, 1 );
 	self.bo1sz_hud_bar SetShader( "white", 1, 6 );
-
-	pop = NewClientHudElem( self );
-	pop.horzAlign = "user_center";
-	pop.vertAlign = "middle";
-	pop.alignX = "center";
-	pop.alignY = "middle";
-	pop.y = -120;
-	pop.fontScale = 1.6;
-	pop.foreground = true;
-	pop.alpha = 0;
-	self.bo1sz_hud_pop = pop;
 
 	self.bo1sz_hud_shown_rank = -1;
 }
@@ -342,6 +332,19 @@ style_popup( up )
 	self endon( "bo1sz_style_popup" );
 
 	r = self.bo1sz_style_rank;
+	if ( !isDefined( self.bo1sz_hud_pop ) )
+	{
+		pop = NewClientHudElem( self );
+		pop.horzAlign = "user_center";
+		pop.vertAlign = "middle";
+		pop.alignX = "center";
+		pop.alignY = "middle";
+		pop.y = -120;
+		pop.fontScale = 1.6;
+		pop.foreground = true;
+		pop.alpha = 0;
+		self.bo1sz_hud_pop = pop;
+	}
 	pop = self.bo1sz_hud_pop;
 	pop SetText( level.bo1sz_style_ranks_word[ r ] );
 	pop.color = ( level.bo1sz_style_ranks_r[ r ], level.bo1sz_style_ranks_g[ r ], level.bo1sz_style_ranks_b[ r ] );
@@ -358,6 +361,9 @@ style_popup( up )
 	wait style_bal( "popup_seconds" );
 	pop FadeOverTime( 0.4 );
 	pop.alpha = 0;
+	wait 0.45;
+	pop Destroy();
+	self.bo1sz_hud_pop = undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -953,8 +959,16 @@ style_chain_hud()
 	self.bo1sz_hud_chain_shown = n;
 	if ( n == 0 || isDefined( self.bo1sz_style_hidden ) )
 	{
-		self.bo1sz_hud_chain.alpha = 0;
+		if ( isDefined( self.bo1sz_hud_chain ) )
+		{
+			self.bo1sz_hud_chain Destroy();
+			self.bo1sz_hud_chain = undefined;
+		}
 		return;
+	}
+	if ( !isDefined( self.bo1sz_hud_chain ) )
+	{
+		self.bo1sz_hud_chain = self style_hud_elem( 14, -12, 1.2 );
 	}
 	self.bo1sz_hud_chain SetText( "Chain x" + n );
 	self.bo1sz_hud_chain.alpha = 1;

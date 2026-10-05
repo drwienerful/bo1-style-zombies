@@ -505,13 +505,19 @@ boss_hud_hide()
 	for ( i = 0; i < players.size; i++ )
 	{
 		p = players[ i ];
+		// Destroyed, not hidden (HUD draw limit).
 		if ( isDefined( p.bo1sz_boss_name ) )
 		{
-			p.bo1sz_boss_name.alpha = 0;
-			p.bo1sz_boss_bg.alpha = 0;
-			p.bo1sz_boss_bar.alpha = 0;
-			p.bo1sz_boss_phase.alpha = 0;
-			p.bo1sz_boss_warn SetText( "" );
+			p.bo1sz_boss_name Destroy();
+			p.bo1sz_boss_bg Destroy();
+			p.bo1sz_boss_bar Destroy();
+			p.bo1sz_boss_phase Destroy();
+			p.bo1sz_boss_warn Destroy();
+			p.bo1sz_boss_name = undefined;
+			p.bo1sz_boss_bg = undefined;
+			p.bo1sz_boss_bar = undefined;
+			p.bo1sz_boss_phase = undefined;
+			p.bo1sz_boss_warn = undefined;
 		}
 	}
 }
