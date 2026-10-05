@@ -15,7 +15,8 @@
 //   Quick Revive II = Scavenger (kills may refill every gun's magazine), Mule Kick II
 //   extra ammo reserve, Deadshot II headshot damage. Name + description shown in game.
 //
-// Dvar: bo1sz_perks 0 disables this module. Tunables: data/balance/perks.csv.
+// Dvars: bo1sz_perks 0 disables this module; bo1sz_perks_debug 1 logs perk machines at
+// load and, while USE is held, the nearest machines. Tunables: data/balance/perks.csv.
 
 init()
 {
@@ -51,6 +52,10 @@ perks_start()
 	level thread perks_install_hooks();
 	level thread perks_global_dvars();
 	perks_log( "perks on (minus fn=" + isDefined( level.bo1sz_perk_minus ) + " machines=" + GetEntArray( "zombie_vending", "targetname" ).size + ")" );
+	if ( getDvar( "bo1sz_perks_debug" ) == "1" )
+	{
+		level thread perks_debug_machines();
+	}
 
 	players = GetPlayers();
 	for ( i = 0; i < players.size; i++ )
@@ -482,9 +487,21 @@ perks_tiers_tick()
 	if ( perk == "" )
 	{
 		self.bo1sz_use_ms = 0;
+		if ( getDvar( "bo1sz_perks_debug" ) == "1" )
+		{
+			held = self UseButtonPressed();
+			if ( held )
+			{
+				self perks_debug_use();
+			}
+		}
 		return;
 	}
 	pressed = self UseButtonPressed();
+	if ( pressed && getDvar( "bo1sz_perks_debug" ) == "1" )
+	{
+		self perks_debug_use();
+	}
 	if ( !pressed )
 	{
 		self.bo1sz_use_ms = 0;
@@ -575,4 +592,74 @@ perks_global_dvars()
 			}
 		}
 	}
+}
+
+// Debug: every perk machine trigger once, after power has had time to come on.
+perks_debug_machines()
+{
+	wait 30;
+	trigs = GetEntArray( "zombie_vending", "targetname" );
+	for ( i = 0; i < trigs.size; i++ )
+	{
+		perks_log( "machine " + i + " " + perks_dbg_str( trigs[ i ].script_noteworthy ) + " at " + trigs[ i ].origin + " cost=" + perks_dbg_str( trigs[ i ].cost ) );
+	}
+}
+
+// Debug: while USE is held (at most once a second), the three nearest machines.
+perks_debug_use()
+{
+	now = getTime();
+	if ( isDefined( self.bo1sz_dbg_ms ) && now - self.bo1sz_dbg_ms < 1000 )
+	{
+		return;
+	}
+	self.bo1sz_dbg_ms = now;
+	trigs = GetEntArray( "zombie_vending", "targetname" );
+	line = "use at " + self.origin + ":";
+	for ( k = 0; k < 3 && k < trigs.size; k++ )
+	{
+		best = -1;
+		best_d = 999999;
+		for ( i = 0; i < trigs.size; i++ )
+		{
+			if ( isDefined( trigs[ i ].bo1sz_dbg_used ) )
+			{
+				continue;
+			}
+			d = Distance( self.origin, trigs[ i ].origin );
+			if ( d < best_d )
+			{
+				best_d = d;
+				best = i;
+			}
+		}
+		if ( best < 0 )
+		{
+			break;
+		}
+		trigs[ best ].bo1sz_dbg_used = true;
+		p = trigs[ best ].script_noteworthy;
+		has = false;
+		tier = false;
+		if ( isDefined( p ) )
+		{
+			has = self HasPerk( p );
+			tier = perks_has_tier( self, p );
+		}
+		line = line + " [" + perks_dbg_str( p ) + " d=" + int( best_d ) + " has=" + has + " tier=" + tier + "]";
+	}
+	for ( i = 0; i < trigs.size; i++ )
+	{
+		trigs[ i ].bo1sz_dbg_used = undefined;
+	}
+	perks_log( self.playername + " " + line );
+}
+
+perks_dbg_str( v )
+{
+	if ( !isDefined( v ) )
+	{
+		return "undef";
+	}
+	return "" + v;
 }
