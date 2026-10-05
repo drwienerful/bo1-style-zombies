@@ -62,6 +62,7 @@ init()
 	level.bo1sz_bal[ "archetype_rules.gunner_t2_speed" ] = 1.1;
 	level.bo1sz_bal[ "archetype_rules.gunner_t3_refund" ] = 5;
 	level.bo1sz_bal[ "archetype_rules.sniper_fastads_perk" ] = "specialty_fastads";
+	level.bo1sz_bal[ "archetype_rules.sniper_spread_mult" ] = 0.15;
 	// archetypes.csv
 	level.bo1sz_archetypes_id = [];
 	level.bo1sz_archetypes_name = [];

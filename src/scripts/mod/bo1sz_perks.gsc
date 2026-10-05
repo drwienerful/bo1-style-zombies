@@ -55,6 +55,7 @@ perks_start()
 	perks_record_homes();
 	level thread perks_install_hooks();
 	level thread perks_global_dvars();
+	level thread perks_sniper_spread();
 	perks_log( "perks on (minus fn=" + isDefined( level.bo1sz_perk_minus ) + " machines=" + GetEntArray( "zombie_vending", "targetname" ).size + ")" );
 	if ( getDvar( "bo1sz_perks_debug" ) == "1" )
 	{
@@ -1049,6 +1050,7 @@ perks_handling()
 {
 	cls = perks_weapon_class( self GetCurrentWeapon() );
 	sniper = ( cls == "sniper" );
+	self.bo1sz_holding_sniper = sniper;
 
 	// Double Tap's fire-rate flag while holding a sniper (Marksman Awakened).
 	self perks_set_flag( "specialty_rof", sniper && perks_arch( self, "marksman" ) >= 1 && perks_rule( "marksman_t1_rof" ) == 1 );
@@ -1148,5 +1150,36 @@ perks_panel_tick()
 	{
 		self.bo1sz_panel_perks_text = s;
 		self.bo1sz_panel_perks SetText( s );
+	}
+}
+
+// Sniper hip-fire (user: the crosshair should be much, much smaller). Steady aim is granted
+// while a sniper is held, and the engine scales hip-fire spread (and the crosshair) by
+// perk_weapSpreadMultiplier. It is a game-wide dvar, so the tight value applies while any
+// player holds a sniper; otherwise the stock value is restored.
+perks_sniper_spread()
+{
+	stock = getDvar( "perk_weapSpreadMultiplier" );
+	tight = "" + perks_rule( "sniper_spread_mult" );
+	for ( ;; )
+	{
+		wait 0.2;
+		want = stock;
+		players = GetPlayers();
+		for ( i = 0; i < players.size; i++ )
+		{
+			if ( isDefined( players[ i ].bo1sz_holding_sniper ) && players[ i ].bo1sz_holding_sniper )
+			{
+				want = tight;
+			}
+		}
+		if ( getDvar( "perk_weapSpreadMultiplier" ) != want )
+		{
+			setDvar( "perk_weapSpreadMultiplier", want );
+			for ( i = 0; i < players.size; i++ )
+			{
+				players[ i ] SetClientDvar( "perk_weapSpreadMultiplier", want );
+			}
+		}
 	}
 }

@@ -53,3 +53,4 @@ gunner_t1_max_mult,1.5,Gunner Awakened: suppressive fire cap
 gunner_t2_speed,1.1,Gunner Ascended: movement speed while holding an LMG
 gunner_t3_refund,5,Gunner capstone: bullets refunded per LMG kill
 sniper_fastads_perk,specialty_fastads,granted while holding a sniper (faster aim down sights; effect unproven)
+sniper_spread_mult,0.15,perk_weapSpreadMultiplier while a sniper is held (stock 0.65 with steady aim): much smaller hip-fire spread and crosshair (user request)
