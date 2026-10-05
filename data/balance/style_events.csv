@@ -1,11 +1,11 @@
 name,points,archetype
 kill,5,none
-headshot,12,gunslinger
-headshot_streak,4,gunslinger
+headshot,12,auto
+headshot_streak,4,auto
 multi_kill,10,auto
-long_range,12,marksman
+long_range,12,auto
 melee,15,brawler
-explosive,6,demolitions
+explosive,6,auto
 clutch,12,none
 variety,8,none
 revive,25,none

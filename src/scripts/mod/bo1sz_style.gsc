@@ -467,6 +467,18 @@ style_ev_arch( name )
 	return level.bo1sz_style_ev_arch[ name ];
 }
 
+// "auto" events credit the archetype of the weapon used (a shotgun headshot feeds
+// Blaster, not Gunslinger: playtest 2026-10-05, shotgun-only run grew Gunslinger).
+style_event_arch( name, cls, mod )
+{
+	a = style_ev_arch( name );
+	if ( a == "auto" )
+	{
+		return style_class_arch( cls, mod );
+	}
+	return a;
+}
+
 // ---------------------------------------------------------------------------
 // Hooks: wrap stock callbacks (stock always runs first; proven in Phase 0 B3/B8)
 // ---------------------------------------------------------------------------
@@ -729,7 +741,7 @@ style_on_kill( attacker, mod, weapon, hitloc )
 		{
 			best_pts = pts;
 			best_tag = "headshot";
-			best_arch = style_ev_arch( "headshot" );
+			best_arch = style_event_arch( "headshot", cls, mod );
 		}
 	}
 	else
@@ -791,7 +803,7 @@ style_on_kill( attacker, mod, weapon, hitloc )
 		{
 			best_pts = pts;
 			best_tag = "explosive";
-			best_arch = style_ev_arch( "explosive" );
+			best_arch = style_event_arch( "explosive", cls, mod );
 		}
 	}
 
@@ -810,7 +822,7 @@ style_on_kill( attacker, mod, weapon, hitloc )
 		{
 			best_pts = pts;
 			best_tag = "long_range";
-			best_arch = style_ev_arch( "long_range" );
+			best_arch = style_event_arch( "long_range", cls, mod );
 		}
 	}
 
