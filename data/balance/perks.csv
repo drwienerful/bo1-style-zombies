@@ -11,8 +11,8 @@ tier_hold_seconds,0.75,hold USE this long at an owned perk's machine to buy tier
 jugg2_health_bonus,50,Juggernog II extra max health
 speed2_reload_mult,0.35,Speed Cola II perk_weapReloadMultiplier (stock Speed Cola 0.5)
 dt2b_rate_mult,0.769,Double Tap II perk_weapRateMultiplier (+30% fire rate; DT 2.0 alone 0.8333)
-qr2_regen_hp,10,Quick Revive II health regained per tick
-qr2_regen_interval,0.5,Quick Revive II seconds per regen tick
-qr2_regen_delay_ms,2000,Quick Revive II regen starts this long after last damage
 deadshot2_hs_mult,1.25,Deadshot II headshot damage multiplier
 mule2_extra_reserves,1,Mule Kick II extra spare reserves per weapon (ammo module)
+scavenger_chance,8,Quick Revive II (Scavenger): percent chance per kill
+scavenger_clip_frac,0.3,Quick Revive II (Scavenger): fraction of each gun's clip size refilled (min 1)
+tier_popup_seconds,3,how long the tier name and description stay on screen after purchase

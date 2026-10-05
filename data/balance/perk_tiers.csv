@@ -1,7 +1,7 @@
-perk,name,price
-specialty_armorvest,Juggernog II,3000
-specialty_fastreload,Speed Cola II,3000
-specialty_rof,Double Tap II,3000
-specialty_quickrevive,Quick Revive II,3000
-specialty_additionalprimaryweapon,Mule Kick II,3000
-specialty_deadshot,Deadshot II,3000
+perk,name,price,desc
+specialty_armorvest,Juggernog II,3000,+50 max health
+specialty_fastreload,Speed Cola II,3000,Reloads even faster (0.35x reload time)
+specialty_rof,Double Tap II,3000,Fire rate up to +30%
+specialty_quickrevive,Quick Revive II: Scavenger,3000,Kills may refill 30% of every gun's magazine (8% chance)
+specialty_additionalprimaryweapon,Mule Kick II,3000,One more spare ammo reserve on every weapon
+specialty_deadshot,Deadshot II,3000,+25% headshot damage

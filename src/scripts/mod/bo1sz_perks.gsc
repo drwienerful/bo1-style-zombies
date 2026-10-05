@@ -12,7 +12,8 @@
 //
 //   Perk tier II (step 2): hold USE at an owned perk's machine to buy tier II
 //   (perk_tiers.csv): Jugg II health, Speed Cola II reload, Double Tap II fire rate,
-//   Quick Revive II regen, Mule Kick II extra ammo reserve, Deadshot II headshot damage.
+//   Quick Revive II = Scavenger (kills may refill every gun's magazine), Mule Kick II
+//   extra ammo reserve, Deadshot II headshot damage. Name + description shown in game.
 //
 // Dvar: bo1sz_perks 0 disables this module. Tunables: data/balance/perks.csv.
 
@@ -258,7 +259,7 @@ perks_dt2_steady()
 perks_install_hooks()
 {
 	t = 0;
-	while ( !isDefined( level.overrideActorDamage ) && t < 300 )
+	while ( ( !isDefined( level.overrideActorDamage ) || !isDefined( level.overrideActorKilled ) ) && t < 300 )
 	{
 		wait 0.1;
 		t++;
@@ -269,6 +270,59 @@ perks_install_hooks()
 	}
 	level.bo1sz_perks_orig_damage = level.overrideActorDamage;
 	level.overrideActorDamage = ::perks_actor_damage;
+	level.bo1sz_perks_orig_killed = level.overrideActorKilled;
+	level.overrideActorKilled = ::perks_actor_killed;
+}
+
+perks_actor_killed( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, psOffsetTime )
+{
+	if ( isDefined( level.bo1sz_perks_orig_killed ) )
+	{
+		self [[ level.bo1sz_perks_orig_killed ]]( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, psOffsetTime );
+	}
+	if ( isDefined( attacker ) && isPlayer( attacker ) && perks_has_tier( attacker, "specialty_quickrevive" ) && RandomInt( 100 ) < perks_bal( "scavenger_chance" ) )
+	{
+		attacker perks_scavenge();
+	}
+}
+
+// Quick Revive II (Scavenger): refill part of every carried gun's magazine.
+perks_scavenge()
+{
+	list = self GetWeaponsList();
+	n = 0;
+	for ( i = 0; i < list.size; i++ )
+	{
+		w = list[ i ];
+		if ( w == "none" || WeaponClass( w ) == "grenade" )
+		{
+			continue;
+		}
+		size = WeaponClipSize( w );
+		if ( size <= 0 )
+		{
+			continue;
+		}
+		clip = self GetWeaponAmmoClip( w );
+		add = int( size * perks_bal( "scavenger_clip_frac" ) );
+		if ( add < 1 )
+		{
+			add = 1;
+		}
+		if ( clip + add > size )
+		{
+			add = size - clip;
+		}
+		if ( add > 0 )
+		{
+			self SetWeaponAmmoClip( w, clip + add );
+			n++;
+		}
+	}
+	if ( n > 0 )
+	{
+		self iPrintLn( "Scavenger: magazines refilled" );
+	}
 }
 
 perks_actor_damage( inflictor, attacker, damage, flags, meansofdeath, weapon, vpoint, vdir, sHitLoc, modelIndex, psOffsetTime )
@@ -303,11 +357,13 @@ perks_build_tiers()
 {
 	level.bo1sz_tier_name = [];
 	level.bo1sz_tier_price = [];
+	level.bo1sz_tier_desc = [];
 	for ( i = 0; i < level.bo1sz_perk_tiers_count; i++ )
 	{
 		perk = level.bo1sz_perk_tiers_perk[ i ];
 		level.bo1sz_tier_name[ perk ] = level.bo1sz_perk_tiers_name[ i ];
 		level.bo1sz_tier_price[ perk ] = level.bo1sz_perk_tiers_price[ i ];
+		level.bo1sz_tier_desc[ perk ] = level.bo1sz_perk_tiers_desc[ i ];
 	}
 }
 
@@ -327,11 +383,44 @@ perks_tiers_init()
 	self.bo1sz_tier_hint.y = 110;
 	self.bo1sz_tier_hint.fontScale = 1.3;
 	self.bo1sz_tier_hint.alpha = 0;
+	self.bo1sz_tier_hint_desc = perks_center_elem( self, 128, 1.1 );
+	self.bo1sz_tier_pop_name = perks_center_elem( self, -110, 1.8 );
+	self.bo1sz_tier_pop_desc = perks_center_elem( self, -86, 1.2 );
 	self.bo1sz_tier_hint_perk = "";
 	self.bo1sz_use_ms = 0;
-	self.bo1sz_last_health = self.health;
-	self.bo1sz_last_dmg_ms = 0;
-	self.bo1sz_regen_ms = 0;
+}
+
+perks_center_elem( player, y, scale )
+{
+	e = NewClientHudElem( player );
+	e.horzAlign = "user_center";
+	e.vertAlign = "middle";
+	e.alignX = "center";
+	e.alignY = "middle";
+	e.y = y;
+	e.fontScale = scale;
+	e.foreground = true;
+	e.alpha = 0;
+	return e;
+}
+
+// Name in large text with its description underneath, then fade out.
+perks_tier_popup( perk )
+{
+	self endon( "disconnect" );
+	self notify( "bo1sz_tier_popup" );
+	self endon( "bo1sz_tier_popup" );
+	self.bo1sz_tier_pop_name SetText( level.bo1sz_tier_name[ perk ] );
+	self.bo1sz_tier_pop_desc SetText( level.bo1sz_tier_desc[ perk ] );
+	self.bo1sz_tier_pop_name FadeOverTime( 0.2 );
+	self.bo1sz_tier_pop_desc FadeOverTime( 0.2 );
+	self.bo1sz_tier_pop_name.alpha = 1;
+	self.bo1sz_tier_pop_desc.alpha = 1;
+	wait perks_bal( "tier_popup_seconds" );
+	self.bo1sz_tier_pop_name FadeOverTime( 0.5 );
+	self.bo1sz_tier_pop_desc FadeOverTime( 0.5 );
+	self.bo1sz_tier_pop_name.alpha = 0;
+	self.bo1sz_tier_pop_desc.alpha = 0;
 }
 
 perks_tiers_tick()
@@ -363,23 +452,6 @@ perks_tiers_tick()
 		self.maxhealth = self.bo1sz_jugg2_max;
 	}
 
-	// Quick Revive II: steady regen after a short time without damage.
-	if ( self.health < self.bo1sz_last_health )
-	{
-		self.bo1sz_last_dmg_ms = now;
-	}
-	if ( perks_has_tier( self, "specialty_quickrevive" ) && self.health < self.maxhealth && now - self.bo1sz_last_dmg_ms > perks_bal( "qr2_regen_delay_ms" ) && now - self.bo1sz_regen_ms >= perks_bal( "qr2_regen_interval" ) * 1000 )
-	{
-		self.bo1sz_regen_ms = now;
-		hp = self.health + perks_bal( "qr2_regen_hp" );
-		if ( hp > self.maxhealth )
-		{
-			hp = self.maxhealth;
-		}
-		self.health = hp;
-	}
-	self.bo1sz_last_health = self.health;
-
 	// Prompt and purchase at the machine of an owned perk that has a tier II.
 	perk = "";
 	machine = perks_near_machine( self );
@@ -397,11 +469,14 @@ perks_tiers_tick()
 		if ( perk == "" )
 		{
 			self.bo1sz_tier_hint.alpha = 0;
+			self.bo1sz_tier_hint_desc.alpha = 0;
 		}
 		else
 		{
 			self.bo1sz_tier_hint SetText( "Hold USE: " + level.bo1sz_tier_name[ perk ] + " (" + level.bo1sz_tier_price[ perk ] + ")" );
+			self.bo1sz_tier_hint_desc SetText( level.bo1sz_tier_desc[ perk ] );
 			self.bo1sz_tier_hint.alpha = 1;
+			self.bo1sz_tier_hint_desc.alpha = 1;
 		}
 	}
 	if ( perk == "" )
@@ -457,7 +532,7 @@ perks_buy_tier( perk )
 		self.bo1sz_extra_reserve_bonus = perks_bal( "mule2_extra_reserves" );
 	}
 	self PlayLocalSound( "zmb_cha_ching" );
-	self iPrintLnBold( level.bo1sz_tier_name[ perk ] );
+	self thread perks_tier_popup( perk );
 	perks_log( self.playername + " bought " + level.bo1sz_tier_name[ perk ] + " for " + price );
 	self.bo1sz_tier_hint_perk = "-";
 }
