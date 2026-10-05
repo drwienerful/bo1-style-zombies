@@ -38,6 +38,7 @@ def render():
     events = rows("style_events")
     tiers = rows("perk_tiers")
     archs = rows("archetypes")
+    boss = kv("boss")
     augs = rows("augments")
     arch_name = {a["id"]: a["name"] for a in archs}
 
@@ -111,7 +112,25 @@ def render():
         "(Marksman), melee (Brawler), shotguns (Blaster), launchers and explosives (Demolitions), "
         "wonder weapons, claymores and monkeys (Tech).",
         "",
-        "### Augments",
+        "## Boss",
+        "",
+        f"At round {boss['round']} (or the next normal round), the first zombie becomes **{boss['name']}**, "
+        f"with {boss['hp_mult']}x that round's zombie health per player. Its name and health bar appear at the top.",
+        "",
+        table(["Phase", "Health", "What happens"], [
+            ["1. Onslaught", f"100-{int(float(boss['phase2_at']) * 100)}%",
+             f"Push it below {int(float(boss['phase2_at']) * 100)}% within {boss['p1_timer']}s or it enrages and sprints"],
+            ["2. Hunt", f"{int(float(boss['phase2_at']) * 100)}-{int(float(boss['phase3_at']) * 100)}%",
+             f"It sprints; every {boss['p2_pulse_interval']}s \"PULSE INCOMING\" warns of a {boss['p2_pulse_damage']}-damage pulse around it"],
+            ["3. Iron Skin", f"{int(float(boss['phase3_at']) * 100)}-0%",
+             f"Only headshots and explosives do full damage; every {boss['p3_crack_interval']}s \"ARMOUR DOWN!\" "
+             f"gives {boss['p3_crack_seconds']}s of x{boss['p3_crack_mult']} damage"],
+        ]),
+        "",
+        f"No single moment can take more than {int(float(boss['hit_cap_frac']) * 100)}% of its health. "
+        f"Defeating it shows a victory summary and gives the killer {boss['kill_points']} points.",
+        "",
+        "## Augments",
         "",
         "Offered 1 of 3 when an archetype ascends: tap USE to move, hold USE to choose.",
         "",

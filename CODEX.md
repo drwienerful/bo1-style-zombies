@@ -78,7 +78,19 @@ Your play quietly builds affinity for six archetypes. At round breaks you can ea
 
 Affinity comes from: pistols and headshots (Gunslinger), snipers, piercing and range (Marksman), melee (Brawler), shotguns (Blaster), launchers and explosives (Demolitions), wonder weapons, claymores and monkeys (Tech).
 
-### Augments
+## Boss
+
+At round 25 (or the next normal round), the first zombie becomes **Der Eiserne**, with 40x that round's zombie health per player. Its name and health bar appear at the top.
+
+| Phase | Health | What happens |
+|---|---|---|
+| 1. Onslaught | 100-66% | Push it below 66% within 45s or it enrages and sprints |
+| 2. Hunt | 66-33% | It sprints; every 6s "PULSE INCOMING" warns of a 60-damage pulse around it |
+| 3. Iron Skin | 33-0% | Only headshots and explosives do full damage; every 12s "ARMOUR DOWN!" gives 4s of x2.0 damage |
+
+No single moment can take more than 10% of its health. Defeating it shows a victory summary and gives the killer 5000 points.
+
+## Augments
 
 Offered 1 of 3 when an archetype ascends: tap USE to move, hold USE to choose.
 
