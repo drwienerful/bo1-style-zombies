@@ -1,0 +1,6 @@
+key,value,notes
+cap,128,max zombies alive at once from cap_round (user asked for 128; the engine's actor limit decides what really happens; see the pacing log)
+cap_round,10,round from which the raised cap applies (stock limit before it)
+spawn_delay_extra_mult,0.9,extra per-round multiplier on the stock spawn delay (stock already x0.95 per round)
+spawn_delay_floor,0.08,never go below the stock floor
+health_growth_mult,0.07,zombie health growth per round after round 10 (stock 0.1)

@@ -275,6 +275,12 @@ init()
 	level.bo1sz_augments_kind[ 29 ] = "special";
 	level.bo1sz_augments_value[ 29 ] = 50;
 	level.bo1sz_augments_count = 30;
+	// pacing.csv
+	level.bo1sz_bal[ "pacing.cap" ] = 128;
+	level.bo1sz_bal[ "pacing.cap_round" ] = 10;
+	level.bo1sz_bal[ "pacing.spawn_delay_extra_mult" ] = 0.9;
+	level.bo1sz_bal[ "pacing.spawn_delay_floor" ] = 0.08;
+	level.bo1sz_bal[ "pacing.health_growth_mult" ] = 0.07;
 	// payoffs.csv
 	level.bo1sz_bal[ "payoffs.excluded_weapons" ] = "ray_gun thundergun tesla_gun freezegun shrink_ray microwavegun humangun black_hole quantum sniper_explosive";
 	level.bo1sz_bal[ "payoffs.pistol_step_mult" ] = 0.5;
