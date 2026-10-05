@@ -4,7 +4,9 @@
 # Pick the first interpreter that actually runs (Windows has a python3 Store stub).
 for PY in python3 python py; do
   if "$PY" -c "import sys" >/dev/null 2>&1; then
-    exec "$PY" tools/check_no_game_files.py
+    "$PY" tools/check_no_game_files.py || exit 1
+    "$PY" tools/build_balance.py --check || exit 1
+    exec "$PY" tools/gsc_lint.py
   fi
 done
 echo "pre-commit: no working Python found; cannot verify no game files are staged." >&2

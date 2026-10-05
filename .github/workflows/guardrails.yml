@@ -9,3 +9,5 @@ jobs:
         with:
           python-version: "3.12"
       - run: python tools/check_no_game_files.py --all
+      - run: python tools/build_balance.py --check
+      - run: python tools/gsc_lint.py
