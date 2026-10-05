@@ -549,6 +549,7 @@ boss_victory( killer )
 boss_victory_screen()
 {
 	self endon( "disconnect" );
+	boss_log( "victory screen: start for " + self.playername );
 	// Hide the style meter so the ending screen is clean.
 	style_elems = [];
 	style_elems[ 0 ] = self.bo1sz_hud_letter;
@@ -594,6 +595,7 @@ boss_victory_screen()
 		}
 		lines[ lines.size ] = "Archetypes: " + s;
 	}
+	boss_log( "victory screen: " + lines.size + " lines built" );
 	// Placed below stock's end-screen lines ("GAME OVER" at y -130, rounds at -100) and kept
 	// up through the end sequence, so the ending reads as a victory. Stock has no hook to
 	// change its own text, and stock's end sequence only destroys its own HUD.
@@ -616,13 +618,26 @@ boss_victory_screen()
 		e.alpha = 1;
 		elems[ i ] = e;
 	}
-	// Keep a reference on the player: HUD elements held only by locals of a thread that
-	// ends are freed (the summary vanished when this thread returned, 2026-10-05).
+	made = 0;
+	for ( i = 0; i < elems.size; i++ )
+	{
+		if ( isDefined( elems[ i ] ) )
+		{
+			made++;
+		}
+	}
+	boss_log( "victory screen: " + made + " of " + lines.size + " elements created" );
+	// Keep references on the player and keep this thread alive while the summary is up
+	// (the build whose thread waited showed the summary; the one that returned didn't).
 	self.bo1sz_victory_elems = elems;
 	self PlayLocalSound( boss_bal( "victory_sound" ) );
+	boss_log( "victory screen: shown" );
 	if ( boss_bal( "end_on_victory" ) == 1 )
 	{
-		return;
+		for ( ;; )
+		{
+			wait 1;
+		}
 	}
 	// Endless play: fade the summary after a while and bring the style meter back.
 	wait boss_bal( "victory_seconds" );
