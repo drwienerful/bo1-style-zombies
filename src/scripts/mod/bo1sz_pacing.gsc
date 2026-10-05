@@ -8,7 +8,8 @@
 // by stock, and the per-round log below records the real peak.
 //
 // Dvars: bo1sz_pacing 0 disables (stock pacing); bo1sz_pacing_test 1 applies the cap
-// from round 1 for testing.
+// from round 1 for testing; bo1sz_pacing_flood 1 (in game, testing only) adds 100
+// zombies to the current round to find the engine's real limit.
 
 init()
 {
@@ -47,6 +48,7 @@ pace_start()
 	pace_log_raw( "pacing on (cap " + pace_bal( "cap" ) + " from round " + pace_cap_round() + ", stock limit " + level.bo1sz_stock_ai_limit + ")" );
 
 	level thread pace_round_log();
+	level thread pace_flood_command();
 	pace_apply();
 	for ( ;; )
 	{
@@ -134,4 +136,25 @@ pace_wait_end()
 {
 	level waittill( "end_of_round" );
 	level.bo1sz_pace_round_over = true;
+}
+
+// Testing aid: add 100 zombies to the current round.
+pace_flood_command()
+{
+	setDvar( "bo1sz_pacing_flood", "0" );
+	for ( ;; )
+	{
+		wait 0.5;
+		v = getDvar( "bo1sz_pacing_flood" );
+		if ( v == "" || v == "0" )
+		{
+			continue;
+		}
+		setDvar( "bo1sz_pacing_flood", "0" );
+		if ( isDefined( level.zombie_total ) )
+		{
+			level.zombie_total += 100;
+			pace_log_raw( "flood: +100 zombies this round (zombie_total=" + level.zombie_total + ")" );
+		}
+	}
 }
