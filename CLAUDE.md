@@ -14,9 +14,11 @@ Roguelike-flavoured runs, a style meter, emergent archetypes, weapon payoffs, a 
    - Never replace a stock script by copying it with edits. Our scripts add behaviour by
      loading alongside stock scripts and hooking via threads, callback overrides
      (`level.overrideActorDamage` etc.), and level variables.
-   - `replaceFunc` (Plutonium) is a hook, but replacing a stock function means writing
-     its body ourselves. Only use it with an **original** body, never a pasted copy of the
-     stock function, and only after the user approves the specific use.
+   - `replaceFunc` (Plutonium) is **allowed** (user decision, 2026-10-05) as long as the
+     replacement body is **original**: written from the behaviour we want, never a
+     pasted or lightly edited copy of the stock function. Prefer wrapping (call the stock
+     function via `getFunction`, then add our logic) over full replacement. List every
+     replaced function in `docs/platform_findings.md`.
 2. **Reference material is local-only** in `reference/` (gitignored). Read it to learn
    function names, signatures and patterns. Never paste its code or assets into tracked
    files. Write original implementations; credit inspirations in README.

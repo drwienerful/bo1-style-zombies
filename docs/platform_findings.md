@@ -18,7 +18,7 @@ is what reading the local reference material suggests. It is a prediction, not a
 | S7 | Score uses `maps/_zombiemode_score::add_to_player_score(points)` and a per-player `zombie_vars["zombie_point_scalar"]`. | Reimagined `_zombiemode_score.gsc` |
 | S8 | Pacing vars are `level.zombie_vars["zombie_spawn_delay"]`, `["zombie_max_ai"]` (zombies per round, not the concurrent cap), and `level.zombie_health`. The concurrent cap is `level.zombie_ai_limit` in Reimagined, but stock may hard-code 24 (C9 checks). | Reimagined `_zombiemode.gsc` |
 | S9 | Double Tap fire rate is engine-side via the dvar `perk_weapRateMultiplier` and the `specialty_rof` perk. | Reimagined `_zombiemode_perks.gsc` |
-| S10 | The user already has third-party scripts installed: `scripts\sp\Zombiemode_perks.gsc` sets `num_perks = -5` (removes the perk limit), and `storage\t5\maps\_zombiemode_perks.gsc` is a full stock-file override. **Both will distort B7/C6/C7 results.** | installer warning (names only) |
+| S10 | Third-party `scripts\sp\Zombiemode_perks.gsc` and `maps\_zombiemode_perks.gsc` were installed and would have distorted B7/C6/C7. **The user removed both on 2026-10-05.** Only Plutonium's own `zm_spawn_fix.gsc` remains. | installer warning (names only) |
 
 ## Results table
 
@@ -76,13 +76,12 @@ and Plutonium adds `getFunction` and `replaceFunc` for safe runtime lookup.
 A standalone Rust game only makes sense if B2/B3 fail, which would be very
 surprising given S4.
 
-## Open questions for the user
+## Decisions (2026-10-05)
 
-1. **replaceFunc policy.** It can swap a stock function at runtime without
-   copying any file (for example, an original perk-limit check). Allowed, with
-   an original body each time and your approval per use? Or banned outright?
-2. **Your other installed scripts** (S10) skew perk tests. Can you move them out
-   of `storage\t5` while probing? The installer only lists them and never touches them.
-3. **LICENSE** for our original code: MIT, GPL-3.0, or something else?
-4. **Co-op / dedicated:** do you have a second player or a dedicated-server setup
-   for the co-op/server rows, or should those stay `untested`?
+1. **replaceFunc:** allowed, with an original replacement body (see CLAUDE.md rule 1).
+2. **Third-party scripts:** removed by the user before probing (S10).
+3. **License:** MIT for our original code. It's the simplest for a mod community to
+   reuse and puts no burden on players. It explicitly grants nothing for game assets.
+4. **Co-op / dedicated server:** not testable right now. Every `coop` and `server`
+   result stays `untested` until a second player or a server is available.
+   Solo results must not be generalised to co-op.
