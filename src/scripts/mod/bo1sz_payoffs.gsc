@@ -4,7 +4,8 @@
 //   Pistols   headshot-kill streak ramps damage (cap x3.5), +points per step, bullet refund
 //   Snipers   x3.5 headshot damage; each extra zombie one shot passes through takes
 //             more damage, +points (FN FAL counts as a sniper via class_overrides)
-//   Shotguns  hits knock zombies down (crowd control); +points per extra kill, shell refund on 3+
+//   Shotguns  each blast sends a damaging shockwave through the crowd behind the target;
+//             +points per extra kill, shell refund on 3+
 //   Launchers +points for every zombie caught in the blast; round refund on 6+ kills
 //   Any       real bonus points for headshot / multi-kill / long-range / melee kills,
 //             plus a per-kill bonus and an ammo-on-kill chance from the style rank
@@ -275,7 +276,11 @@ pay_on_damage( attacker, dmg, mod, weapon, hitloc )
 	if ( cls == "spread" )
 	{
 		mode = pay_bal( "shotgun_cc_mode" );
-		if ( mode == "knockdown" )
+		if ( mode == "shockwave" )
+		{
+			self pay_shockwave( attacker );
+		}
+		else if ( mode == "knockdown" )
 		{
 			self thread pay_knockdown( attacker );
 		}
@@ -302,6 +307,63 @@ pay_on_damage( attacker, dmg, mod, weapon, hitloc )
 		return int( dmg * mult );
 	}
 	return dmg;
+}
+
+// Shotgun shockwave (user asked for crowd control that doesn't change zombie movement,
+// since slowing breaks trains and a real knockdown can't be triggered from script).
+// Once per blast: damages every zombie near a point just beyond the hit zombie,
+// pointing away from the shooter. Skipped if the shooter could be inside the radius.
+pay_shockwave( player )
+{
+	now = getTime();
+	if ( isDefined( player.bo1sz_wave_ms ) && player.bo1sz_wave_ms == now )
+	{
+		return;
+	}
+	player.bo1sz_wave_ms = now;
+	if ( !isDefined( level.zombie_health ) )
+	{
+		return;
+	}
+	d = Distance( player.origin, self.origin );
+	if ( d < 1 )
+	{
+		return;
+	}
+	// Unit vector from the shooter to the zombie, flattened to the ground plane.
+	dx = self.origin[ 0 ] - player.origin[ 0 ];
+	dy = self.origin[ 1 ] - player.origin[ 1 ];
+	flat = Distance( ( dx, dy, 0 ), ( 0, 0, 0 ) );
+	if ( flat < 1 )
+	{
+		return;
+	}
+	off = pay_bal( "shockwave_offset" );
+	r = pay_bal( "shockwave_radius" );
+	centre = self.origin + ( dx / flat * off, dy / flat * off, 30 );
+	if ( Distance( player.origin, centre ) < r + pay_bal( "shockwave_player_margin" ) )
+	{
+		return;
+	}
+	amount = int( level.zombie_health * pay_bal( "shockwave_health_frac" ) );
+	if ( amount < 1 )
+	{
+		amount = 1;
+	}
+	// Fire after the current damage callback finishes: the hit zombie is inside the
+	// radius, and damaging it again from within its own callback would re-enter it.
+	level thread pay_shockwave_fire( centre, r, amount, player );
+}
+
+pay_shockwave_fire( centre, r, amount, player )
+{
+	waittillframeend;
+	if ( !isDefined( player ) )
+	{
+		return;
+	}
+	RadiusDamage( centre, r, amount, amount, player, "MOD_UNKNOWN" );
+	pay_debug( player, "shotgun shockwave " + amount );
 }
 
 // Knocks the zombie down with the stock knockdown every zombie is given at spawn

@@ -29,7 +29,11 @@ init()
 	level.bo1sz_bal[ "payoffs.sniper_headshot_mult" ] = 3.5;
 	level.bo1sz_bal[ "payoffs.launcher_refund_kills" ] = 6;
 	level.bo1sz_bal[ "payoffs.launcher_refund" ] = 1;
-	level.bo1sz_bal[ "payoffs.shotgun_cc_mode" ] = "knockdown";
+	level.bo1sz_bal[ "payoffs.shotgun_cc_mode" ] = "shockwave";
+	level.bo1sz_bal[ "payoffs.shockwave_offset" ] = 60;
+	level.bo1sz_bal[ "payoffs.shockwave_radius" ] = 90;
+	level.bo1sz_bal[ "payoffs.shockwave_health_frac" ] = 0.5;
+	level.bo1sz_bal[ "payoffs.shockwave_player_margin" ] = 24;
 	level.bo1sz_bal[ "payoffs.shotgun_knockdown_cooldown_ms" ] = 2500;
 	level.bo1sz_bal[ "payoffs.shotgun_stagger_rate" ] = 0.4;
 	level.bo1sz_bal[ "payoffs.shotgun_stagger_seconds" ] = 1.2;
