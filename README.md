@@ -20,7 +20,7 @@ powershell -ExecutionPolicy Bypass -File tools\install.ps1 -Uninstall  # remove 
 ```
 
 The installer copies only our `bo1sz_*.gsc` files into
-`%LOCALAPPDATA%\Plutonium\storage	5\scripts\sp\zom\` (loaded in Zombies only).
+`%LOCALAPPDATA%\Plutonium\storage\t5\scripts\sp\zom\` (loaded in Zombies only).
 Disable without uninstalling: `set bo1sz_enable 0` in the console before loading a map.
 
 ## Phase 0 probe (re-testing)
