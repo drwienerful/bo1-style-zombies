@@ -85,6 +85,15 @@ perks_log( msg )
 	logprint( line + "\n" );
 }
 
+// True if the player owns the perk from a machine or the shop, not just a flag this module
+// grants (e.g. Double Tap's fire-rate flag while holding a sniper). A tier II was once sold
+// on top of a granted flag and vanished on weapon switch (playtest 2026-10-05).
+perks_really_has( player, perk )
+{
+	has = player HasPerk( perk );
+	return ( has && !( isDefined( player.bo1sz_grant ) && isDefined( player.bo1sz_grant[ perk ] ) ) );
+}
+
 // Perks the player really owns: flags this module grants for archetypes or while holding
 // a weapon (player.bo1sz_grant) don't count toward the limit or the surcharge.
 perks_owned( player )
@@ -220,7 +229,7 @@ perks_player()
 			}
 			// Only prompt at a machine selling a perk the player doesn't own yet: stock never
 			// sells an owned perk, and showing a surcharge there looked like a broken machine.
-			if ( !isDefined( machine ) || ( isDefined( machine.script_noteworthy ) && self HasPerk( machine.script_noteworthy ) ) )
+			if ( !isDefined( machine ) || ( isDefined( machine.script_noteworthy ) && perks_really_has( self, machine.script_noteworthy ) ) )
 			{
 				surcharge = 0;
 			}
@@ -464,7 +473,7 @@ perks_tiers_tick()
 	keys = getArrayKeys( self.bo1sz_tier );
 	for ( i = 0; i < keys.size; i++ )
 	{
-		still = self HasPerk( keys[ i ] );
+		still = perks_really_has( self, keys[ i ] );
 		if ( !still )
 		{
 			self.bo1sz_tier[ keys[ i ] ] = undefined;
@@ -491,7 +500,7 @@ perks_tiers_tick()
 	if ( isDefined( machine ) && isDefined( machine.script_noteworthy ) )
 	{
 		p = machine.script_noteworthy;
-		if ( isDefined( level.bo1sz_tier_name[ p ] ) && self HasPerk( p ) && !perks_has_tier( self, p ) )
+		if ( isDefined( level.bo1sz_tier_name[ p ] ) && perks_really_has( self, p ) && !perks_has_tier( self, p ) )
 		{
 			perk = p;
 		}
@@ -737,7 +746,7 @@ perks_shop_offer()
 	for ( i = 0; i < level.bo1sz_shop_count; i++ )
 	{
 		perk = level.bo1sz_shop_perk[ i ];
-		has = self HasPerk( perk );
+		has = perks_really_has( self, perk );
 		if ( !isDefined( machines[ perk ] ) && !has )
 		{
 			offer[ offer.size ] = i;
@@ -1071,7 +1080,8 @@ perks_handling()
 }
 
 // ---------------------------------------------------------------------------
-// Info panel, top left (user request): "Round N" and the perks the player owns, with
+// Info panel, bottom left like the stock round counter (user request): "Round N" and the
+// perks the player owns, with
 // tier II marked. Archetype-granted flags (player.bo1sz_grant) are left out. Text is
 // only re-set when it changes.
 // ---------------------------------------------------------------------------
@@ -1087,16 +1097,16 @@ perks_panel_init()
 	{
 		e = elems[ i ];
 		e.horzAlign = "user_left";
-		e.vertAlign = "middle";
+		e.vertAlign = "user_bottom";
 		e.alignX = "left";
-		e.alignY = "middle";
+		e.alignY = "bottom";
 		e.x = 12;
 		e.foreground = true;
 		e.alpha = 1;
 	}
-	self.bo1sz_panel_round.y = -170;
-	self.bo1sz_panel_round.fontScale = 1.4;
-	self.bo1sz_panel_perks.y = -150;
+	self.bo1sz_panel_round.y = -8;
+	self.bo1sz_panel_round.fontScale = 1.6;
+	self.bo1sz_panel_perks.y = -34;
 	self.bo1sz_panel_perks.fontScale = 1.1;
 	self.bo1sz_panel_round_text = "";
 	self.bo1sz_panel_perks_text = "";
@@ -1114,8 +1124,8 @@ perks_panel_tick()
 	for ( i = 0; i < level.bo1sz_perk_names_count; i++ )
 	{
 		perk = level.bo1sz_perk_names_perk[ i ];
-		has = self HasPerk( perk );
-		if ( !has || ( isDefined( self.bo1sz_grant ) && isDefined( self.bo1sz_grant[ perk ] ) ) )
+		has = perks_really_has( self, perk );
+		if ( !has )
 		{
 			continue;
 		}
