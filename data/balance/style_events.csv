@@ -1,0 +1,11 @@
+name,points,archetype
+kill,5,none
+headshot,12,gunslinger
+headshot_streak,4,gunslinger
+multi_kill,10,auto
+long_range,12,marksman
+melee,15,brawler
+explosive,6,demolitions
+clutch,12,none
+variety,8,none
+revive,25,support

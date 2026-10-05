@@ -8,3 +8,10 @@ sound_rank_down,evt_perk_deny,stock alias (proven in Phase 0 C2)
 fake_min,10,debug fake event minimum points
 fake_max,40,debug fake event maximum points
 fake_interval_ticks,6,debug fake event every N quarter-seconds
+rep_decay,0.75,each repeat of the same primary action multiplies its points by this
+rep_min,0.3,floor for the repetition multiplier
+long_range_units,1200,kill distance that counts as long range (about 30 m)
+clutch_health_frac,0.35,kill while below this fraction of max health counts as clutch
+hs_streak_cap,5,headshot streak bonus stops growing after this many extra headshots
+hit_drop_cooldown_ms,1500,after taking damage drops a rank this long before another hit can
+variety_window,3,kill with a weapon class not used in the last N kills counts as variety

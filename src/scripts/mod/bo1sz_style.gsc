@@ -1,17 +1,21 @@
 // bo1-style-zombies: style meter.
-// Milestone 2, step 1: HUD, gauge, rank up/down, decay, and fake input only.
-// Real style events (kills, headshots, ...) arrive in step 2.
+// Milestone 2: HUD, gauge, rank up/down, decay (step 1) and real style events (step 2):
+// kills scored by headshot, streak, multi-kill, range, melee, explosive, clutch and
+// variety; revives; taking damage drops a rank; going down resets to D.
 //
 // Other modules add style by appending to the player's queue (no cross-file calls):
 //   p.bo1sz_style_q_pts[ p.bo1sz_style_q_pts.size ] = points;
 //   p.bo1sz_style_q_tag[ p.bo1sz_style_q_tag.size ] = "tag";
+//   p.bo1sz_style_q_arch[ p.bo1sz_style_q_arch.size ] = "archetype";   // or "none"
+// Every event also accrues hidden per-run affinity: p.bo1sz_aff[ archetype ].
 //
 // Dvars (console, before loading a map unless noted):
 //   bo1sz_style 0        disable this module
 //   bo1sz_style_fake 1   feed random fake style events (can be toggled in game)
 //   bo1sz_style_add 1    add one 30-point fake event to every player (in game)
+//   bo1sz_style_debug 1  log every scored style event (in game)
 //
-// Tunables: data/balance/style.csv and style_ranks.csv (generated into bo1sz_balance.gsc).
+// Tunables: data/balance/style*.csv (generated into bo1sz_balance.gsc).
 
 init()
 {
@@ -42,7 +46,10 @@ style_start()
 		return;
 	}
 	setDvar( "bo1sz_style_add", "0" );
+	style_build_event_table();
 	level thread style_debug_input();
+	level thread style_install_hooks();
+	level thread style_round_report();
 	style_log( "style meter on, ranks=" + level.bo1sz_style_ranks_count );
 
 	players = GetPlayers();
@@ -85,9 +92,25 @@ style_player()
 
 	self.bo1sz_style_q_pts = [];
 	self.bo1sz_style_q_tag = [];
+	self.bo1sz_style_q_arch = [];
 	self.bo1sz_style_rank = 0;
 	self.bo1sz_style_gauge = 0;
 	self.bo1sz_style_last_ms = 0;
+	self.bo1sz_style_last_tag = "";
+	self.bo1sz_style_rep = 1.0;
+	self.bo1sz_style_hit = false;
+	self.bo1sz_style_hit_ms = 0;
+	self.bo1sz_style_downed = false;
+	self.bo1sz_hs_streak = 0;
+	self.bo1sz_recent_classes = [];
+	self.bo1sz_kill_ms = -1;
+	self.bo1sz_kill_n = 0;
+	if ( !isDefined( self.bo1sz_aff ) )
+	{
+		self.bo1sz_aff = [];
+	}
+	self thread style_listen( "player_downed" );
+	self thread style_listen( "player_revived" );
 
 	self style_hud_create();
 	self style_hud_refresh();
@@ -105,15 +128,49 @@ style_tick()
 		wait 0.1;
 		changed = false;
 
+		// Going down resets the meter; taking damage drops one rank (with a cooldown).
+		if ( self.bo1sz_style_downed )
+		{
+			self.bo1sz_style_downed = false;
+			self.bo1sz_style_hit = false;
+			if ( self.bo1sz_style_rank > 0 || self.bo1sz_style_gauge > 0 )
+			{
+				self.bo1sz_style_rank = 0;
+				self.bo1sz_style_gauge = 0;
+				self thread style_popup( false );
+				changed = true;
+			}
+		}
+		if ( self.bo1sz_style_hit )
+		{
+			self.bo1sz_style_hit = false;
+			if ( self.bo1sz_style_rank > 0 && getTime() - self.bo1sz_style_hit_ms > style_bal( "hit_drop_cooldown_ms" ) )
+			{
+				self.bo1sz_style_hit_ms = getTime();
+				self.bo1sz_style_rank--;
+				self thread style_popup( false );
+				changed = true;
+			}
+		}
+
 		// Drain queued style events.
 		pts = self.bo1sz_style_q_pts;
 		if ( pts.size > 0 )
 		{
+			tags = self.bo1sz_style_q_tag;
+			archs = self.bo1sz_style_q_arch;
 			self.bo1sz_style_q_pts = [];
 			self.bo1sz_style_q_tag = [];
+			self.bo1sz_style_q_arch = [];
 			for ( i = 0; i < pts.size; i++ )
 			{
-				self style_gain( pts[ i ], gauge_max, top );
+				gain = pts[ i ] * self style_repetition( tags[ i ] );
+				self style_affinity( archs[ i ], gain );
+				self style_gain( gain, gauge_max, top );
+				if ( getDvar( "bo1sz_style_debug" ) == "1" )
+				{
+					style_log( "ev tag=" + tags[ i ] + " arch=" + archs[ i ] + " pts=" + pts[ i ] + " gain=" + gain + " rank=" + self.bo1sz_style_rank );
+				}
 			}
 			self.bo1sz_style_last_ms = getTime();
 			changed = true;
@@ -307,10 +364,364 @@ style_fake_all( points )
 	for ( i = 0; i < players.size; i++ )
 	{
 		p = players[ i ];
-		if ( isDefined( p.bo1sz_style_q_pts ) )
+		// A different tag each time so the repetition penalty doesn't throttle the demo.
+		p style_queue( points, "debug" + RandomInt( 1000 ), "none" );
+	}
+}
+
+style_queue( points, tag, arch )
+{
+	if ( !isDefined( self.bo1sz_style_q_pts ) )
+	{
+		return;
+	}
+	self.bo1sz_style_q_pts[ self.bo1sz_style_q_pts.size ] = points;
+	self.bo1sz_style_q_tag[ self.bo1sz_style_q_tag.size ] = tag;
+	self.bo1sz_style_q_arch[ self.bo1sz_style_q_arch.size ] = arch;
+}
+
+// Repeating the same primary action gives diminishing returns; any other action resets it.
+style_repetition( tag )
+{
+	if ( tag == self.bo1sz_style_last_tag )
+	{
+		self.bo1sz_style_rep = self.bo1sz_style_rep * style_bal( "rep_decay" );
+		if ( self.bo1sz_style_rep < style_bal( "rep_min" ) )
 		{
-			p.bo1sz_style_q_pts[ p.bo1sz_style_q_pts.size ] = points;
-			p.bo1sz_style_q_tag[ p.bo1sz_style_q_tag.size ] = "debug";
+			self.bo1sz_style_rep = style_bal( "rep_min" );
+		}
+	}
+	else
+	{
+		self.bo1sz_style_rep = 1.0;
+		self.bo1sz_style_last_tag = tag;
+	}
+	return self.bo1sz_style_rep;
+}
+
+// Hidden per-run affinity (read by the archetype module at Milestone 5).
+style_affinity( arch, amount )
+{
+	if ( !isDefined( arch ) || arch == "none" || arch == "" )
+	{
+		return;
+	}
+	if ( !isDefined( self.bo1sz_aff[ arch ] ) )
+	{
+		self.bo1sz_aff[ arch ] = 0;
+	}
+	self.bo1sz_aff[ arch ] += amount;
+}
+
+style_listen( note )
+{
+	self endon( "disconnect" );
+	for ( ;; )
+	{
+		self waittill( note, reviver );
+		if ( note == "player_downed" )
+		{
+			self.bo1sz_style_downed = true;
+		}
+		else if ( isDefined( reviver ) && isPlayer( reviver ) && reviver != self )
+		{
+			reviver style_queue( style_ev_pts( "revive" ), "revive", style_ev_arch( "revive" ) );
+		}
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Event table (data/balance/style_events.csv)
+// ---------------------------------------------------------------------------
+
+style_build_event_table()
+{
+	level.bo1sz_style_ev_pts = [];
+	level.bo1sz_style_ev_arch = [];
+	for ( i = 0; i < level.bo1sz_style_events_count; i++ )
+	{
+		name = level.bo1sz_style_events_name[ i ];
+		level.bo1sz_style_ev_pts[ name ] = level.bo1sz_style_events_points[ i ];
+		level.bo1sz_style_ev_arch[ name ] = level.bo1sz_style_events_archetype[ i ];
+	}
+}
+
+style_ev_pts( name )
+{
+	return level.bo1sz_style_ev_pts[ name ];
+}
+
+style_ev_arch( name )
+{
+	return level.bo1sz_style_ev_arch[ name ];
+}
+
+// ---------------------------------------------------------------------------
+// Hooks: wrap stock callbacks (stock always runs first; proven in Phase 0 B3/B8)
+// ---------------------------------------------------------------------------
+
+style_install_hooks()
+{
+	t = 0;
+	while ( ( !isDefined( level.overrideActorKilled ) || !isDefined( level.overridePlayerDamage ) ) && t < 300 )
+	{
+		wait 0.1;
+		t++;
+	}
+	for ( i = 0; i < 10; i++ )
+	{
+		waittillframeend;
+	}
+	level.bo1sz_style_orig_killed = level.overrideActorKilled;
+	level.bo1sz_style_orig_pdamage = level.overridePlayerDamage;
+	level.overrideActorKilled = ::style_actor_killed;
+	level.overridePlayerDamage = ::style_player_damage;
+	style_log( "hooks installed (stock killed=" + isDefined( level.bo1sz_style_orig_killed ) + " pdamage=" + isDefined( level.bo1sz_style_orig_pdamage ) + ")" );
+}
+
+style_actor_killed( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, psOffsetTime )
+{
+	if ( isDefined( level.bo1sz_style_orig_killed ) )
+	{
+		self [[ level.bo1sz_style_orig_killed ]]( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc, psOffsetTime );
+	}
+	if ( isDefined( attacker ) && isPlayer( attacker ) && isDefined( attacker.bo1sz_style_q_pts ) )
+	{
+		self style_on_kill( attacker, sMeansOfDeath, sWeapon, sHitLoc );
+	}
+}
+
+style_player_damage( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, modelIndex, psOffsetTime )
+{
+	dmg = iDamage;
+	if ( isDefined( level.bo1sz_style_orig_pdamage ) )
+	{
+		dmg = self [[ level.bo1sz_style_orig_pdamage ]]( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, modelIndex, psOffsetTime );
+	}
+	if ( !isDefined( dmg ) )
+	{
+		dmg = iDamage;
+	}
+	// Spy only: never changes the damage.
+	if ( dmg > 0 && isDefined( self.bo1sz_style_q_pts ) )
+	{
+		self.bo1sz_style_hit = true;
+	}
+	return dmg;
+}
+
+// ---------------------------------------------------------------------------
+// Kill scoring: all events from one kill are summed into one queue entry whose
+// tag is the highest-scoring (primary) event, so repetition is judged per kill.
+// ---------------------------------------------------------------------------
+
+style_is_explosive( mod )
+{
+	return ( mod == "MOD_GRENADE" || mod == "MOD_GRENADE_SPLASH" || mod == "MOD_PROJECTILE" || mod == "MOD_PROJECTILE_SPLASH" || mod == "MOD_EXPLOSIVE" );
+}
+
+style_is_bullet( mod )
+{
+	return ( mod == "MOD_PISTOL_BULLET" || mod == "MOD_RIFLE_BULLET" || mod == "MOD_HEAD_SHOT" );
+}
+
+style_weapon_class( weapon )
+{
+	if ( !isDefined( weapon ) || weapon == "none" || weapon == "" )
+	{
+		return "none";
+	}
+	return WeaponClass( weapon );
+}
+
+style_class_arch( cls, mod )
+{
+	// Grenade kills can report the held gun as the weapon: classify by means of death first.
+	if ( style_is_explosive( mod ) || cls == "rocketlauncher" || cls == "grenade" )
+	{
+		return "demolitions";
+	}
+	if ( cls == "pistol" )
+	{
+		return "gunslinger";
+	}
+	if ( cls == "spread" || mod == "MOD_MELEE" )
+	{
+		return "brawler";
+	}
+	if ( cls == "sniper" )
+	{
+		return "marksman";
+	}
+	return "none";
+}
+
+style_on_kill( attacker, mod, weapon, hitloc )
+{
+	if ( !isDefined( mod ) )
+	{
+		mod = "";
+	}
+	cls = style_weapon_class( weapon );
+	total = style_ev_pts( "kill" );
+	best_tag = "kill";
+	best_pts = 0;
+	best_arch = style_class_arch( cls, mod );
+
+	// Headshot and headshot streak.
+	headshot = ( isDefined( hitloc ) && ( hitloc == "head" || hitloc == "helmet" || hitloc == "neck" ) && style_is_bullet( mod ) );
+	if ( headshot )
+	{
+		attacker.bo1sz_hs_streak++;
+		extra = attacker.bo1sz_hs_streak - 1;
+		if ( extra > style_bal( "hs_streak_cap" ) )
+		{
+			extra = style_bal( "hs_streak_cap" );
+		}
+		pts = style_ev_pts( "headshot" ) + extra * style_ev_pts( "headshot_streak" );
+		total += pts;
+		if ( pts > best_pts )
+		{
+			best_pts = pts;
+			best_tag = "headshot";
+			best_arch = style_ev_arch( "headshot" );
+		}
+	}
+	else
+	{
+		attacker.bo1sz_hs_streak = 0;
+	}
+
+	// Multi-kill: several kills by one player in the same server frame (proven in C5).
+	now = getTime();
+	if ( attacker.bo1sz_kill_ms == now )
+	{
+		attacker.bo1sz_kill_n++;
+		pts = style_ev_pts( "multi_kill" );
+		total += pts;
+		if ( pts > best_pts )
+		{
+			best_pts = pts;
+			best_tag = "multi_kill";
+			best_arch = "marksman";
+			if ( style_is_explosive( mod ) )
+			{
+				best_arch = "demolitions";
+			}
+			else if ( cls == "spread" )
+			{
+				best_arch = "brawler";
+			}
+		}
+	}
+	else
+	{
+		attacker.bo1sz_kill_ms = now;
+		attacker.bo1sz_kill_n = 1;
+	}
+
+	// Melee finish.
+	if ( mod == "MOD_MELEE" )
+	{
+		pts = style_ev_pts( "melee" );
+		total += pts;
+		if ( pts > best_pts )
+		{
+			best_pts = pts;
+			best_tag = "melee";
+			best_arch = style_ev_arch( "melee" );
+		}
+	}
+
+	// Explosive kill.
+	if ( style_is_explosive( mod ) )
+	{
+		pts = style_ev_pts( "explosive" );
+		total += pts;
+		if ( pts > best_pts )
+		{
+			best_pts = pts;
+			best_tag = "explosive";
+			best_arch = style_ev_arch( "explosive" );
+		}
+	}
+
+	// Long-range kill (bullets only).
+	if ( style_is_bullet( mod ) && Distance( attacker.origin, self.origin ) > style_bal( "long_range_units" ) )
+	{
+		pts = style_ev_pts( "long_range" );
+		total += pts;
+		if ( pts > best_pts )
+		{
+			best_pts = pts;
+			best_tag = "long_range";
+			best_arch = style_ev_arch( "long_range" );
+		}
+	}
+
+	// Clutch: kill while badly hurt.
+	if ( isDefined( attacker.maxhealth ) && attacker.maxhealth > 0 && attacker.health < attacker.maxhealth * style_bal( "clutch_health_frac" ) )
+	{
+		pts = style_ev_pts( "clutch" );
+		total += pts;
+		if ( pts > best_pts )
+		{
+			best_pts = pts;
+			best_tag = "clutch";
+		}
+	}
+
+	// Variety: a weapon class not used in the last N kills.
+	window = style_bal( "variety_window" );
+	recent = attacker.bo1sz_recent_classes;
+	if ( recent.size >= window )
+	{
+		fresh = true;
+		for ( i = 0; i < recent.size; i++ )
+		{
+			if ( recent[ i ] == cls )
+			{
+				fresh = false;
+				break;
+			}
+		}
+		if ( fresh )
+		{
+			total += style_ev_pts( "variety" );
+		}
+	}
+	updated = [];
+	updated[ 0 ] = cls;
+	for ( i = 0; i < recent.size && updated.size < window; i++ )
+	{
+		updated[ updated.size ] = recent[ i ];
+	}
+	attacker.bo1sz_recent_classes = updated;
+
+	attacker style_queue( total, best_tag, best_arch );
+}
+
+// Logs each player's rank and hidden affinity at every round end (tuning aid).
+style_round_report()
+{
+	for ( ;; )
+	{
+		level waittill( "end_of_round" );
+		players = GetPlayers();
+		for ( i = 0; i < players.size; i++ )
+		{
+			p = players[ i ];
+			if ( !isDefined( p.bo1sz_aff ) )
+			{
+				continue;
+			}
+			line = "round " + level.round_number + " " + p.playername + " rank=" + p.bo1sz_style_rank + " aff:";
+			keys = getArrayKeys( p.bo1sz_aff );
+			for ( k = 0; k < keys.size; k++ )
+			{
+				line = line + " " + keys[ k ] + "=" + int( p.bo1sz_aff[ keys[ k ] ] );
+			}
+			style_log( line );
 		}
 	}
 }
