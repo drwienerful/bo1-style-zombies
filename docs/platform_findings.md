@@ -164,3 +164,7 @@ machine on a map get script re-implemented effects. Double Tap 2.0 is accepted a
   attempt once 24 were alive (38/38 with 382 queued), and so did the force-spawn path
   (`script_forcespawn` → `StalingradSpawn`, 10/10). No dvar in the dump controls it. The user's
   128 cap is not reachable from script; pacing uses faster spawns and gentler health instead.
+- **Unresolved: a HUD title shown at the boss's death never renders (2026-10-05).** Five builds
+  created the element and logged it as shown (fade-in, y -110 or -50, scale 2.5-3, made at death
+  or pre-made at promotion), but nothing appeared, while the boss HUD made by the same function
+  works. `iPrintLnBold` at the same moment shows reliably and is used for "VICTORY".

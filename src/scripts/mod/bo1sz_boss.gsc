@@ -452,12 +452,6 @@ boss_hud_create()
 		p.bo1sz_boss_phase = boss_elem( p, -144, 1.15 );
 		p.bo1sz_boss_warn = boss_elem( p, -118, 1.6 );
 		p.bo1sz_boss_warn.color = ( 1, 0.85, 0.2 );
-		// Created now, hidden, with its text set: if the game's pool of HUD strings fills up
-		// during a long run, a brand-new string at the very end may draw nothing.
-		p.bo1sz_victory_elem = boss_elem( p, -110, 3 );
-		p.bo1sz_victory_elem.color = ( 1, 0.85, 0.2 );
-		p.bo1sz_victory_elem SetText( "VICTORY" );
-		p.bo1sz_victory_elem.alpha = 0;
 	}
 }
 
@@ -555,22 +549,13 @@ boss_victory( killer )
 // User preference (2026-10-05): just "VICTORY" after the kill, then stock's own game-over
 // screen. Layout is the one confirmed visible; held for victory_seconds, then removed
 // before stock's end screen starts.
+// "VICTORY" through the game's centre-print message, then stock's game-over screen (user
+// preference). A large HUD-element title never rendered at this point in any build
+// (created, logged as shown, invisible; cause unknown), so the centre print is used.
 boss_victory_screen()
 {
 	self endon( "disconnect" );
-	// Fallback through the centre-print channel, which doesn't use HUD string slots.
 	self iPrintLnBold( "VICTORY" );
 	self PlayLocalSound( boss_bal( "victory_sound" ) );
-	e = self.bo1sz_victory_elem;
-	if ( !isDefined( e ) )
-	{
-		boss_log( "victory screen: no pre-made element" );
-		return;
-	}
-	e FadeOverTime( 0.5 );
-	e.alpha = 1;
-	boss_log( "victory screen: shown (pre-made element)" );
-	wait boss_bal( "victory_seconds" ) - 1;
-	e FadeOverTime( 0.8 );
-	e.alpha = 0;
+	boss_log( "victory shown to " + self.playername );
 }
