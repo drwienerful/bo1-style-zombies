@@ -515,7 +515,7 @@ init()
 	level.bo1sz_bal[ "perks.perk_list" ] = "specialty_quickrevive specialty_armorvest specialty_rof specialty_fastreload specialty_longersprint specialty_flakjacket specialty_deadshot specialty_additionalprimaryweapon";
 	level.bo1sz_bal[ "perks.stock_limit" ] = 4;
 	level.bo1sz_bal[ "perks.surcharge_step" ] = 1000;
-	level.bo1sz_bal[ "perks.machine_radius" ] = 160;
+	level.bo1sz_bal[ "perks.machine_radius" ] = 75;
 	level.bo1sz_bal[ "perks.default_cost" ] = 2500;
 	level.bo1sz_bal[ "perks.dt2_damage_mult" ] = 2.0;
 	level.bo1sz_bal[ "perks.dt2_rate_mult" ] = 0.8333;
@@ -529,7 +529,7 @@ init()
 	level.bo1sz_bal[ "perks.scavenger_chance" ] = 8;
 	level.bo1sz_bal[ "perks.scavenger_clip_frac" ] = 0.3;
 	level.bo1sz_bal[ "perks.tier_popup_seconds" ] = 3;
-	level.bo1sz_bal[ "perks.shop_radius" ] = 90;
+	level.bo1sz_bal[ "perks.shop_radius" ] = 60;
 	level.bo1sz_bal[ "perks.roller_decay_mult" ] = 1.3;
 	level.bo1sz_bal[ "perks.lucky_refill_frac" ] = 0.2;
 	level.bo1sz_bal[ "perks.deadshot_hs_mult" ] = 1.25;

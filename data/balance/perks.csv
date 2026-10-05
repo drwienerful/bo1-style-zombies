@@ -2,7 +2,7 @@ key,value,notes
 perk_list,specialty_quickrevive specialty_armorvest specialty_rof specialty_fastreload specialty_longersprint specialty_flakjacket specialty_deadshot specialty_additionalprimaryweapon,perks counted toward the limit (space separated)
 stock_limit,4,perks bought at stock price; beyond this a surcharge applies
 surcharge_step,1000,surcharge = step x (perks owned - stock_limit + 1)
-machine_radius,160,distance at which a perk machine counts as the one being used
+machine_radius,75,distance at which a perk machine counts as the one being used (160 reached nearby barricades; standing at a machine measured 49-61)
 default_cost,2500,used if a machine has no cost set yet
 dt2_damage_mult,2.0,Double Tap 2.0 bullet damage multiplier (docs/design/double_tap_2.md)
 dt2_rate_mult,0.8333,perk_weapRateMultiplier for Double Tap 2.0 (+20% fire rate; stock 0.75)
@@ -16,7 +16,7 @@ mule2_extra_reserves,1,Mule Kick II extra spare reserves per weapon (ammo module
 scavenger_chance,8,Quick Revive II (Scavenger): percent chance per kill
 scavenger_clip_frac,0.3,Quick Revive II (Scavenger): fraction of each gun's clip size refilled (min 1)
 tier_popup_seconds,3,how long the tier name and description stay on screen after purchase
-shop_radius,90,distance from the spawn point at which the perk shop prompt appears
+shop_radius,60,distance from the spawn point at which the perk shop prompt appears (kept tight so it does not overlap barricades)
 roller_decay_mult,1.3,High Roller: style decay multiplier
 lucky_refill_frac,0.2,Lucky Streak: magazine fraction refilled
 deadshot_hs_mult,1.25,Deadshot Daiquiri (shop): headshot damage multiplier
