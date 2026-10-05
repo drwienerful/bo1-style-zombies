@@ -16,3 +16,9 @@ style_multi_points,10,real points per extra kill in the same frame
 style_long_range_points,15,real points for a long-range bullet kill
 style_melee_points,20,real points for a melee kill
 ammo_refill_frac,0.1,clip fraction refilled by the rank ammo-on-kill chance (min 1 bullet)
+class_overrides,fnfal=sniper,weapon name substring=class pairs (space separated); FN FAL plays as a sniper (user request)
+sniper_headshot_mult,3.5,extra damage multiplier on sniper headshots (user request)
+launcher_refund_kills,6,kills from one launcher blast needed for the refund (more than 5; user request)
+launcher_refund,1,rounds refunded to the launcher
+shotgun_stagger_rate,0.4,zombie movement rate while staggered by a shotgun hit (1 = normal)
+shotgun_stagger_seconds,1.2,stagger duration; a new hit restarts it

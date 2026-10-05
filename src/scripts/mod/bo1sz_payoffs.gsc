@@ -2,9 +2,10 @@
 // Every effect ADDS power or reward; nothing is ever reduced (CLAUDE.md rule 7).
 //
 //   Pistols   headshot-kill streak ramps damage (cap x3.5), +points per step, bullet refund
-//   Snipers   each extra zombie one shot passes through takes more damage, +points
-//   Shotguns  +points per extra kill from one blast, shell refund on 3+ kills
-//   Launchers +points for every zombie caught in the blast
+//   Snipers   x3.5 headshot damage; each extra zombie one shot passes through takes
+//             more damage, +points (FN FAL counts as a sniper via class_overrides)
+//   Shotguns  hits stagger (slow) zombies; +points per extra kill, shell refund on 3+
+//   Launchers +points for every zombie caught in the blast; round refund on 6+ kills
 //   Any       real bonus points for headshot / multi-kill / long-range / melee kills,
 //             plus a per-kill bonus and an ammo-on-kill chance from the style rank
 // Wonder weapons (payoffs.excluded_weapons) get none of the class payoffs.
@@ -39,6 +40,7 @@ pay_start()
 		return;
 	}
 	level.bo1sz_pay_excluded = strTok( pay_bal( "excluded_weapons" ), " " );
+	pay_build_overrides();
 	level.bo1sz_pay_add_points = getFunction( "maps/_zombiemode_score", "add_to_player_score" );
 
 	t = 0;
@@ -95,6 +97,23 @@ pay_is_excluded( weapon )
 	return false;
 }
 
+// "fnfal=sniper rk5=pistol" -> parallel arrays of name substrings and classes.
+pay_build_overrides()
+{
+	level.bo1sz_pay_ovr_name = [];
+	level.bo1sz_pay_ovr_class = [];
+	pairs = strTok( pay_bal( "class_overrides" ), " " );
+	for ( i = 0; i < pairs.size; i++ )
+	{
+		kv = strTok( pairs[ i ], "=" );
+		if ( kv.size == 2 )
+		{
+			level.bo1sz_pay_ovr_name[ level.bo1sz_pay_ovr_name.size ] = kv[ 0 ];
+			level.bo1sz_pay_ovr_class[ level.bo1sz_pay_ovr_class.size ] = kv[ 1 ];
+		}
+	}
+}
+
 pay_class( weapon )
 {
 	if ( !isDefined( weapon ) || weapon == "none" || weapon == "" )
@@ -104,6 +123,13 @@ pay_class( weapon )
 	if ( pay_is_excluded( weapon ) )
 	{
 		return "wonder";
+	}
+	for ( i = 0; i < level.bo1sz_pay_ovr_name.size; i++ )
+	{
+		if ( isSubStr( weapon, level.bo1sz_pay_ovr_name[ i ] ) )
+		{
+			return level.bo1sz_pay_ovr_class[ i ];
+		}
 	}
 	return WeaponClass( weapon );
 }
@@ -194,12 +220,12 @@ pay_actor_damage( inflictor, attacker, damage, flags, meansofdeath, weapon, vpoi
 	}
 	if ( dmg > 0 && isDefined( attacker ) && isPlayer( attacker ) )
 	{
-		dmg = self pay_on_damage( attacker, dmg, meansofdeath, weapon );
+		dmg = self pay_on_damage( attacker, dmg, meansofdeath, weapon, sHitLoc );
 	}
 	return dmg;
 }
 
-pay_on_damage( attacker, dmg, mod, weapon )
+pay_on_damage( attacker, dmg, mod, weapon, hitloc )
 {
 	if ( !isDefined( mod ) )
 	{
@@ -239,6 +265,18 @@ pay_on_damage( attacker, dmg, mod, weapon )
 		}
 	}
 
+	// Snipers: big headshot multiplier on top of stock headshot damage.
+	if ( cls == "sniper" && pay_is_head( hitloc, mod ) )
+	{
+		mult = mult * pay_bal( "sniper_headshot_mult" );
+	}
+
+	// Shotguns: every hit staggers the zombie (crowd control).
+	if ( cls == "spread" )
+	{
+		self thread pay_stagger();
+	}
+
 	// Launchers: points for every zombie caught in the blast (once per zombie per blast).
 	// Pistols are skipped: the upgraded M1911 fires explosive rounds and already has the streak.
 	if ( cls != "wonder" && cls != "none" && cls != "pistol" && pay_is_projectile( mod ) )
@@ -256,6 +294,27 @@ pay_on_damage( attacker, dmg, mod, weapon )
 		return int( dmg * mult );
 	}
 	return dmg;
+}
+
+// Slows the zombie's movement for a moment; a new hit restarts the timer.
+pay_stagger()
+{
+	self endon( "death" );
+	self notify( "bo1sz_stagger" );
+	self endon( "bo1sz_stagger" );
+	if ( !isDefined( self.bo1sz_stagger_base ) )
+	{
+		base = 1.0;
+		if ( isDefined( self.moveplaybackrate ) )
+		{
+			base = self.moveplaybackrate;
+		}
+		self.bo1sz_stagger_base = base;
+	}
+	self.moveplaybackrate = self.bo1sz_stagger_base * pay_bal( "shotgun_stagger_rate" );
+	wait pay_bal( "shotgun_stagger_seconds" );
+	self.moveplaybackrate = self.bo1sz_stagger_base;
+	self.bo1sz_stagger_base = undefined;
 }
 
 // Current streak, cleared once the timeout has passed since the last pistol headshot kill.
@@ -343,6 +402,12 @@ pay_on_kill( attacker, mod, weapon, hitloc )
 		{
 			pay_refund( attacker, weapon, pay_bal( "shotgun_refund" ), "shotgun " + attacker.bo1sz_pay_kill_n + " kills" );
 		}
+	}
+
+	// Launcher blasts that kill more than 5 refund a round.
+	if ( cls != "wonder" && cls != "none" && cls != "pistol" && pay_is_projectile( mod ) && attacker.bo1sz_pay_kill_n == pay_bal( "launcher_refund_kills" ) )
+	{
+		pay_refund( attacker, weapon, pay_bal( "launcher_refund" ), "launcher " + attacker.bo1sz_pay_kill_n + " kills" );
 	}
 
 	// Style points (real points, any weapon).

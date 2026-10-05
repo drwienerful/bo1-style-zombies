@@ -22,6 +22,12 @@ init()
 	level.bo1sz_bal[ "payoffs.style_long_range_points" ] = 15;
 	level.bo1sz_bal[ "payoffs.style_melee_points" ] = 20;
 	level.bo1sz_bal[ "payoffs.ammo_refill_frac" ] = 0.1;
+	level.bo1sz_bal[ "payoffs.class_overrides" ] = "fnfal=sniper";
+	level.bo1sz_bal[ "payoffs.sniper_headshot_mult" ] = 3.5;
+	level.bo1sz_bal[ "payoffs.launcher_refund_kills" ] = 6;
+	level.bo1sz_bal[ "payoffs.launcher_refund" ] = 1;
+	level.bo1sz_bal[ "payoffs.shotgun_stagger_rate" ] = 0.4;
+	level.bo1sz_bal[ "payoffs.shotgun_stagger_seconds" ] = 1.2;
 	// style.csv
 	level.bo1sz_bal[ "style.gauge_max" ] = 100;
 	level.bo1sz_bal[ "style.idle_grace_ms" ] = 2000;

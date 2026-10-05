@@ -637,6 +637,17 @@ style_weapon_class( weapon )
 	{
 		return "none";
 	}
+	// Same class overrides as the payoffs module (payoffs.class_overrides), when loaded.
+	if ( isDefined( level.bo1sz_pay_ovr_name ) )
+	{
+		for ( i = 0; i < level.bo1sz_pay_ovr_name.size; i++ )
+		{
+			if ( isSubStr( weapon, level.bo1sz_pay_ovr_name[ i ] ) )
+			{
+				return level.bo1sz_pay_ovr_class[ i ];
+			}
+		}
+	}
 	return WeaponClass( weapon );
 }
 
