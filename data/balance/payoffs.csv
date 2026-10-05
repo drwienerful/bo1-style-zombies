@@ -20,5 +20,7 @@ class_overrides,fnfal=sniper,weapon name substring=class pairs (space separated)
 sniper_headshot_mult,3.5,extra damage multiplier on sniper headshots (user request)
 launcher_refund_kills,6,kills from one launcher blast needed for the refund (more than 5; user request)
 launcher_refund,1,rounds refunded to the launcher
+shotgun_cc_mode,knockdown,shotgun crowd control: knockdown (stock thundergun knockdown; maps that load it) / stagger (slowdown) / none
+shotgun_knockdown_cooldown_ms,2500,minimum time between knockdowns of the same zombie
 shotgun_stagger_rate,0.4,zombie movement rate while staggered by a shotgun hit (1 = normal)
 shotgun_stagger_seconds,1.2,stagger duration; a new hit restarts it

@@ -4,6 +4,9 @@
 init()
 {
 	level.bo1sz_bal = [];
+	// ammo.csv
+	level.bo1sz_bal[ "ammo.extra_reserves" ] = 1;
+	level.bo1sz_bal[ "ammo.excluded" ] = "knife bowie claymore cymbal_monkey perk_bottle syrette zombie_fists frag_grenade sticky_grenade";
 	// payoffs.csv
 	level.bo1sz_bal[ "payoffs.excluded_weapons" ] = "ray_gun thundergun tesla_gun freezegun shrink_ray microwavegun humangun black_hole quantum sniper_explosive";
 	level.bo1sz_bal[ "payoffs.pistol_step_mult" ] = 0.5;
@@ -26,6 +29,8 @@ init()
 	level.bo1sz_bal[ "payoffs.sniper_headshot_mult" ] = 3.5;
 	level.bo1sz_bal[ "payoffs.launcher_refund_kills" ] = 6;
 	level.bo1sz_bal[ "payoffs.launcher_refund" ] = 1;
+	level.bo1sz_bal[ "payoffs.shotgun_cc_mode" ] = "knockdown";
+	level.bo1sz_bal[ "payoffs.shotgun_knockdown_cooldown_ms" ] = 2500;
 	level.bo1sz_bal[ "payoffs.shotgun_stagger_rate" ] = 0.4;
 	level.bo1sz_bal[ "payoffs.shotgun_stagger_seconds" ] = 1.2;
 	// style.csv

@@ -4,7 +4,7 @@
 //   Pistols   headshot-kill streak ramps damage (cap x3.5), +points per step, bullet refund
 //   Snipers   x3.5 headshot damage; each extra zombie one shot passes through takes
 //             more damage, +points (FN FAL counts as a sniper via class_overrides)
-//   Shotguns  hits stagger (slow) zombies; +points per extra kill, shell refund on 3+
+//   Shotguns  hits knock zombies down (crowd control); +points per extra kill, shell refund on 3+
 //   Launchers +points for every zombie caught in the blast; round refund on 6+ kills
 //   Any       real bonus points for headshot / multi-kill / long-range / melee kills,
 //             plus a per-kill bonus and an ammo-on-kill chance from the style rank
@@ -271,10 +271,18 @@ pay_on_damage( attacker, dmg, mod, weapon, hitloc )
 		mult = mult * pay_bal( "sniper_headshot_mult" );
 	}
 
-	// Shotguns: every hit staggers the zombie (crowd control).
+	// Shotguns: crowd control on hit (payoffs.shotgun_cc_mode).
 	if ( cls == "spread" )
 	{
-		self thread pay_stagger();
+		mode = pay_bal( "shotgun_cc_mode" );
+		if ( mode == "knockdown" )
+		{
+			self thread pay_knockdown( attacker );
+		}
+		else if ( mode == "stagger" )
+		{
+			self thread pay_stagger();
+		}
 	}
 
 	// Launchers: points for every zombie caught in the blast (once per zombie per blast).
@@ -294,6 +302,38 @@ pay_on_damage( attacker, dmg, mod, weapon, hitloc )
 		return int( dmg * mult );
 	}
 	return dmg;
+}
+
+// Knocks the zombie down with the stock knockdown every zombie is given at spawn
+// (self.thundergun_knockdown_func). It needs the Thundergun's knockdown values, which
+// only maps that include the Thundergun load; elsewhere this does nothing.
+// The user preferred this over a slowdown, which breaks trains.
+pay_knockdown( player )
+{
+	self endon( "death" );
+	if ( !isDefined( self.thundergun_knockdown_func ) || !isDefined( level.zombie_vars[ "thundergun_knockdown_damage" ] ) )
+	{
+		if ( !isDefined( level.bo1sz_pay_kd_warned ) )
+		{
+			level.bo1sz_pay_kd_warned = true;
+			pay_log( "shotgun knockdown unavailable on this map (func=" + isDefined( self.thundergun_knockdown_func ) + " vars=" + isDefined( level.zombie_vars[ "thundergun_knockdown_damage" ] ) + ")" );
+		}
+		return;
+	}
+	now = getTime();
+	if ( isDefined( self.bo1sz_kd_ms ) && now - self.bo1sz_kd_ms < pay_bal( "shotgun_knockdown_cooldown_ms" ) )
+	{
+		return;
+	}
+	self.bo1sz_kd_ms = now;
+	// Let the shotgun's own damage resolve first.
+	waittillframeend;
+	if ( !isAlive( self ) )
+	{
+		return;
+	}
+	self [[ self.thundergun_knockdown_func ]]( player, false );
+	pay_debug( player, "shotgun knockdown" );
 }
 
 // Slows the zombie's movement for a moment; a new hit restarts the timer.
