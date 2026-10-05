@@ -159,3 +159,8 @@ machine on a map get script re-implemented effects. Double Tap 2.0 is accepted a
 - **Weapon names on Kino:** `fnfal_zm`, `l96a1_zm`, `dragunov_zm`, `m72_law_zm`, `china_lake_zm`,
   `rottweil72_zm` (Olympia), `hs10_zm`, `spas_zm`, `ithaca_zm`, `cz75dw_zm`. Shotgun class
   is `spread`.
+- **Engine limit: 24 zombies alive (2026-10-05).** Stock's spawn loop ignores
+  `level.zombie_ai_limit`. A supplemental spawner using stock `spawn_zombie` failed every
+  attempt once 24 were alive (38/38 with 382 queued), and so did the force-spawn path
+  (`script_forcespawn` → `StalingradSpawn`, 10/10). No dvar in the dump controls it. The user's
+  128 cap is not reachable from script; pacing uses faster spawns and gentler health instead.

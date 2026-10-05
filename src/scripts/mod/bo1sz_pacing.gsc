@@ -1,16 +1,14 @@
 // bo1-style-zombies: pacing (Milestone 6). Approved by the user on 2026-10-05:
-//   - max zombies alive at once: stock 24, pacing.cap (128, user request) from cap_round
 //   - spawn delay: an extra x0.9 per round on top of stock's x0.95 (same 0.08 floor)
 //   - zombie health growth after round 10: x1.07 per round instead of x1.10
-// Zombies per round are unchanged. All values: data/balance/pacing.csv.
+// Zombies per round are unchanged. Values: data/balance/pacing.csv.
 //
-// The engine's actor limit may sit below the requested cap: failed spawns are retried
-// by stock, and the per-round log below records the real peak.
+// Max zombies alive stays at 24: the user asked for 128, but the engine refuses any
+// spawn past 24 alive, with both DoSpawn and the force-spawn (tested 2026-10-05, see
+// docs/platform_findings.md).
 //
-// Dvars: bo1sz_pacing 0 disables (stock pacing); bo1sz_pacing_test 1 applies the cap
-// from round 1 for testing; bo1sz_pacing_flood 1 (in game, testing only) adds 100
-// zombies to the current round to find the engine's real limit; bo1sz_pacing_hud 1
-// shows the live zombie count.
+// Dvars: bo1sz_pacing 0 disables (stock pacing); bo1sz_pacing_flood 1 (in game, testing
+// only) adds 100 zombies to the current round; bo1sz_pacing_hud 1 shows the live count.
 
 init()
 {
@@ -45,26 +43,15 @@ pace_start()
 		pace_log_raw( "balance or zombie vars missing; pacing off" );
 		return;
 	}
-	level.bo1sz_stock_ai_limit = 24;
-	if ( isDefined( level.zombie_ai_limit ) )
-	{
-		level.bo1sz_stock_ai_limit = level.zombie_ai_limit;
-	}
 	level.zombie_vars[ "zombie_health_increase_multiplier" ] = pace_bal( "health_growth_mult" );
-	pace_log_raw( "pacing on (cap " + pace_bal( "cap" ) + " from round " + pace_cap_round() + ", stock limit " + level.bo1sz_stock_ai_limit + ")" );
+	pace_log_raw( "pacing on (spawn delay x" + pace_bal( "spawn_delay_extra_mult" ) + "/round, health growth " + pace_bal( "health_growth_mult" ) + ")" );
 
 	level thread pace_flood_command();
-	if ( pace_bal( "supplement" ) == 1 )
-	{
-		level thread pace_supplement();
-	}
-	pace_apply();
 	for ( ;; )
 	{
 		level waittill( "start_of_round" );
 		// Stock updates its own spawn delay around the round start; apply ours after it.
 		wait 0.05;
-		pace_apply();
 		pace_faster_spawns();
 	}
 }
@@ -74,14 +61,6 @@ pace_bal( key )
 	return level.bo1sz_bal[ "pacing." + key ];
 }
 
-pace_cap_round()
-{
-	if ( getDvar( "bo1sz_pacing_test" ) == "1" )
-	{
-		return 1;
-	}
-	return pace_bal( "cap_round" );
-}
 
 pace_log_raw( msg )
 {
@@ -90,17 +69,6 @@ pace_log_raw( msg )
 	logprint( line + "\n" );
 }
 
-pace_apply()
-{
-	if ( level.round_number >= pace_cap_round() )
-	{
-		level.zombie_ai_limit = pace_bal( "cap" );
-	}
-	else
-	{
-		level.zombie_ai_limit = level.bo1sz_stock_ai_limit;
-	}
-}
 
 pace_faster_spawns()
 {
@@ -137,14 +105,7 @@ pace_round_log()
 		{
 			limit = "" + level.zombie_ai_limit;
 		}
-		extra = "";
-		if ( isDefined( level.bo1sz_pace_tries ) )
-		{
-			extra = " supplement_tries=" + level.bo1sz_pace_tries + " fails=" + level.bo1sz_pace_fails;
-			level.bo1sz_pace_tries = 0;
-			level.bo1sz_pace_fails = 0;
-		}
-		pace_log_raw( "round " + level.round_number + " length=" + int( ( getTime() - start_ms ) / 1000 ) + "s peak_alive=" + peak + " limit=" + limit + " zombie_health=" + level.zombie_health + " spawn_delay=" + level.zombie_vars[ "zombie_spawn_delay" ] + extra );
+		pace_log_raw( "round " + level.round_number + " length=" + int( ( getTime() - start_ms ) / 1000 ) + "s peak_alive=" + peak + " limit=" + limit + " zombie_health=" + level.zombie_health + " spawn_delay=" + level.zombie_vars[ "zombie_spawn_delay" ] );
 	}
 }
 
@@ -175,96 +136,14 @@ pace_flood_command()
 	}
 }
 
-// ---------------------------------------------------------------------------
-// Supplemental spawner. Playtest 2026-10-05: with level.zombie_ai_limit at 128,
-// spawning still stopped at 24, so stock's loop has its own fixed limit. This thread
-// spawns the extra zombies (stock_fixed_limit .. cap) the way stock does: stock's
-// spawn_zombie on a random active spawner, one off level.zombie_total, and stock's
-// stuck-zombie failsafe. It never runs during special rounds or while stock spawning
-// is paused. Attempts and failures are logged per round to find the engine's limit.
-// ---------------------------------------------------------------------------
 
-pace_flag( name )
-{
-	return ( isDefined( level.flag ) && isDefined( level.flag[ name ] ) && level.flag[ name ] );
-}
 
-pace_supplement()
-{
-	spawn_fn = getFunction( "maps/_zombiemode_utility", "spawn_zombie" );
-	failsafe = getFunction( "maps/_zombiemode", "round_spawn_failsafe" );
-	pace_log_raw( "supplemental spawner (spawn fn=" + isDefined( spawn_fn ) + " failsafe=" + isDefined( failsafe ) + ")" );
-	if ( !isDefined( spawn_fn ) )
-	{
-		return;
-	}
-	level.bo1sz_pace_tries = 0;
-	level.bo1sz_pace_fails = 0;
-	for ( ;; )
-	{
-		delay = 0.5;
-		if ( isDefined( level.zombie_vars[ "zombie_spawn_delay" ] ) )
-		{
-			delay = level.zombie_vars[ "zombie_spawn_delay" ];
-		}
-		wait delay;
-		wait 0.05;
 
-		if ( level.round_number < pace_cap_round() || !isDefined( level.zombie_total ) || level.zombie_total <= 0 )
-		{
-			continue;
-		}
-		if ( pace_flag( "dog_round" ) || pace_flag( "thief_round" ) || pace_flag( "monkey_round" ) || pace_flag( "enter_nml" ) )
-		{
-			continue;
-		}
-		if ( isDefined( level.flag ) && isDefined( level.flag[ "spawn_zombies" ] ) && !level.flag[ "spawn_zombies" ] )
-		{
-			continue;
-		}
-		alive = GetAiSpeciesArray( "axis", "all" ).size;
-		if ( alive < pace_bal( "stock_fixed_limit" ) || alive >= pace_bal( "cap" ) )
-		{
-			continue;
-		}
-		if ( !isDefined( level.enemy_spawns ) || level.enemy_spawns.size == 0 )
-		{
-			continue;
-		}
-		spawner = level.enemy_spawns[ RandomInt( level.enemy_spawns.size ) ];
-		level.bo1sz_pace_tries++;
-		// Test: every DoSpawn failed at 24 alive (2026-10-05). Stock's spawn_zombie uses
-		// the engine force-spawn when the spawner has script_forcespawn set.
-		old_force = spawner.script_forcespawn;
-		if ( pace_bal( "force_spawn" ) == 1 )
-		{
-			spawner.script_forcespawn = true;
-		}
-		ai = [[ spawn_fn ]]( spawner );
-		spawner.script_forcespawn = old_force;
-		if ( isDefined( ai ) )
-		{
-			level.zombie_total--;
-			if ( isDefined( failsafe ) )
-			{
-				ai thread [[ failsafe ]]();
-			}
-		}
-		else
-		{
-			level.bo1sz_pace_fails++;
-		}
-	}
-}
-
-// Live monitor, started from init() so it can't miss round 1 (the round log waits for
-// "start_of_round", which fired before the old start-up finished). Logs every new peak
-// above the stock 24 and, every 10s, supplemental spawn attempts and failures.
-// "set bo1sz_pacing_hud 1" also shows "Zombies alive: N" on screen.
+// Live monitor, started from init() so it can't miss round 1. Logs every new peak above
+// 24 (should never happen: engine limit). "set bo1sz_pacing_hud 1" shows the live count.
 pace_monitor()
 {
 	peak = 0;
-	last_report = 0;
 	hud = undefined;
 	shown = -1;
 	for ( ;; )
@@ -278,11 +157,6 @@ pace_monitor()
 			{
 				pace_log_raw( "peak alive now " + peak );
 			}
-		}
-		if ( getTime() - last_report >= 10000 && isDefined( level.bo1sz_pace_tries ) && level.bo1sz_pace_tries > 0 )
-		{
-			last_report = getTime();
-			pace_log_raw( "monitor: alive=" + n + " peak=" + peak + " supplement_tries=" + level.bo1sz_pace_tries + " fails=" + level.bo1sz_pace_fails + " queued=" + level.zombie_total );
 		}
 
 		if ( getDvar( "bo1sz_pacing_hud" ) == "1" )
