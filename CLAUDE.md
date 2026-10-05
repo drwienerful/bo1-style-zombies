@@ -73,8 +73,8 @@ Roguelike-flavoured runs, a style meter, emergent archetypes, weapon payoffs, a 
 
 ## Current phase
 
-Milestone 1: minimal mod that loads and prints a message; installer working.
-Phase 0 was approved on 2026-10-05 (see `docs/platform_findings.md`, "Approval").
+Milestones 0-2 done (2026-10-05). Next: Milestone 3, weapon payoffs and style-based points.
+Design references: `docs/design/style_meter.md`, `docs/design/double_tap_2.md`.
 
 Mod source lives in `src/scripts/mod/` (files already named `bo1sz_*.gsc`). The installer
 copies them to `storage\t5\scripts\sp\zom\`. The Phase 0 probe in `src/scripts/probe/` is
