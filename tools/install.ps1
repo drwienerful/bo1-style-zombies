@@ -125,6 +125,15 @@ if ($Uninstall) {
 }
 if (-not $Batch) {
     # Default: install the mod (every bo1sz_*.gsc in src\scripts\mod) to the canonical path.
+    # Refuse to install anything the offline lint rejects: a bad file stops the map loading.
+    $py = @('py', 'python', 'python3') | Where-Object { Get-Command $_ -ErrorAction SilentlyContinue } | Select-Object -First 1
+    if ($py) {
+        & $py (Join-Path $RepoRoot 'tools\gsc_lint.py') $ModSrcDir
+        if ($LASTEXITCODE -ne 0) { throw 'gsc_lint failed: nothing was installed.' }
+    }
+    else {
+        Write-Warning 'Python not found: skipping the pre-install lint.'
+    }
     Remove-OurFiles
     $rel = (Get-Candidates)[$Target]
     $files = Get-ChildItem -Path $ModSrcDir -File -Filter "$Prefix*.gsc"

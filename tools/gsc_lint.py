@@ -116,7 +116,10 @@ def lint(path: Path) -> list:
 
 
 def main(argv):
-    files = [Path(a) for a in argv] or sorted(Path("src").rglob("*.gsc"))
+    files = []
+    for a in argv or ["src"]:
+        path = Path(a)
+        files += sorted(path.rglob("*.gsc")) if path.is_dir() else [path]
     errs = []
     for f in files:
         errs += lint(f)
