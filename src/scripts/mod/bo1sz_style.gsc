@@ -2,6 +2,9 @@
 // Milestone 2: HUD, gauge, rank up/down, decay (step 1) and real style events (step 2):
 // kills scored by headshot, streak, multi-kill, range, melee, explosive, clutch and
 // variety; revives; taking damage drops a rank; going down resets to D.
+// Kill chains (user request, after the round-20 playtest): kills within chain_window_ms of
+// each other multiply their style, up to chain_max_mult, shown as "Chain xN". The meter
+// doesn't drain between rounds (pause_between_rounds).
 //
 // Other modules add style by appending to the player's queue (no cross-file calls):
 //   p.bo1sz_style_q_pts[ p.bo1sz_style_q_pts.size ] = points;
@@ -50,6 +53,7 @@ style_start()
 	level thread style_debug_input();
 	level thread style_install_hooks();
 	level thread style_round_report();
+	level thread style_round_break_watch();
 	style_log( "style meter on, ranks=" + level.bo1sz_style_ranks_count );
 
 	players = GetPlayers();
@@ -183,7 +187,8 @@ style_tick()
 		}
 
 		// Decay when idle; empty gauge drops one rank.
-		if ( getTime() - self.bo1sz_style_last_ms > grace && ( self.bo1sz_style_gauge > 0 || self.bo1sz_style_rank > 0 ) )
+		paused = ( isDefined( level.bo1sz_round_break ) && level.bo1sz_round_break && style_bal( "pause_between_rounds" ) == 1 );
+		if ( !paused && getTime() - self.bo1sz_style_last_ms > grace && ( self.bo1sz_style_gauge > 0 || self.bo1sz_style_rank > 0 ) )
 		{
 			decay = level.bo1sz_style_ranks_decay_per_sec[ self.bo1sz_style_rank ] * 0.1;
 			// High Roller run modifier drains the meter faster.
@@ -212,6 +217,7 @@ style_tick()
 		{
 			self style_hud_refresh();
 		}
+		self style_chain_hud();
 	}
 }
 
@@ -256,6 +262,9 @@ style_hud_create()
 	// Archetype name sits beside the letter; filled in at Milestone 5.
 	self.bo1sz_hud_arch = self style_hud_elem( 70, -70, 1.2 );
 	self.bo1sz_hud_arch SetText( "" );
+	self.bo1sz_hud_chain = self style_hud_elem( 14, -12, 1.2 );
+	self.bo1sz_hud_chain.alpha = 0;
+	self.bo1sz_hud_chain_shown = 0;
 
 	self.bo1sz_hud_bg = self style_hud_elem( 12, -28, 1 );
 	self.bo1sz_hud_bg.foreground = false;
@@ -890,7 +899,59 @@ style_on_kill( attacker, mod, weapon, hitloc )
 	// Augments: style multiplier for the archetype this kill belongs to.
 	total = total * style_aug_style( attacker, style_class_arch( cls, mod ) );
 
+	// Kill chain: consecutive kills multiply their style.
+	now_ms = getTime();
+	if ( isDefined( attacker.bo1sz_kchain_ms ) && now_ms - attacker.bo1sz_kchain_ms <= style_bal( "chain_window_ms" ) )
+	{
+		attacker.bo1sz_kchain++;
+	}
+	else
+	{
+		attacker.bo1sz_kchain = 1;
+	}
+	attacker.bo1sz_kchain_ms = now_ms;
+	chain_mult = 1.0 + ( attacker.bo1sz_kchain - 1 ) * style_bal( "chain_step" );
+	if ( chain_mult > style_bal( "chain_max_mult" ) )
+	{
+		chain_mult = style_bal( "chain_max_mult" );
+	}
+	total = total * chain_mult;
+
 	attacker style_queue( total, best_tag, best_arch );
+}
+
+// Shows "Chain xN" under the meter while a chain of 2+ is alive; hides it when it lapses.
+style_chain_hud()
+{
+	n = 0;
+	if ( isDefined( self.bo1sz_kchain_ms ) && getTime() - self.bo1sz_kchain_ms <= style_bal( "chain_window_ms" ) && self.bo1sz_kchain >= 2 )
+	{
+		n = self.bo1sz_kchain;
+	}
+	if ( n == self.bo1sz_hud_chain_shown )
+	{
+		return;
+	}
+	self.bo1sz_hud_chain_shown = n;
+	if ( n == 0 || isDefined( self.bo1sz_style_hidden ) )
+	{
+		self.bo1sz_hud_chain.alpha = 0;
+		return;
+	}
+	self.bo1sz_hud_chain SetText( "Chain x" + n );
+	self.bo1sz_hud_chain.alpha = 1;
+}
+
+style_round_break_watch()
+{
+	level.bo1sz_round_break = false;
+	for ( ;; )
+	{
+		level waittill( "end_of_round" );
+		level.bo1sz_round_break = true;
+		level waittill( "start_of_round" );
+		level.bo1sz_round_break = false;
+	}
 }
 
 style_arch_tier( player, id )

@@ -452,6 +452,10 @@ init()
 	level.bo1sz_bal[ "style.variety_window" ] = 3;
 	level.bo1sz_bal[ "style.hit_cap_per_sec" ] = 8;
 	level.bo1sz_bal[ "style.hit_cap_per_sec_aoe" ] = 20;
+	level.bo1sz_bal[ "style.chain_window_ms" ] = 3000;
+	level.bo1sz_bal[ "style.chain_step" ] = 0.1;
+	level.bo1sz_bal[ "style.chain_max_mult" ] = 3.0;
+	level.bo1sz_bal[ "style.pause_between_rounds" ] = 1;
 	// style_events.csv
 	level.bo1sz_style_events_name = [];
 	level.bo1sz_style_events_points = [];
