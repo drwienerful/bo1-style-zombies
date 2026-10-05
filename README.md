@@ -5,7 +5,7 @@ A script-only (GSC) mod for **Call of Duty: Black Ops Zombies** on the
 with a style meter, emergent archetypes, better weapon variety, and a late-game boss.
 
 **Status:** Milestone 2. The style meter works in game (`docs/design/style_meter.md`).
-Phase 0 findings: [docs/platform_findings.md](docs/platform_findings.md).
+Player reference: [CODEX.md](CODEX.md). Phase 0 findings: [docs/platform_findings.md](docs/platform_findings.md).
 
 ## Requirements
 

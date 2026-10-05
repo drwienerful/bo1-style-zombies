@@ -15,6 +15,9 @@
 // Marksman pierce, Brawler melee, Blaster range, Demolitions explosive damage.
 // Ascended: Gunslinger 2-bullet refund, Blaster shockwave radius, Demolitions grenade
 // refund. Augments (augments.csv): dmg / points / refund kinds plus the specials.
+// Capstones: Gunslinger full-magazine refills, Marksman detonations, Blaster chain
+// reactions, Demolitions second blasts, Tech mini shockwaves (Brawler's is in the
+// archetypes module, which owns the player-damage hook).
 //
 // Dvars: bo1sz_payoffs 0 disables this module; bo1sz_payoff_debug 1 logs every award.
 // Tunables: data/balance/payoffs.csv, style_ranks.csv (kill_bonus, ammo_chance).
@@ -577,6 +580,10 @@ pay_on_kill( attacker, mod, weapon, hitloc )
 		{
 			bullets = pay_rule( "gunslinger_t2_refund" );
 		}
+		if ( pay_arch( attacker, "gunslinger" ) >= 3 && attacker.bo1sz_pistol_streak >= pay_rule( "gunslinger_t3_streak" ) )
+		{
+			bullets = WeaponClipSize( weapon );
+		}
 		pay_refund( attacker, weapon, bullets, "pistol headshot" );
 	}
 	else
@@ -697,6 +704,8 @@ pay_on_kill( attacker, mod, weapon, hitloc )
 	{
 		self pay_shockfist( attacker );
 	}
+
+	self pay_capstones_on_kill( attacker, cls, mod, head );
 
 	if ( isDefined( attacker.bo1sz_generalist ) && attacker.bo1sz_generalist )
 	{
@@ -823,4 +832,91 @@ pay_shockfist( player )
 		amount = 1;
 	}
 	level thread pay_shockwave_fire( centre, r, amount, player );
+}
+
+// ---------------------------------------------------------------------------
+// Capstones that react to kills
+// ---------------------------------------------------------------------------
+
+// Area damage at `centre` credited to `player`, deferred to frame end. Never fires if the
+// player could be inside the radius. `tag` marks the zombies it kills for chain reactions.
+pay_safe_blast( player, centre, r, frac, why )
+{
+	if ( !isDefined( level.zombie_health ) )
+	{
+		return false;
+	}
+	if ( Distance( player.origin, centre ) < r + pay_bal( "shockwave_player_margin" ) )
+	{
+		return false;
+	}
+	amount = int( level.zombie_health * frac );
+	if ( amount < 1 )
+	{
+		amount = 1;
+	}
+	level thread pay_shockwave_fire( centre, r, amount, player );
+	pay_debug( player, why + " " + amount );
+	return true;
+}
+
+pay_capstones_on_kill( attacker, cls, mod, head )
+{
+	now = getTime();
+	centre = self.origin + ( 0, 0, 30 );
+
+	// Marksman: every Nth sniper headshot kill detonates.
+	if ( pay_arch( attacker, "marksman" ) >= 3 && cls == "sniper" && head )
+	{
+		if ( !isDefined( attacker.bo1sz_mark_hs ) )
+		{
+			attacker.bo1sz_mark_hs = 0;
+		}
+		attacker.bo1sz_mark_hs++;
+		if ( attacker.bo1sz_mark_hs >= pay_rule( "marksman_t3_every" ) )
+		{
+			attacker.bo1sz_mark_hs = 0;
+			pay_safe_blast( attacker, centre, pay_rule( "marksman_t3_radius" ), pay_rule( "marksman_t3_frac" ), "marksman detonation" );
+		}
+	}
+
+	// Demolitions: a launcher kill sets off a second blast (once per blast).
+	if ( pay_arch( attacker, "demolitions" ) >= 3 && cls != "wonder" && cls != "pistol" && pay_is_projectile( mod ) )
+	{
+		if ( !( isDefined( attacker.bo1sz_demo3_ms ) && attacker.bo1sz_demo3_ms == now ) )
+		{
+			attacker.bo1sz_demo3_ms = now;
+			pay_safe_blast( attacker, centre, pay_rule( "demolitions_t3_radius" ), pay_rule( "demolitions_t3_frac" ), "demolitions second blast" );
+		}
+	}
+
+	// Tech: a wonder weapon kill releases a mini shockwave (once per shot).
+	if ( pay_arch( attacker, "tech" ) >= 3 && cls == "wonder" )
+	{
+		if ( !( isDefined( attacker.bo1sz_tech3_ms ) && attacker.bo1sz_tech3_ms == now ) )
+		{
+			attacker.bo1sz_tech3_ms = now;
+			pay_safe_blast( attacker, centre, pay_rule( "tech_t3_radius" ), pay_rule( "tech_t3_frac" ), "tech shockwave" );
+		}
+	}
+
+	// Blaster: zombies killed by a shockwave or blast (MOD_UNKNOWN from our area damage)
+	// release their own, chaining through the crowd. Capped per second.
+	if ( pay_arch( attacker, "blaster" ) >= 3 && mod == "MOD_UNKNOWN" )
+	{
+		if ( !isDefined( attacker.bo1sz_chain_ms ) || now - attacker.bo1sz_chain_ms >= 1000 )
+		{
+			attacker.bo1sz_chain_ms = now;
+			attacker.bo1sz_chain_n = 0;
+		}
+		if ( attacker.bo1sz_chain_n < pay_rule( "blaster_t3_chain_max" ) )
+		{
+			frac = pay_bal( "shockwave_health_frac" ) * pay_aug_value( attacker, "blaster", "special", 1.0 );
+			fired = pay_safe_blast( attacker, centre, pay_rule( "blaster_t3_radius" ), frac, "blaster chain " + attacker.bo1sz_chain_n );
+			if ( fired )
+			{
+				attacker.bo1sz_chain_n++;
+			}
+		}
+	}
 }

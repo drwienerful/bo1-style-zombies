@@ -6,6 +6,7 @@ for PY in python3 python py; do
   if "$PY" -c "import sys" >/dev/null 2>&1; then
     "$PY" tools/check_no_game_files.py || exit 1
     "$PY" tools/build_balance.py --check || exit 1
+    "$PY" tools/build_codex.py --check || exit 1
     exec "$PY" tools/gsc_lint.py
   fi
 done

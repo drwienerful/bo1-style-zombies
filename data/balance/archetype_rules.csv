@@ -22,7 +22,7 @@ blaster_t1_range_full,850,Blaster Awakened: bonus reaches its maximum at this di
 blaster_t1_max_mult,2.5,Blaster Awakened: shotgun damage multiplier at full range
 demolitions_t1_mult,1.25,Demolitions Awakened explosive damage multiplier
 tech_t1_style_mult,1.5,Tech Awakened style multiplier for wonder weapon kills
-enabled_tier,2,highest tier that can be earned (built in steps: 2 = Ascended)
+enabled_tier,3,highest tier that can be earned (3 = capstones)
 gunslinger_t2_refund,2,Gunslinger Ascended: bullets refunded on a pistol headshot kill
 marksman_t2_long_style_mult,2.0,Marksman Ascended: style multiplier for long-range kills
 blaster_t2_radius_mult,1.3,Blaster Ascended: shockwave radius multiplier
@@ -30,3 +30,14 @@ demolitions_t2_kills,3,Demolitions Ascended: explosive kills in one blast that r
 grenade_cap,4,most lethal grenades a player can hold
 tech_t2_extra_reserves,1,Tech Ascended: extra spare reserves for wonder weapons
 aug_hold_seconds,1.0,hold USE this long to choose the highlighted augment
+gunslinger_t3_streak,5,Gunslinger capstone: streak at which pistol kills refill the whole magazine
+marksman_t3_every,3,Marksman capstone: every Nth sniper headshot kill detonates
+marksman_t3_radius,120,Marksman capstone detonation radius
+marksman_t3_frac,1.0,Marksman capstone detonation damage (fraction of the round's zombie health)
+brawler_t3_damage_taken,0.5,Brawler capstone: damage taken multiplier
+blaster_t3_chain_max,24,Blaster capstone: most chained shockwaves per second
+blaster_t3_radius,90,Blaster capstone: chained shockwave radius
+demolitions_t3_radius,100,Demolitions capstone second blast radius
+demolitions_t3_frac,0.5,Demolitions capstone second blast damage (fraction of zombie health)
+tech_t3_radius,90,Tech capstone mini shockwave radius
+tech_t3_frac,0.5,Tech capstone mini shockwave damage (fraction of zombie health)

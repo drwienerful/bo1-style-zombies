@@ -48,6 +48,7 @@ arch_start()
 
 	level.bo1sz_round_start_count = 0;
 	level thread arch_round_start_watch();
+	level thread arch_install_hooks();
 	level thread arch_round_watch();
 	level thread arch_eval_command();
 	players = GetPlayers();
@@ -563,3 +564,62 @@ arch_draw_offer( offer, sel )
 	}
 }
 
+// ---------------------------------------------------------------------------
+// Brawler capstone: all damage taken x0.5 (chained player-damage wrapper, stock first).
+// The first hits are verified against the real health drop and logged, which also
+// settles Phase 0's open item B8 (modifying player damage).
+// ---------------------------------------------------------------------------
+
+arch_install_hooks()
+{
+	t = 0;
+	while ( !isDefined( level.overridePlayerDamage ) && t < 300 )
+	{
+		wait 0.1;
+		t++;
+	}
+	for ( i = 0; i < 10; i++ )
+	{
+		waittillframeend;
+	}
+	level.bo1sz_arch_orig_pdamage = level.overridePlayerDamage;
+	level.overridePlayerDamage = ::arch_player_damage;
+}
+
+arch_player_damage( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, modelIndex, psOffsetTime )
+{
+	dmg = iDamage;
+	if ( isDefined( level.bo1sz_arch_orig_pdamage ) )
+	{
+		dmg = self [[ level.bo1sz_arch_orig_pdamage ]]( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, modelIndex, psOffsetTime );
+	}
+	if ( !isDefined( dmg ) )
+	{
+		dmg = iDamage;
+	}
+	if ( dmg > 0 && isDefined( self.bo1sz_arch ) && isDefined( self.bo1sz_arch[ "brawler" ] ) && self.bo1sz_arch[ "brawler" ] >= 3 )
+	{
+		reduced = int( dmg * arch_rule( "brawler_t3_damage_taken" ) );
+		if ( reduced < 1 )
+		{
+			reduced = 1;
+		}
+		if ( !isDefined( self.bo1sz_brawler_checks ) )
+		{
+			self.bo1sz_brawler_checks = 0;
+		}
+		if ( self.bo1sz_brawler_checks < 3 )
+		{
+			self.bo1sz_brawler_checks++;
+			self thread arch_verify_drop( self.health, dmg, reduced );
+		}
+		return reduced;
+	}
+	return dmg;
+}
+
+arch_verify_drop( before, full, reduced )
+{
+	waittillframeend;
+	arch_log( self.playername + " brawler capstone hit: stock=" + full + " reduced=" + reduced + " health drop=" + ( before - self.health ) );
+}

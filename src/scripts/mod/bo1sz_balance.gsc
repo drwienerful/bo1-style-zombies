@@ -31,7 +31,7 @@ init()
 	level.bo1sz_bal[ "archetype_rules.blaster_t1_max_mult" ] = 2.5;
 	level.bo1sz_bal[ "archetype_rules.demolitions_t1_mult" ] = 1.25;
 	level.bo1sz_bal[ "archetype_rules.tech_t1_style_mult" ] = 1.5;
-	level.bo1sz_bal[ "archetype_rules.enabled_tier" ] = 2;
+	level.bo1sz_bal[ "archetype_rules.enabled_tier" ] = 3;
 	level.bo1sz_bal[ "archetype_rules.gunslinger_t2_refund" ] = 2;
 	level.bo1sz_bal[ "archetype_rules.marksman_t2_long_style_mult" ] = 2.0;
 	level.bo1sz_bal[ "archetype_rules.blaster_t2_radius_mult" ] = 1.3;
@@ -39,6 +39,17 @@ init()
 	level.bo1sz_bal[ "archetype_rules.grenade_cap" ] = 4;
 	level.bo1sz_bal[ "archetype_rules.tech_t2_extra_reserves" ] = 1;
 	level.bo1sz_bal[ "archetype_rules.aug_hold_seconds" ] = 1.0;
+	level.bo1sz_bal[ "archetype_rules.gunslinger_t3_streak" ] = 5;
+	level.bo1sz_bal[ "archetype_rules.marksman_t3_every" ] = 3;
+	level.bo1sz_bal[ "archetype_rules.marksman_t3_radius" ] = 120;
+	level.bo1sz_bal[ "archetype_rules.marksman_t3_frac" ] = 1.0;
+	level.bo1sz_bal[ "archetype_rules.brawler_t3_damage_taken" ] = 0.5;
+	level.bo1sz_bal[ "archetype_rules.blaster_t3_chain_max" ] = 24;
+	level.bo1sz_bal[ "archetype_rules.blaster_t3_radius" ] = 90;
+	level.bo1sz_bal[ "archetype_rules.demolitions_t3_radius" ] = 100;
+	level.bo1sz_bal[ "archetype_rules.demolitions_t3_frac" ] = 0.5;
+	level.bo1sz_bal[ "archetype_rules.tech_t3_radius" ] = 90;
+	level.bo1sz_bal[ "archetype_rules.tech_t3_frac" ] = 0.5;
 	// archetypes.csv
 	level.bo1sz_archetypes_id = [];
 	level.bo1sz_archetypes_name = [];
