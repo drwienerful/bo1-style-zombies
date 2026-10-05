@@ -1,7 +1,7 @@
 # Platform findings (Phase 0)
 
-Status: **A, B and C done (2026-10-05, solo, zombie_theater)** except B8/C3 modification checks
-(a probe bug hid their results; fixed, small rerun pending) and the optional off-map weapon test.
+Status: **Phase 0 complete (2026-10-05, solo, zombie_theater).** Co-op, dedicated server and
+the mods folder (A5) are untested. B8 player-damage modification is unverified (retry cap).
 Results come from `[PROBE]` lines in `%LOCALAPPDATA%\Plutonium\storage\t5\main\games.log`,
 cross-checked against Plutonium's loader lines in `main\console.log`. The "Static evidence" column
 is what reading the local reference material suggests. It is a prediction, not a result.
@@ -37,48 +37,49 @@ is what reading the local reference material suggests. It is a prediction, not a
 | B5 rounds | PASS (solo) | `B5 \| PASS \| ... \| end_of_round@r1 start_of_round@r2 gap=12s mod=n/a` | `level` `"end_of_round"`, `"start_of_round"`, `level.round_number` | Round break is about 12s. That's the window for archetype pop-ups. |
 | B6 weapons | PASS spy / mod inconclusive (solo) | `B6 \| PASS \| ... \| weapon_change=zombie_perk_bottle_revive list_change=yes maxammo stock 0->0` | player `"weapon_change"`, `GetWeaponsList` polling | `weapon_change` also fires for the **perk bottle**, so payoff code must ignore `zombie_perk_bottle_*`. The list change seen was the spawn grenade. GiveMaxAmmo was checked on the bottle (0->0), so modification is **not proven**; the probe listed B6 as modifiable by mistake. |
 | B7 perks | PASS (solo) | `B7 \| PASS \| ... \| perk_bought=specialty_quickrevive num_perks 0->1 owned=1 limit=num_perks>=4` | player `"perk_bought"` (with perk name), `player.num_perks` | Stock fires `perk_bought` with the perk name. The limit test is C6. |
-| B8 player dmg/down | BLOCKED (solo) | `B8 \| BLOCKED \| ... \| do in game: let a zombie hit you once` | wrap `level.overridePlayerDamage` | Hook installed (`player_damage_stock=1`); no hit occurred while the probe waited. Rerun together with Batch C. |
+| B8 player dmg/down | PARTIAL (solo) | `[PROBE-DATA] B8 first call dmg=60 hp=100 mod=MOD_MELEE` (also 9 calls in an earlier run) | wrap `level.overridePlayerDamage` | **Spy proven:** zombie hits reach our wrapper with damage and means of death, which is enough for \"taking damage drops the style rank\". **Modifying** player damage is unverified after 3 runs (a probe reporting race lost the result; fixed in code). Retry cap reached, so it gets confirmed in the first milestone that needs it. Down/revive notifies not observed. |
 | B9 zombie spawn | PASS (solo) | `B9 \| PASS \| ... \| spawn hp0=150 hp=150 lvl_hp=150 +100 stuck=1` | poll `GetAiSpeciesArray("axis","all")` | **Modifiable:** setting health 0.5s after spawn sticks. |
 | C1 HUD | PASS (solo, user-confirmed) | `C1 \| PASS \| ... \| drawn, 7 ranks, hid at round end` + user: "the hud was shown" | `NewClientHudElem`, `SetText`, `SetShader("white")`, `FadeOverTime` | Rank letter, fill bar and pop-up all work and update live; hiding at round end works. Run 1 hit the watchdog bug; run 2 passed. |
 | C2 sound | PASS (solo, user-confirmed) | probe timed out (watchdog bug); user heard all 4 | `PlayLocalSound` | Working aliases: `zmb_cha_ching`, `evt_perk_deny`, `zmb_perks_power_on`, `zmb_switch_flip`. |
-| C3 dmg scaling | BLOCKED (solo) | `C3 \| BLOCKED \| ... \| shoot a zombie in the body with a pistol` | B2 hook + `WeaponClass` | The pistol filter never matched. Suspect `WeaponClass("m1911_zm")` is not `"pistol"`; the rerun logs actual class names. The B2 x2 proof already shows per-hit scaling works. |
+| C3 dmg scaling | PASS (solo) | `C3 \| PASS \| ... \| pistol x2 drop=44 want=44 base=22` | B2 hook + `WeaponClass()==\"pistol\"` | Per-class damage scaling works. Classes seen: `m1911_zm=pistol`, `ak74u_zm=smg`, `mp40_zm=smg`, `knife_zm=melee`, `frag_grenade_zm=grenade`. |
 | C4 ammo refund | PASS (solo) | `C4 \| PASS \| ... \| wep=m1911_zm clip 6->7 size=8` (twice) | `GetWeaponAmmoClip`/`SetWeaponAmmoClip` in kill hook | Bullet refund on headshot kill works. |
 | C5 multi-kill | PASS (solo) | `C5 \| PASS \| ... \| 2 kills same frame wep=frag_grenade_zm mod=MOD_GRENADE_SPLASH bonus+50->50` | same-`getTime()` kills in kill hook | Grenade kills sometimes report the **held gun** as weapon (`wep=ak74u_zm mod=MOD_GRENADE_SPLASH`). Payoff code must classify by `mod`, not `weapon`. |
 | C6 perk limit | PASS (solo) | `C6 \| PASS \| ... \| owned=5 bought_with_offset=3 num_perks=-96 machines=5` | offset `player.num_perks` | **Perk limit removable** by keeping `num_perks` far below 4 (stock check `num_perks >= 4`). Bought a 5th machine perk on Kino. |
-| C7 perks per map | PARTIAL (solo) | `C7 \| PARTIAL \| ... \| machines=5 script shop gave specialty_longersprint has=1` | proximity + `UseButtonPressed` shop, `SetPerk` | Kino machines: QR, Speed Cola, Double Tap, Jugg, Mule Kick. A perk with **no machine on the map** (Stamin-Up) was granted engine-side; awaiting user confirmation of the prompt and its effect. |
+| C7 perks per map | PARTIAL (solo) | `C7 \| PARTIAL \| ... \| script shop gave specialty_longersprint has=1` + user: no noticeable sprint change | proximity + `UseButtonPressed` shop, `SetPerk` | The script shop works (one-use; prompt only after walking away and back). `SetPerk` on a perk with **no machine on the map** only sets the engine flag; the user felt no Stamin-Up effect, so most perk behaviour comes from stock perk scripts. Kino machines: QR, Speed Cola, Double Tap, Jugg, Mule Kick. |
 | C8 Double Tap 2.0 | PASS (solo, user-confirmed) | `C8 \| PARTIAL \| ... \| rate 0.75->0.8333 ft=0.096 dt=1 x2hits=14 steady=1` + user: "the double tap feels pretty much perfect" | dvar `perk_weapRateMultiplier`, x2 in damage hook, `SetPerk("specialty_bulletaccuracy")` | The user's DT 2.0 spec works as designed (`docs/design/double_tap_2.md`). |
 | C9 spawn/cap | PASS (solo) | `C9 \| PASS \| ... \| delay 2->0.475 ai_limit=24 peak=8 hp x1.5 150->225` | `zombie_vars["zombie_spawn_delay"]`, `level.zombie_ai_limit`, spawn health | Spawn delay and spawn health are writable, and `level.zombie_ai_limit` exists (24). A concurrent count above 24 was **not observed** (round 2 peak = 8); verify at a later round during Milestone 6. |
-| C10 unused weapons | PARTIAL (solo) | `C10 \| PARTIAL \| ... \| pool=36 give knife_ballistic_bowie_zm:1 \| foreign: not attempted` | `GiveWeapon`/`TakeWeapon` | Giving any weapon in the map's pool works. Off-map weapon not yet attempted (opt-in, may crash). |
+| C10 unused weapons | PARTIAL (solo) | `C10 \| PARTIAL \| ... \| pool=36 give knife_ballistic_bowie_zm:1 \| foreign tesla_gun_zm has=0` | `GiveWeapon` | Any weapon in the map's loaded pool can be given. An **off-map weapon is silently refused** (no crash, `HasWeapon`=0). |
 | C11 boss base | PASS (solo) | `C11 \| PASS \| ... \| hp=4000 phase=2 hazard_ticks=17 ai=dogs` | promoted zombie; `Earthquake`, `RadiusDamage`, `moveplaybackrate`, `set_zombie_run_cycle` via getFunction | Health scaling, a phase change at 50% and a timed area hazard all work. Kino's only special AI is dogs. |
 | C12 input | PASS (solo) | `C12 \| PASS \| ... \| dvar toggle seen after 42s; ads+use combo=no` | poll dvar `probe_codex` | Console/bind toggle works. The ADS+USE combo was not observed (maybe not tried). Co-op clients' dvars untested. |
 | C13 round break | PASS (solo) | `C13 \| PASS \| ... \| shown end_of_round -> hidden start_of_round, break=12s` | `end_of_round` → `start_of_round` | |
 
-## Feature verdicts (provisional, to be finalised after Batches B and C)
+## Feature verdicts (final, solo; co-op untested)
 
-| Area | Verdict | Depends on | Fallback if it fails |
+| Area | Verdict | Proven by | Fallback / note |
 |---|---|---|---|
-| Style meter | provisional GO | B2, B3, C1 | Text-only meter via `iPrintLn` if HUD elements misbehave. |
-| Archetypes | provisional GO | B3, B5, C1 | Pop-ups via `iPrintLnBold` at round break. |
-| Weapon payoffs | provisional GO | B2, B3, C3–C5 | None. A NO-GO here stops the project (stop-early rule). |
-| Economy & perks | provisional ADJUST | C6, C7, C8 | Perks with no machine on the map are sold through a script shop as engine perks with no icon or drink animation. |
-| Pacing | provisional ADJUST | C9 | If the concurrent cap is hard-coded, change only spawn delay and health growth. |
-| Boss | provisional ADJUST | C11 | Use a buffed regular zombie with scripted phases (no new model) when the map has no suitable special AI. |
-| Unused weapons | provisional NO-GO | C10 | Use only weapons already in each map's pool. Adding weapons needs fastfiles, which we won't ship. |
+| Style meter | **GO** | B2, B3, B8 (spy), B5, C1, C2, C4, C5, C13 | HUD letter, bar, pop-ups and sounds work. Rank-down on damage uses the B8 spy, which is proven. |
+| Archetypes | **GO** | B3, B5, C1, C3, C13 | Weapon class and means of death are available on every hit and kill; the round break is 12s. |
+| Weapon payoffs | **GO** | B2, B3, B4, C3, C4, C5 | Damage scaling, ammo refund, multi-kill bonus and bonus points all work. Classify grenade kills by means of death. |
+| Economy & perks | **ADJUST** | B4, B7, C6, C7, C8 | Perk limit removal, points and Double Tap 2.0 all work. **All perks on every map**: only perks whose machine exists on the map behave fully. Others need their effect re-implemented in our own script, and each perk's effect must be checked before it's sold. |
+| Pacing | **GO** | B9, C9 | Spawn delay, spawn health and `level.zombie_ai_limit` are writable. A concurrent count above 24 still needs checking at a later round. |
+| Boss | **GO (built from a regular zombie)** | C11 | Health scaling, a 50% phase change, sprint and a timed area hazard work. No new model is possible, and `Spawn` is unavailable, so the boss is promoted from a spawned zombie (or a dog where available). |
+| Unused weapons | **NO-GO beyond the map pool** | C10 | Off-map weapons are refused. Variety comes from each map's own loaded pool (36 on Kino), e.g. rotating wall-buy and box offerings. |
 
 ## Canonical install path
 
-`storage	5\scripts\sp\zom\` (A2). It loads in Zombies only, so the mod can never run in
+`%LOCALAPPDATA%\Plutonium\storage\t5\scripts\sp\zom\` (A2). It loads in Zombies only, so the mod can never run in
 campaign or the frontend. The Batch A summary printed `canonical_path=scripts/sp/` because
 it picks the first PASS in list order; A2 is chosen deliberately over it. `tools/install.ps1`
 now defaults to `-Target A2`.
 
-## Recommendation (provisional)
+## Recommendation
 
-Proceed as a Plutonium mod. Static evidence (S1–S9) shows that every system the
-design leans on is exposed to script as level callbacks, notifies or level vars,
-and Plutonium adds `getFunction` and `replaceFunc` for safe runtime lookup.
-A standalone Rust game only makes sense if B2/B3 fail, which would be very
-surprising given S4.
+**Proceed as a Plutonium mod.** Every system the design depends on is reachable from script:
+damage and kill hooks that can be modified, score, rounds, spawns, perks, HUD and sound. The
+only hard limits found are no `Spawn` from our source, no off-map weapons, and perk effects
+that live in stock scripts. All three have workable fallbacks. A standalone Rust game
+would throw away the main draw (playing BO1's maps and weapons) to avoid limits that
+don't block any pillar.
 
 ## Decisions (2026-10-05)
 

@@ -1072,15 +1072,12 @@ probe_b8( id )
 		}
 		wait 0.1;
 	}
-	// Give down/revive a little longer if the user is testing it.
-	probe_stage( id, "wait:optional - go down and get revived (needs Quick Revive solo)" );
-	t = 0;
-	while ( level.probe_b8_revive == "no" && t < 60 && getDvar( "probe_finish" ) != "1" )
-	{
-		wait 1;
-		t++;
-	}
-	ev = level.probe_b8_spy + " half " + level.probe_b8_drop + " down=" + level.probe_b8_down + " rev=" + level.probe_b8_revive;
+	// Report the modification result immediately. An earlier version waited here for
+	// an optional revive, and the watchdog's BLOCKED won the race on probe_finish, so
+	// the measured drop was lost (3 runs). Down/revive go to the log instead.
+	probe_stage( id, "report" );
+	level thread probe_b8_log_down_revive();
+	ev = level.probe_b8_spy + " half " + level.probe_b8_drop;
 	if ( level.probe_b8_mod == "yes" )
 	{
 		probe_mark_modifiable( id );
@@ -1090,6 +1087,15 @@ probe_b8( id )
 	{
 		probe_result( id, "PARTIAL", ev );
 	}
+}
+
+probe_b8_log_down_revive()
+{
+	while ( level.probe_b8_revive == "no" && getDvar( "probe_finish" ) != "1" )
+	{
+		wait 1;
+	}
+	probe_data( "B8", "down=" + level.probe_b8_down + " revive=" + level.probe_b8_revive );
 }
 
 probe_b8_listen( note )

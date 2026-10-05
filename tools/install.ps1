@@ -70,8 +70,14 @@ function Remove-OurFiles {
             }
         }
     }
-    # Our mod folder is ours entirely; remove it only if nothing else is left in it.
+    # Our mod folder is ours entirely: drop the mod.json we wrote, then the folder
+    # if nothing else is left in it.
     $modDir = Join-Path $StorageRoot "mods\$ModName"
+    $modJson = Join-Path $modDir 'mod.json'
+    if ((Test-Path $modJson) -and $PSCmdlet.ShouldProcess($modJson, 'Remove')) {
+        Remove-Item -LiteralPath $modJson
+        Write-Host "removed  $modJson"
+    }
     if ((Test-Path $modDir) -and -not (Get-ChildItem -Path $modDir -Recurse -File)) {
         if ($PSCmdlet.ShouldProcess($modDir, 'Remove empty folder')) {
             Remove-Item -LiteralPath $modDir -Recurse
