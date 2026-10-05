@@ -88,7 +88,7 @@ boss_now_command()
 	{
 		wait 0.5;
 		v = getDvar( "bo1sz_boss_now" );
-		if ( v == "" || v == "0" )
+		if ( v == "" || v == "0" || !( getDvar( "bo1sz_dev" ) == "1" ) )
 		{
 			continue;
 		}
@@ -162,7 +162,7 @@ boss_arm( health_frac )
 	}
 	players = GetPlayers();
 	hp = int( level.zombie_health * boss_bal( "hp_mult" ) * players.size );
-	if ( getDvar( "bo1sz_boss_test" ) == "1" )
+	if ( getDvar( "bo1sz_boss_test" ) == "1" && getDvar( "bo1sz_dev" ) == "1" )
 	{
 		hp = int( hp * boss_bal( "test_hp_scale" ) );
 	}

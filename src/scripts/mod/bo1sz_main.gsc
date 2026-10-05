@@ -1,16 +1,17 @@
 // bo1-style-zombies: main entry point.
-// Milestone 1: load in Zombies, announce the version, do nothing else.
+// Loads in Zombies, announces the version, and hosts the debug points command.
 //
 // Dvars (set in the console before loading a map):
 //   bo1sz_enable 0   disables the whole mod (default: enabled)
-//   bo1sz_debug_points 1   (in game) grant 50000 points to every player; testing aid
-//   bo1sz_hud_probe 1      (before load) log how many more HUD elements a player can get
+//   bo1sz_dev 1            enables every debug/testing command in the mod (off by default)
+//   bo1sz_debug_points 1   (in game, dev) grant 50000 points to every player
+//   bo1sz_hud_probe 1      (before load, dev) log how many more HUD elements a player can get
 //
 // Installed to storage\t5\scripts\sp\zom\, which Plutonium loads only in Zombies.
 
 bo1sz_version()
 {
-	return "0.1.0";
+	return "1.0.0";
 }
 
 init()
@@ -49,7 +50,7 @@ bo1sz_greet()
 	wait 3;
 	self iPrintLnBold( "bo1-style-zombies v" + level.bo1sz_version );
 	bo1sz_log( "greeted " + self.playername );
-	if ( getDvar( "bo1sz_hud_probe" ) == "1" )
+	if ( getDvar( "bo1sz_hud_probe" ) == "1" && getDvar( "bo1sz_dev" ) == "1" )
 	{
 		wait 5;
 		self bo1sz_hud_probe();
@@ -98,7 +99,7 @@ bo1sz_debug_points()
 	{
 		wait 0.5;
 		v = getDvar( "bo1sz_debug_points" );
-		if ( v == "" || v == "0" )
+		if ( v == "" || v == "0" || !( getDvar( "bo1sz_dev" ) == "1" ) )
 		{
 			continue;
 		}

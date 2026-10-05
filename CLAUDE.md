@@ -79,7 +79,7 @@ Roguelike-flavoured runs, a style meter, emergent archetypes, weapon payoffs, a 
 
 ## Current phase
 
-Milestones 0-7 done (2026-10-05). Next: Milestone 8, events, modifiers and polish (proposal first).
+All milestones 0-8 done (2026-10-05), v1.0.0. Debug commands need `bo1sz_dev 1`. Open: co-op/server untested; player-damage modification unverified (Brawler capstone).
 Design references: `docs/design/style_meter.md`, `weapon_payoffs.md`, `perks.md`, `archetypes.md`, `boss.md`, `double_tap_2.md`; player reference `CODEX.md`.
 
 Mod source lives in `src/scripts/mod/` (files already named `bo1sz_*.gsc`). The installer

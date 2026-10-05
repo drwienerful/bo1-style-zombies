@@ -8,7 +8,8 @@
 //   lucky      chance per kill to refill part of the magazine
 //   headstart  extra points at the start
 //
-// Dvars: bo1sz_modifiers 0 disables; bo1sz_modifier <id> (before load) forces one.
+// Dvars: bo1sz_modifiers 0 disables; bo1sz_modifier <id> (before load, needs bo1sz_dev 1)
+// forces one.
 
 init()
 {
@@ -38,7 +39,11 @@ mods_start()
 	}
 
 	pick = RandomInt( level.bo1sz_modifiers_count );
-	forced = getDvar( "bo1sz_modifier" );
+	forced = "";
+	if ( getDvar( "bo1sz_dev" ) == "1" )
+	{
+		forced = getDvar( "bo1sz_modifier" );
+	}
 	for ( i = 0; i < level.bo1sz_modifiers_count; i++ )
 	{
 		if ( level.bo1sz_modifiers_id[ i ] == forced )

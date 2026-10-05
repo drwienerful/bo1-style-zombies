@@ -168,3 +168,7 @@ machine on a map get script re-implemented effects. Double Tap 2.0 is accepted a
   created the element and logged it as shown (fade-in, y -110 or -50, scale 2.5-3, made at death
   or pre-made at promotion), but nothing appeared, while the boss HUD made by the same function
   works. `iPrintLnBold` at the same moment shows reliably and is used for "VICTORY".
+- **PhD (shop) and player-damage modification (2026-10-05):** the user confirmed PhD works, but
+  our self-explosive block never logged a hit: the engine's own `specialty_flakjacket` flag most
+  likely prevents the damage before the callback. Modifying player damage (B8) therefore stays
+  formally unverified; the Brawler capstone (x0.5 damage taken) is the one feature relying on it.

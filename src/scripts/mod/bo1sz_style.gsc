@@ -360,13 +360,13 @@ style_debug_input()
 
 		// String compare on purpose: getDvarInt returned 0 for console-typed values.
 		v = getDvar( "bo1sz_style_add" );
-		if ( v != "" && v != "0" )
+		if ( v != "" && v != "0" && getDvar( "bo1sz_dev" ) == "1" )
 		{
 			setDvar( "bo1sz_style_add", "0" );
 			style_fake_all( 30 );
 		}
 
-		if ( getDvar( "bo1sz_style_fake" ) == "1" && ticks >= style_bal( "fake_interval_ticks" ) )
+		if ( getDvar( "bo1sz_style_fake" ) == "1" && getDvar( "bo1sz_dev" ) == "1" && ticks >= style_bal( "fake_interval_ticks" ) )
 		{
 			ticks = 0;
 			lo = style_bal( "fake_min" );

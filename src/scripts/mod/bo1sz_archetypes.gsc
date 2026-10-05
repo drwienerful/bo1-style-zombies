@@ -42,7 +42,7 @@ arch_start()
 		arch_log( "balance data missing; archetypes off" );
 		return;
 	}
-	level.bo1sz_arch_test = ( getDvar( "bo1sz_arch_test" ) == "1" );
+	level.bo1sz_arch_test = ( getDvar( "bo1sz_arch_test" ) == "1" && getDvar( "bo1sz_dev" ) == "1" );
 	setDvar( "bo1sz_arch_eval", "0" );
 	arch_log( "archetypes on (count=" + level.bo1sz_archetypes_count + " test=" + level.bo1sz_arch_test + " max tier=" + arch_rule( "enabled_tier" ) + ")" );
 
@@ -175,7 +175,7 @@ arch_eval_command()
 	{
 		wait 0.5;
 		v = getDvar( "bo1sz_arch_eval" );
-		if ( v != "" && v != "0" )
+		if ( v != "" && v != "0" && getDvar( "bo1sz_dev" ) == "1" )
 		{
 			setDvar( "bo1sz_arch_eval", "0" );
 			arch_eval_all();

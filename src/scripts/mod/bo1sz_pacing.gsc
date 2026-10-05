@@ -123,7 +123,7 @@ pace_flood_command()
 	{
 		wait 0.5;
 		v = getDvar( "bo1sz_pacing_flood" );
-		if ( v == "" || v == "0" )
+		if ( v == "" || v == "0" || !( getDvar( "bo1sz_dev" ) == "1" ) )
 		{
 			continue;
 		}
@@ -159,7 +159,7 @@ pace_monitor()
 			}
 		}
 
-		if ( getDvar( "bo1sz_pacing_hud" ) == "1" )
+		if ( getDvar( "bo1sz_pacing_hud" ) == "1" && getDvar( "bo1sz_dev" ) == "1" )
 		{
 			players = GetPlayers();
 			if ( !isDefined( hud ) && players.size > 0 )
