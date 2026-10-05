@@ -1045,8 +1045,11 @@ perks_handling()
 	has_dt = self HasPerk( "specialty_rof" );
 	steady = ( has_dt || perks_has_shop( self, "specialty_deadshot" ) || sniper || ( cls == "smg" && perks_arch( self, "skirmisher" ) >= 1 ) );
 	self perks_set_flag( perks_bal( "dt2_steady_perk" ), steady );
-	self perks_set_flag( perks_rule( "sniper_fastads_perk" ), sniper );
-	self perks_set_flag( perks_rule( "skirmisher_t3_perk" ), cls == "smg" && perks_arch( self, "skirmisher" ) >= 3 );
+	// Unproven perk names run in their own thread: an unknown name ends the thread it runs
+	// in (the faster-melee perk did exactly that), and this loop also runs the perk limit,
+	// tiers and shop.
+	self thread perks_set_flag( perks_rule( "sniper_fastads_perk" ), sniper );
+	self thread perks_set_flag( perks_rule( "skirmisher_t3_perk" ), cls == "smg" && perks_arch( self, "skirmisher" ) >= 3 );
 	self perks_set_flag( "specialty_flakjacket", perks_arch( self, "tech" ) >= 1 );
 
 	speed = 1.0;
