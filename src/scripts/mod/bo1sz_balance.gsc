@@ -37,6 +37,29 @@ init()
 	level.bo1sz_bal[ "payoffs.shotgun_knockdown_cooldown_ms" ] = 2500;
 	level.bo1sz_bal[ "payoffs.shotgun_stagger_rate" ] = 0.4;
 	level.bo1sz_bal[ "payoffs.shotgun_stagger_seconds" ] = 1.2;
+	// perk_tiers.csv
+	level.bo1sz_perk_tiers_perk = [];
+	level.bo1sz_perk_tiers_name = [];
+	level.bo1sz_perk_tiers_price = [];
+	level.bo1sz_perk_tiers_perk[ 0 ] = "specialty_armorvest";
+	level.bo1sz_perk_tiers_name[ 0 ] = "Juggernog II";
+	level.bo1sz_perk_tiers_price[ 0 ] = 3000;
+	level.bo1sz_perk_tiers_perk[ 1 ] = "specialty_fastreload";
+	level.bo1sz_perk_tiers_name[ 1 ] = "Speed Cola II";
+	level.bo1sz_perk_tiers_price[ 1 ] = 3000;
+	level.bo1sz_perk_tiers_perk[ 2 ] = "specialty_rof";
+	level.bo1sz_perk_tiers_name[ 2 ] = "Double Tap II";
+	level.bo1sz_perk_tiers_price[ 2 ] = 3000;
+	level.bo1sz_perk_tiers_perk[ 3 ] = "specialty_quickrevive";
+	level.bo1sz_perk_tiers_name[ 3 ] = "Quick Revive II";
+	level.bo1sz_perk_tiers_price[ 3 ] = 3000;
+	level.bo1sz_perk_tiers_perk[ 4 ] = "specialty_additionalprimaryweapon";
+	level.bo1sz_perk_tiers_name[ 4 ] = "Mule Kick II";
+	level.bo1sz_perk_tiers_price[ 4 ] = 3000;
+	level.bo1sz_perk_tiers_perk[ 5 ] = "specialty_deadshot";
+	level.bo1sz_perk_tiers_name[ 5 ] = "Deadshot II";
+	level.bo1sz_perk_tiers_price[ 5 ] = 3000;
+	level.bo1sz_perk_tiers_count = 6;
 	// perks.csv
 	level.bo1sz_bal[ "perks.perk_list" ] = "specialty_quickrevive specialty_armorvest specialty_rof specialty_fastreload specialty_longersprint specialty_flakjacket specialty_deadshot specialty_additionalprimaryweapon";
 	level.bo1sz_bal[ "perks.stock_limit" ] = 4;
@@ -46,6 +69,15 @@ init()
 	level.bo1sz_bal[ "perks.dt2_damage_mult" ] = 2.0;
 	level.bo1sz_bal[ "perks.dt2_rate_mult" ] = 0.8333;
 	level.bo1sz_bal[ "perks.dt2_steady_perk" ] = "specialty_bulletaccuracy";
+	level.bo1sz_bal[ "perks.tier_hold_seconds" ] = 0.75;
+	level.bo1sz_bal[ "perks.jugg2_health_bonus" ] = 50;
+	level.bo1sz_bal[ "perks.speed2_reload_mult" ] = 0.35;
+	level.bo1sz_bal[ "perks.dt2b_rate_mult" ] = 0.769;
+	level.bo1sz_bal[ "perks.qr2_regen_hp" ] = 10;
+	level.bo1sz_bal[ "perks.qr2_regen_interval" ] = 0.5;
+	level.bo1sz_bal[ "perks.qr2_regen_delay_ms" ] = 2000;
+	level.bo1sz_bal[ "perks.deadshot2_hs_mult" ] = 1.25;
+	level.bo1sz_bal[ "perks.mule2_extra_reserves" ] = 1;
 	// style.csv
 	level.bo1sz_bal[ "style.gauge_max" ] = 100;
 	level.bo1sz_bal[ "style.idle_grace_ms" ] = 2000;

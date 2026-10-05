@@ -103,14 +103,14 @@ ammo_player()
 			if ( !isDefined( spare[ w ] ) )
 			{
 				// Newly acquired (or re-bought) weapon: give it its spare reserve.
-				spare[ w ] = level.bo1sz_bal[ "ammo.extra_reserves" ];
+				spare[ w ] = self ammo_reserves();
 				last[ w ] = stock;
 				continue;
 			}
 			if ( stock > last[ w ] )
 			{
 				// Refilled by the game (Max Ammo, wall ammo): restore the spare.
-				spare[ w ] = level.bo1sz_bal[ "ammo.extra_reserves" ];
+				spare[ w ] = self ammo_reserves();
 			}
 			if ( stock <= 0 && spare[ w ] > 0 )
 			{
@@ -137,4 +137,15 @@ ammo_player()
 			}
 		}
 	}
+}
+
+// Spare reserves per weapon; Mule Kick II (perks module) adds more via a player field.
+ammo_reserves()
+{
+	n = level.bo1sz_bal[ "ammo.extra_reserves" ];
+	if ( isDefined( self.bo1sz_extra_reserve_bonus ) )
+	{
+		n += self.bo1sz_extra_reserve_bonus;
+	}
+	return n;
 }
