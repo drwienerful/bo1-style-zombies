@@ -1,6 +1,6 @@
 # Platform findings (Phase 0)
 
-Status: **Batch A done (2026-10-05, solo, zombie_theater). Batches B and C not run.**
+Status: **Batches A and B done (2026-10-05, solo, zombie_theater); B8 needs a rerun. Batch C not run.**
 Results come from `[PROBE]` lines in `%LOCALAPPDATA%\Plutonium\storage\t5\main\games.log`,
 cross-checked against Plutonium's loader lines in `main\console.log`. The "Static evidence" column
 is what reading the local reference material suggests. It is a prediction, not a result.
@@ -29,15 +29,15 @@ is what reading the local reference material suggests. It is a prediction, not a
 | A3 `scripts\sp\<map>\` | PASS (solo) | `A3 \| PASS \| zombie_theater \| solo \| loaded scripts/sp/zombie_theater/ init@0 main=yes@0` | `main()` then `init()` | Loads only on that map. Useful for per-map add-ons. |
 | A4 `raw\scripts\sp\` | PASS (solo) | `A4 \| PASS \| zombie_theater \| solo \| loaded raw/scripts/sp/ init@0 main=yes@0` | `main()` then `init()` | Merged into the same virtual `scripts/sp/` as A1 (same-name files would shadow each other). Menu and campaign too. |
 | A5 mods folder | SKIPPED | `A5 \| SKIPPED \| ... \| prereq: load mods/bo1sz_probe from the Mods menu` | | Not needed now that A2 works. Co-op and dedicated loading are untested for every A row. |
-| B1 connect/spawn | untested | | `"connecting"`/`"connected"`, `"spawned_player"` | |
-| B2 zombie damage | untested | | wrap `level.overrideActorDamage` | mod = x2 one hit, health drop verified |
-| B3 zombie death | untested | | wrap `level.overrideActorKilled` | mod = +10 bonus on headshot kill |
-| B4 points | untested | | poll `player.score`, `add_to_player_score` via getFunction | grants 5000 to help B7 |
-| B5 rounds | untested | | `start_of_round` / `end_of_round` | |
-| B6 weapons | untested | | `"weapon_change"`, `GetWeaponsList` poll | give/take has no notify; polled |
-| B7 perks | untested | | `"perk_bought"` notify?, `num_perks` | |
-| B8 player dmg/down | untested | | wrap `level.overridePlayerDamage`, `player_downed/revived` | mod = halve one hit |
-| B9 zombie spawn | untested | | poll `GetAiSpeciesArray("axis","all")` | mod = +100 hp sticks? |
+| B1 connect/spawn | PASS (solo) | `B1 \| PASS \| ... \| connect_notify=connected spawned_notify=yes init_before_player=1 main=1` | `level` `"connected"`, player `"spawned_player"` | `init()` runs before any player exists, so per-player setup must listen for `"connected"`. |
+| B2 zombie damage | PASS (solo) | `B2 \| PASS \| ... \| wep=m1911_zm dmg=22 hit=torso_lower mod=MOD_PISTOL_BULLET \| x2 drop=44 want=44` | wrap `level.overrideActorDamage`, return the new damage | **Modifiable.** The doubled damage landed exactly (44/44). Stock callback existed and was still called. |
+| B3 zombie death | PASS (solo) | `B3 \| PASS \| ... \| wep=m1911_zm hs=1 hit=helmet bonus+10->10` | wrap `level.overrideActorKilled` | **Modifiable** (side effects on kill work). Headshots arrive as `hit=helmet` as well as `head`; count both. |
+| B4 points | PASS (solo) | `B4 \| PASS \| ... \| spy +20 \| add 5000 -> +5000 fn=1 scalar=undef` | `getFunction("maps/_zombiemode_score","add_to_player_score")` | **Modifiable.** `player.zombie_vars["zombie_point_scalar"]` was undefined on stock Kino; find the stock double-points mechanism before relying on a scalar. |
+| B5 rounds | PASS (solo) | `B5 \| PASS \| ... \| end_of_round@r1 start_of_round@r2 gap=12s mod=n/a` | `level` `"end_of_round"`, `"start_of_round"`, `level.round_number` | Round break is about 12s. That's the window for archetype pop-ups. |
+| B6 weapons | PASS spy / mod inconclusive (solo) | `B6 \| PASS \| ... \| weapon_change=zombie_perk_bottle_revive list_change=yes maxammo stock 0->0` | player `"weapon_change"`, `GetWeaponsList` polling | `weapon_change` also fires for the **perk bottle**, so payoff code must ignore `zombie_perk_bottle_*`. The list change seen was the spawn grenade. GiveMaxAmmo was checked on the bottle (0->0), so modification is **not proven**; the probe listed B6 as modifiable by mistake. |
+| B7 perks | PASS (solo) | `B7 \| PASS \| ... \| perk_bought=specialty_quickrevive num_perks 0->1 owned=1 limit=num_perks>=4` | player `"perk_bought"` (with perk name), `player.num_perks` | Stock fires `perk_bought` with the perk name. The limit test is C6. |
+| B8 player dmg/down | BLOCKED (solo) | `B8 \| BLOCKED \| ... \| do in game: let a zombie hit you once` | wrap `level.overridePlayerDamage` | Hook installed (`player_damage_stock=1`); no hit occurred while the probe waited. Rerun together with Batch C. |
+| B9 zombie spawn | PASS (solo) | `B9 \| PASS \| ... \| spawn hp0=150 hp=150 lvl_hp=150 +100 stuck=1` | poll `GetAiSpeciesArray("axis","all")` | **Modifiable:** setting health 0.5s after spawn sticks. |
 | C1 HUD | untested | | `NewClientHudElem`, `SetText`, `SetShader("white")` | needs visual confirm |
 | C2 sound | untested | | `PlayLocalSound` | aliases: zmb_cha_ching, evt_perk_deny, zmb_perks_power_on, zmb_switch_flip |
 | C3 dmg scaling | untested | | B2 hook + `WeaponClass()=="pistol"` | |
@@ -89,6 +89,16 @@ surprising given S4.
    result stays `untested` until a second player or a server is available.
    Solo results must not be generalised to co-op.
 
+## Batch B summary (from the probe)
+
+```
+[PROBE] passed=8 partial=0 failed=0 blocked=1 skipped=0
+[PROBE] hooks_modifiable=B9,B4,B2,B3,B6   (B6 is wrong; see table)
+[PROBE] next_batch=C stop_reason=none
+```
+
+Stop-early gate: **cleared.** B2 and B3 are both hookable and modifiable.
+
 ## Compile notes
 
 - **2026-10-05, first Batch B attempt:** the map failed to load with
@@ -98,6 +108,8 @@ surprising given S4.
   Plutonium's T5 compiler accepts it from our source. Working theory: the compiler
   stops at the first unresolved call in file order, so everything above `probe_c7`
   compiled.
+- **Confirmed 2026-10-05:** the trimmed probe compiled and ran, so every builtin
+  left in `probe.gsc` is proven. Only the names in `sweep_candidates.txt` remain unproven.
 - Action: C7, C8, C10, C11 and C12 are parked in `src/scripts/probe/parked_c_tests.txt`
   (not loaded) and report SKIPPED. `tools/install.ps1 -Batch Sweep` installs one
   compile-only file per uncertain builtin (`sweep_candidates.txt`) so we can tell which
