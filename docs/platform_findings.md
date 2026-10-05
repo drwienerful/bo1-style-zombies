@@ -117,3 +117,13 @@ Stop-early gate: **cleared.** B2 and B3 are both hookable and modifiable.
 - **Rule from now on:** a builtin counts as proven only after our own file using it has
   compiled in game. `tools/gsc_lint.py` checking against stock usage is a first filter,
   not proof.
+- **Builtin sweep (2026-10-05, 2 launches):** `Spawn` → **unknown function** (rejected,
+  and it was what broke `probe_c7`). Compiled fine: `SetCursorHint`, `SetHintString`,
+  `SetPerk`, `Delete`, `SetClientDvar`, `WeaponFireTime`, `GiveWeapon`, `TakeWeapon`,
+  `SwitchToWeapon`, `Earthquake`, `RadiusDamage`, `AdsButtonPressed`, `UseButtonPressed`,
+  `UnsetPerk`, `PlaySound`, `RandomInt`, `Distance`. `tools/gsc_lint.py` now rejects `Spawn`.
+- **Consequence:** we cannot create entities (triggers, script models, origins) from our
+  own source. Workarounds: proximity + `UseButtonPressed` instead of use triggers;
+  reuse existing map entities; call stock helper functions that spawn internally via
+  `getFunction` (to be tested when needed). C7 is rebuilt this way, and every parked
+  test is back in `probe.gsc`.

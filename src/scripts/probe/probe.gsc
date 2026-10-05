@@ -66,12 +66,12 @@ probe_register()
 	level.probe_fn[ "C4" ] = ::probe_c4;
 	level.probe_fn[ "C5" ] = ::probe_c5;
 	level.probe_fn[ "C6" ] = ::probe_c6;
-	level.probe_fn[ "C7" ] = ::probe_parked;
-	level.probe_fn[ "C8" ] = ::probe_parked;
+	level.probe_fn[ "C7" ] = ::probe_c7;
+	level.probe_fn[ "C8" ] = ::probe_c8;
 	level.probe_fn[ "C9" ] = ::probe_c9;
-	level.probe_fn[ "C10" ] = ::probe_parked;
-	level.probe_fn[ "C11" ] = ::probe_parked;
-	level.probe_fn[ "C12" ] = ::probe_parked;
+	level.probe_fn[ "C10" ] = ::probe_c10;
+	level.probe_fn[ "C11" ] = ::probe_c11;
+	level.probe_fn[ "C12" ] = ::probe_c12;
 	level.probe_fn[ "C13" ] = ::probe_c13;
 
 	level.probe_ids = getArrayKeys( level.probe_fn );
@@ -1042,14 +1042,6 @@ probe_b9( id )
 // Batch C: capabilities
 // ---------------------------------------------------------------------------
 
-// C7, C8, C10, C11, C12 call builtins that Plutonium's compiler has not yet
-// accepted from our source (first attempt: "unknown function @ probe_c7").
-// Their bodies live in parked_c_tests.txt until the builtin sweep clears them.
-probe_parked( id )
-{
-	probe_result( id, "SKIPPED", "prereq: builtin sweep (test parked after compile error)" );
-}
-
 probe_c1( id )
 {
 	p = probe_player();
@@ -1351,4 +1343,292 @@ probe_c13( id )
 	level waittill( "start_of_round" );
 	msg Destroy();
 	probe_result( id, "PASS", "shown end_of_round -> hidden start_of_round, break=" + int( ( getTime() - t0 ) / 1000 ) + "s" );
+}
+
+probe_c7( id )
+{
+	p = probe_player();
+	wait 3;
+	machines = probe_machine_perks();
+	probe_data( id, "machines on " + getDvar( "mapname" ) + ": " + probe_join( machines ) );
+
+	// Pick a perk whose machine is NOT on this map.
+	list = probe_perk_list();
+	perk = undefined;
+	for ( i = 0; i < list.size; i++ )
+	{
+		if ( !probe_in_array( machines, list[ i ] ) )
+		{
+			perk = list[ i ];
+			break;
+		}
+	}
+	if ( !isDefined( perk ) )
+	{
+		probe_result( id, "PASS", "all 8 perk machines exist on this map: " + machines.size );
+		return;
+	}
+
+	// Spawn() is not callable from our source (sweep), so the shop is a spot plus
+	// a HUD prompt plus a distance and USE-button check instead of a trigger entity.
+	probe_stage( id, "shop" );
+	spot = p.origin;
+	hint = NewClientHudElem( p );
+	hint.horzAlign = "user_center";
+	hint.vertAlign = "middle";
+	hint.alignX = "center";
+	hint.alignY = "middle";
+	hint.y = 60;
+	hint.fontScale = 1.4;
+	hint.alpha = 0;
+	hint SetText( "PROBE SHOP: press USE for a free perk" );
+	p iPrintLnBold( "C7: probe shop placed where you stand. Walk away, come back, press USE." );
+
+	probe_stage( id, "wait:walk away from the C7 spot, come back and press USE" );
+	left = false;
+	for ( ;; )
+	{
+		near = ( Distance( p.origin, spot ) < 64 );
+		if ( !near )
+		{
+			left = true;
+			hint.alpha = 0;
+		}
+		else if ( left )
+		{
+			hint.alpha = 1;
+			if ( p UseButtonPressed() )
+			{
+				break;
+			}
+		}
+		wait 0.05;
+	}
+	hint Destroy();
+	p SetPerk( perk );
+	wait 0.1;
+	has = p HasPerk( perk );
+	ev = "machines=" + machines.size + " script shop gave " + perk + " has=" + has + " - CONFIRM prompt+effect?";
+	if ( has )
+	{
+		probe_result( id, "PARTIAL", ev );
+	}
+	else
+	{
+		probe_result( id, "FAIL", ev );
+	}
+}
+
+probe_c8( id )
+{
+	p = probe_player();
+	wait 2;
+	probe_stage( id, "dvar" );
+	orig = getDvar( "perk_weapRateMultiplier" );
+	if ( getDvar( "probe_c8_orig" ) == "" )
+	{
+		setDvar( "probe_c8_orig", orig );
+	}
+	setDvar( "perk_weapRateMultiplier", "0.5" );
+	p SetClientDvar( "perk_weapRateMultiplier", "0.5" );
+	now = getDvar( "perk_weapRateMultiplier" );
+	cur = p GetCurrentWeapon();
+	ft = "n/a";
+	if ( cur != "none" )
+	{
+		ft = "" + WeaponFireTime( cur );
+	}
+	level thread probe_c8_restore();
+	probe_stage( id, "wait:buy Double Tap and compare fire rate (set probe_finish 1 when done)" );
+	dt = p HasPerk( "specialty_rof" );
+	while ( !dt && getDvar( "probe_finish" ) != "1" )
+	{
+		wait 0.5;
+		dt = p HasPerk( "specialty_rof" );
+	}
+	ev = "perk_weapRateMultiplier " + orig + "->" + now + " firetime=" + ft + " dt=" + dt + " - faster?";
+	if ( now == "0.5" )
+	{
+		probe_result( id, "PARTIAL", ev );
+	}
+	else
+	{
+		probe_result( id, "FAIL", ev );
+	}
+}
+
+probe_c8_restore()
+{
+	level waittill( "end_game" );
+	orig = getDvar( "probe_c8_orig" );
+	if ( orig != "" )
+	{
+		setDvar( "perk_weapRateMultiplier", orig );
+		setDvar( "probe_c8_orig", "" );
+	}
+}
+
+probe_c10( id )
+{
+	p = probe_player();
+	wait 2;
+	probe_stage( id, "list" );
+	keys = [];
+	if ( isDefined( level.zombie_weapons ) )
+	{
+		keys = getArrayKeys( level.zombie_weapons );
+	}
+	probe_data( id, "zombie_weapons(" + keys.size + ")=" + probe_join( keys ) );
+
+	// In-pool give: first registered weapon the player does not already have.
+	probe_stage( id, "give in-pool" );
+	pool = "none";
+	for ( i = 0; i < keys.size; i++ )
+	{
+		c = probe_weapon_class( keys[ i ] );
+		owned = p HasWeapon( keys[ i ] );
+		if ( ( c == "smg" || c == "rifle" || c == "spread" || c == "pistol" ) && !owned )
+		{
+			p GiveWeapon( keys[ i ] );
+			owned = p HasWeapon( keys[ i ] );
+			pool = keys[ i ] + ":" + owned;
+			wait 2;
+			p TakeWeapon( keys[ i ] );
+			break;
+		}
+	}
+
+	foreign = getDvar( "probe_c10_weapon" );
+	if ( foreign == "" )
+	{
+		probe_result( id, "PARTIAL", "pool=" + keys.size + " give " + pool + " | foreign: set probe_c10_weapon <name>" );
+		return;
+	}
+	// Breadcrumb first: if the game crashes now, this is the last log line.
+	logprint( "[PROBE-TRY] C10 giving foreign weapon " + foreign + "\n" );
+	probe_stage( id, "give foreign " + foreign );
+	p GiveWeapon( foreign );
+	wait 0.5;
+	has = p HasWeapon( foreign );
+	ev = "pool=" + keys.size + " give " + pool + " | foreign " + foreign + " has=" + has;
+	if ( has )
+	{
+		p SwitchToWeapon( foreign );
+		probe_result( id, "PASS", ev + " CONFIRM model/fire ok?" );
+	}
+	else
+	{
+		probe_result( id, "PARTIAL", ev );
+	}
+}
+
+probe_c11( id )
+{
+	probe_player();
+	probe_data( id, "special AI: " + probe_c11_special_ai() );
+	probe_stage( id, "spawnwatch" );
+	probe_mark_existing_zombies();
+	probe_stage( id, "wait:wait for a zombie to spawn (it becomes the boss)" );
+	boss = probe_next_new_zombie();
+	wait 0.5;
+	if ( !isDefined( boss ) || !isAlive( boss ) )
+	{
+		probe_result( id, "FAIL", "boss candidate died before setup" );
+		return;
+	}
+	boss.maxhealth = 4000;
+	boss.health = 4000;
+	boss.probe_boss = true;
+	level.probe_c11_phase = 1;
+	level.probe_c11_ticks = 0;
+	boss thread probe_c11_hazard();
+	boss thread probe_c11_phase();
+	players = GetPlayers();
+	players[ 0 ] iPrintLnBold( "C11: next zombie is a 4000hp boss. Screen shake = hazard pulse." );
+
+	probe_stage( id, "wait:shoot the boss below half health, then kill it" );
+	boss waittill( "death" );
+	ev = "hp=4000 phase=" + level.probe_c11_phase + " hazard_ticks=" + level.probe_c11_ticks + " ai=" + probe_c11_special_ai();
+	if ( level.probe_c11_phase >= 2 && level.probe_c11_ticks >= 1 )
+	{
+		probe_result( id, "PASS", ev );
+	}
+	else
+	{
+		probe_result( id, "PARTIAL", ev );
+	}
+}
+
+probe_c11_hazard()
+{
+	self endon( "death" );
+	for ( ;; )
+	{
+		wait 6;
+		Earthquake( 0.35, 1.0, self.origin, 600 );
+		RadiusDamage( self.origin + ( 0, 0, 30 ), 160, 25, 5 );
+		level.probe_c11_ticks++;
+	}
+}
+
+probe_c11_phase()
+{
+	self endon( "death" );
+	while ( self.health > self.maxhealth / 2 )
+	{
+		wait 0.2;
+	}
+	level.probe_c11_phase = 2;
+	self.moveplaybackrate = 1.5;
+	fn = getFunction( "maps/_zombiemode_spawner", "set_zombie_run_cycle" );
+	if ( isDefined( fn ) )
+	{
+		self [[ fn ]]( "sprint" );
+	}
+	players = GetPlayers();
+	players[ 0 ] iPrintLnBold( "C11: boss phase 2 (sprint)" );
+}
+
+probe_c11_special_ai()
+{
+	switch ( getDvar( "mapname" ) )
+	{
+		case "zombie_theater":
+		case "zombie_cod5_factory":
+			return "dogs";
+		case "zombie_pentagon":
+			return "thief,dogs";
+		case "zombie_cosmodrome":
+			return "monkeys";
+		case "zombie_coast":
+			return "director";
+		case "zombie_temple":
+			return "napalm,sonic,monkey";
+		case "zombie_moon":
+			return "astronaut,quad";
+		case "zombie_cod5_asylum":
+		case "zombie_cod5_prototype":
+		case "zombie_cod5_sumpf":
+			return "none/dogs?";
+	}
+	return "unknown";
+}
+
+probe_c12( id )
+{
+	p = probe_player();
+	setDvar( "probe_codex", "0" );
+	probe_stage( id, "wait:console: set probe_codex 1 (or bind a key to it); also hold ADS+USE" );
+	combo = "no";
+	t0 = getTime();
+	while ( getDvar( "probe_codex" ) != "1" )
+	{
+		if ( p AdsButtonPressed() && p UseButtonPressed() )
+		{
+			combo = "yes";
+		}
+		wait 0.05;
+	}
+	setDvar( "probe_codex", "0" );
+	probe_result( id, "PASS", "dvar toggle seen after " + int( ( getTime() - t0 ) / 1000 ) + "s; ads+use combo=" + combo );
 }

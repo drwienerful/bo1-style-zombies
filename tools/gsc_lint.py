@@ -14,13 +14,15 @@ import re
 import sys
 from pathlib import Path
 
-# Each name below is used by stock BO1 scripts or by Plutonium's own shipped
-# zm_spawn_fix.gsc. Add a name only after confirming it there.
+# Every name below has compiled in game from OUR source (probe.gsc or the builtin
+# sweep, 2026-10-05). Stock usage alone is NOT enough: Plutonium's T5 compiler does
+# not know every engine builtin by name (see DENIED_BUILTINS). New names go through
+# tools/install.ps1 -Batch Sweep before use.
 VERIFIED_BUILTINS = {
     # flow / engine
     "isdefined", "isalive", "isplayer", "isai", "gettime", "int", "getarraykeys",
     "strtok", "getsubstr", "issubstr", "tolower", "getplayers", "getaispeciesarray",
-    "getentarray", "spawn", "earthquake", "radiusdamage", "precacheshader",
+    "getentarray", "earthquake", "radiusdamage", "precacheshader",
     "precachestring", "logprint", "println", "iprintln", "iprintlnbold",
     "getdvar", "getdvarint", "getdvarfloat", "setdvar", "setclientdvar",
     "weaponclass", "weaponclipsize", "weaponfiretime", "newclienthudelem",
@@ -34,6 +36,11 @@ VERIFIED_BUILTINS = {
     "playsound", "adsbuttonpressed", "usebuttonpressed", "attackbuttonpressed",
     "setcursorhint", "sethintstring", "delete", "destroy", "settext", "setshader",
     "setvalue", "fadeovertime", "scaleovertime",
+}
+# Builtins that stock scripts use but Plutonium's compiler rejects from our source
+# ("unknown function"). Using one stops the map from loading.
+DENIED_BUILTINS = {
+    "spawn": "unknown function in Plutonium T5 compiler (sweep, 2026-10-05)",
 }
 KEYWORDS = {"if", "while", "for", "switch", "return", "wait", "foreach", "else",
             "case", "thread", "waittill", "notify", "endon", "waittillframeend"}
@@ -91,6 +98,10 @@ def lint(path: Path) -> list:
             errs.append(f"{path}:{ln}: ::{m.group(1)} not defined in this file")
     for m in re.finditer(r"(?<![:\w])([A-Za-z_]\w*)\s*\(", code):
         name = m.group(1).lower()
+        if name in DENIED_BUILTINS:
+            ln = code.count("\n", 0, m.start()) + 1
+            errs.append(f"{path}:{ln}: '{m.group(1)}' is denied: {DENIED_BUILTINS[name]}")
+            continue
         if name in KEYWORDS or name in defined or name in VERIFIED_BUILTINS:
             continue
         ln = code.count("\n", 0, m.start()) + 1
