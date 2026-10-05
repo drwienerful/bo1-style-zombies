@@ -91,6 +91,11 @@ def lint(path: Path) -> list:
     for ch, ln in stack:
         errs.append(f"{path}:{ln}: unclosed '{ch}'")
 
+    # "!player HasPerk( x )" has never been compiled in game; assign the call first.
+    for m in re.finditer(r"!\s*[A-Za-z_][\w.\[\] ]*?\s+[A-Za-z_]\w*\s*\(", code):
+        ln = code.count("\n", 0, m.start()) + 1
+        errs.append(f"{path}:{ln}: negated method call '{m.group(0).strip()}' is unproven; assign it to a variable first")
+
     defined = {m.group(1).lower() for m in re.finditer(r"^([A-Za-z_]\w*)\s*\(", code, re.M)}
     for m in re.finditer(r"::\s*([A-Za-z_]\w*)", code):
         if m.group(1).lower() not in defined:
