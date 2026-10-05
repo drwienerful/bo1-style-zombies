@@ -37,6 +37,15 @@ init()
 	level.bo1sz_bal[ "payoffs.shotgun_knockdown_cooldown_ms" ] = 2500;
 	level.bo1sz_bal[ "payoffs.shotgun_stagger_rate" ] = 0.4;
 	level.bo1sz_bal[ "payoffs.shotgun_stagger_seconds" ] = 1.2;
+	// perks.csv
+	level.bo1sz_bal[ "perks.perk_list" ] = "specialty_quickrevive specialty_armorvest specialty_rof specialty_fastreload specialty_longersprint specialty_flakjacket specialty_deadshot specialty_additionalprimaryweapon";
+	level.bo1sz_bal[ "perks.stock_limit" ] = 4;
+	level.bo1sz_bal[ "perks.surcharge_step" ] = 1000;
+	level.bo1sz_bal[ "perks.machine_radius" ] = 160;
+	level.bo1sz_bal[ "perks.default_cost" ] = 2500;
+	level.bo1sz_bal[ "perks.dt2_damage_mult" ] = 2.0;
+	level.bo1sz_bal[ "perks.dt2_rate_mult" ] = 0.8333;
+	level.bo1sz_bal[ "perks.dt2_steady_perk" ] = "specialty_bulletaccuracy";
 	// style.csv
 	level.bo1sz_bal[ "style.gauge_max" ] = 100;
 	level.bo1sz_bal[ "style.idle_grace_ms" ] = 2000;
