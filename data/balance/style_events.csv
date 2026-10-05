@@ -4,11 +4,11 @@ headshot,12,gunslinger
 headshot_streak,4,gunslinger
 multi_kill,10,auto
 long_range,12,marksman
-melee,15,brawler
+melee,15,jackie
 explosive,6,demolitions
 clutch,12,none
 variety,8,none
-revive,25,support
+revive,25,none
 hit,2,auto
 hit_headshot,4,auto
 hit_aoe,3,auto

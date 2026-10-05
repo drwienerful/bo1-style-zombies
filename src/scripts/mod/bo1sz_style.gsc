@@ -637,6 +637,21 @@ style_weapon_class( weapon )
 	{
 		return "none";
 	}
+	// Wonder weapons and equipment are their own classes for archetype affinity.
+	if ( isDefined( level.bo1sz_pay_excluded ) )
+	{
+		for ( i = 0; i < level.bo1sz_pay_excluded.size; i++ )
+		{
+			if ( isSubStr( weapon, level.bo1sz_pay_excluded[ i ] ) )
+			{
+				return "wonder";
+			}
+		}
+	}
+	if ( isSubStr( weapon, "claymore" ) || isSubStr( weapon, "cymbal_monkey" ) )
+	{
+		return "equipment";
+	}
 	// Same class overrides as the payoffs module (payoffs.class_overrides), when loaded.
 	if ( isDefined( level.bo1sz_pay_ovr_name ) )
 	{
@@ -651,8 +666,20 @@ style_weapon_class( weapon )
 	return WeaponClass( weapon );
 }
 
+// Archetype ids: gunslinger, marksman, jackie (melee), blaster (shotguns), demolitions, tech.
 style_class_arch( cls, mod )
 {
+	// Melee feeds Jackie Chan whatever is in hand (knife, Bowie).
+	if ( mod == "MOD_MELEE" )
+	{
+		return "jackie";
+	}
+	// Wonder weapons and equipment (claymores, monkeys) feed Tech; checked before
+	// explosives because claymore kills are explosive.
+	if ( cls == "wonder" || cls == "equipment" )
+	{
+		return "tech";
+	}
 	// Grenade kills can report the held gun as the weapon: classify by means of death first.
 	if ( style_is_explosive( mod ) || cls == "rocketlauncher" || cls == "grenade" )
 	{
@@ -662,9 +689,9 @@ style_class_arch( cls, mod )
 	{
 		return "gunslinger";
 	}
-	if ( cls == "spread" || mod == "MOD_MELEE" )
+	if ( cls == "spread" )
 	{
-		return "brawler";
+		return "blaster";
 	}
 	if ( cls == "sniper" )
 	{
@@ -727,7 +754,11 @@ style_on_kill( attacker, mod, weapon, hitloc )
 			}
 			else if ( cls == "spread" )
 			{
-				best_arch = "brawler";
+				best_arch = "blaster";
+			}
+			else if ( cls == "wonder" )
+			{
+				best_arch = "tech";
 			}
 		}
 	}
@@ -814,6 +845,12 @@ style_on_kill( attacker, mod, weapon, hitloc )
 		updated[ updated.size ] = recent[ i ];
 	}
 	attacker.bo1sz_recent_classes = updated;
+
+	// Tech Awakened: wonder weapon kills give extra style.
+	if ( cls == "wonder" && isDefined( attacker.bo1sz_arch ) && isDefined( attacker.bo1sz_arch[ "tech" ] ) && attacker.bo1sz_arch[ "tech" ] >= 1 )
+	{
+		total = total * level.bo1sz_bal[ "archetype_rules.tech_t1_style_mult" ];
+	}
 
 	attacker style_queue( total, best_tag, best_arch );
 }

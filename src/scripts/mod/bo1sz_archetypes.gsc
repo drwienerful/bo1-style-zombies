@@ -1,0 +1,409 @@
+// bo1-style-zombies: archetypes (Milestone 5).
+// Reads the hidden per-run affinity the style meter builds (player.bo1sz_aff[id]) and at
+// every round break grants archetype tiers into player.bo1sz_arch[id]:
+//   1 Awakened   round >= awaken_round and affinity >= awaken_aff
+//   2 Ascended   round >= ascend_round, affinity >= ascend_aff, at most max_ascended
+//   3 Capstone   round >= cap_round, affinity >= cap_aff, share >= cap_focus, only one
+// Tiers are never taken away. Effects live in the modules that own the mechanic
+// (payoffs, style, perks) and check player.bo1sz_arch.
+// Generalist: from generalist_round, no archetype Awakened and none with a share
+// >= generalist_focus gives a flat bonus per kill (payoffs module).
+//
+// Dvars: bo1sz_archetypes 0 disables; bo1sz_arch_test 1 (before load) scales gates
+// down for testing; bo1sz_arch_eval 1 (in game) evaluates immediately.
+// Tunables: data/balance/archetypes.csv, archetype_rules.csv.
+
+init()
+{
+	if ( getDvar( "zombiemode" ) != "1" && !( isDefined( level.is_zombie_level ) && level.is_zombie_level ) )
+	{
+		return;
+	}
+	if ( getDvar( "bo1sz_enable" ) == "0" || getDvar( "bo1sz_archetypes" ) == "0" )
+	{
+		return;
+	}
+	level thread arch_start();
+}
+
+arch_start()
+{
+	t = 0;
+	while ( !isDefined( level.bo1sz_bal ) && t < 100 )
+	{
+		wait 0.05;
+		t++;
+	}
+	if ( !isDefined( level.bo1sz_bal ) )
+	{
+		arch_log( "balance data missing; archetypes off" );
+		return;
+	}
+	level.bo1sz_arch_test = ( getDvar( "bo1sz_arch_test" ) == "1" );
+	setDvar( "bo1sz_arch_eval", "0" );
+	arch_log( "archetypes on (count=" + level.bo1sz_archetypes_count + " test=" + level.bo1sz_arch_test + " max tier=" + arch_rule( "enabled_tier" ) + ")" );
+
+	level thread arch_round_watch();
+	level thread arch_eval_command();
+	players = GetPlayers();
+	for ( i = 0; i < players.size; i++ )
+	{
+		players[ i ] thread arch_player();
+	}
+	for ( ;; )
+	{
+		level waittill( "connected", player );
+		player thread arch_player();
+	}
+}
+
+arch_rule( key )
+{
+	return level.bo1sz_bal[ "archetype_rules." + key ];
+}
+
+arch_log( msg )
+{
+	line = "[BO1SZ] archetypes: " + msg;
+	println( line );
+	logprint( line + "\n" );
+}
+
+// Round and affinity gates, scaled down in test mode.
+arch_round_gate( key )
+{
+	g = arch_rule( key );
+	if ( level.bo1sz_arch_test )
+	{
+		g = g * arch_rule( "test_round_scale" );
+	}
+	return g;
+}
+
+arch_aff_gate( key )
+{
+	g = arch_rule( key );
+	if ( level.bo1sz_arch_test )
+	{
+		g = g * arch_rule( "test_aff_scale" );
+	}
+	return g;
+}
+
+// ---------------------------------------------------------------------------
+// Per player
+// ---------------------------------------------------------------------------
+
+arch_player()
+{
+	self endon( "disconnect" );
+	if ( isDefined( self.bo1sz_arch_started ) )
+	{
+		return;
+	}
+	self.bo1sz_arch_started = true;
+	self waittill( "spawned_player" );
+
+	self.bo1sz_arch = [];
+	for ( i = 0; i < level.bo1sz_archetypes_count; i++ )
+	{
+		self.bo1sz_arch[ level.bo1sz_archetypes_id[ i ] ] = 0;
+	}
+	if ( !isDefined( self.bo1sz_aff ) )
+	{
+		self.bo1sz_aff = [];
+	}
+	self.bo1sz_generalist = false;
+	self.bo1sz_arch_shown = "";
+	self.bo1sz_pop_title = [];
+	self.bo1sz_pop_desc = [];
+
+	self.bo1sz_arch_pop1 = arch_center_elem( self, -170, 1.7 );
+	self.bo1sz_arch_pop2 = arch_center_elem( self, -148, 1.2 );
+	self thread arch_popup_loop();
+}
+
+arch_center_elem( player, y, scale )
+{
+	e = NewClientHudElem( player );
+	e.horzAlign = "user_center";
+	e.vertAlign = "middle";
+	e.alignX = "center";
+	e.alignY = "middle";
+	e.y = y;
+	e.fontScale = scale;
+	e.foreground = true;
+	e.alpha = 0;
+	return e;
+}
+
+arch_aff( player, id )
+{
+	if ( isDefined( player.bo1sz_aff[ id ] ) )
+	{
+		return player.bo1sz_aff[ id ];
+	}
+	return 0;
+}
+
+arch_round_watch()
+{
+	for ( ;; )
+	{
+		level waittill( "end_of_round" );
+		arch_eval_all();
+	}
+}
+
+arch_eval_command()
+{
+	for ( ;; )
+	{
+		wait 0.5;
+		v = getDvar( "bo1sz_arch_eval" );
+		if ( v != "" && v != "0" )
+		{
+			setDvar( "bo1sz_arch_eval", "0" );
+			arch_eval_all();
+		}
+	}
+}
+
+arch_eval_all()
+{
+	players = GetPlayers();
+	for ( i = 0; i < players.size; i++ )
+	{
+		if ( isDefined( players[ i ].bo1sz_arch ) )
+		{
+			players[ i ] arch_evaluate();
+		}
+	}
+}
+
+arch_evaluate()
+{
+	rnd = level.round_number;
+	max_tier = arch_rule( "enabled_tier" );
+	ids = level.bo1sz_archetypes_id;
+
+	total = 0;
+	for ( i = 0; i < ids.size; i++ )
+	{
+		total += arch_aff( self, ids[ i ] );
+	}
+
+	// Count existing Ascended / capstone holders before granting more.
+	ascended = 0;
+	capstone = false;
+	for ( i = 0; i < ids.size; i++ )
+	{
+		if ( self.bo1sz_arch[ ids[ i ] ] >= 2 )
+		{
+			ascended++;
+		}
+		if ( self.bo1sz_arch[ ids[ i ] ] >= 3 )
+		{
+			capstone = true;
+		}
+	}
+
+	// Highest affinity first, so the strongest archetypes take the limited slots.
+	order = arch_sorted_ids();
+	for ( k = 0; k < order.size; k++ )
+	{
+		id = order[ k ];
+		a = arch_aff( self, id );
+		tier = self.bo1sz_arch[ id ];
+
+		if ( tier < 1 && max_tier >= 1 && rnd >= arch_round_gate( "awaken_round" ) && a >= arch_aff_gate( "awaken_aff" ) )
+		{
+			tier = 1;
+			self arch_grant( id, 1 );
+		}
+		if ( tier == 1 && max_tier >= 2 && ascended < arch_rule( "max_ascended" ) && rnd >= arch_round_gate( "ascend_round" ) && a >= arch_aff_gate( "ascend_aff" ) )
+		{
+			tier = 2;
+			ascended++;
+			self arch_grant( id, 2 );
+		}
+		if ( tier == 2 && max_tier >= 3 && !capstone && rnd >= arch_round_gate( "cap_round" ) && a >= arch_aff_gate( "cap_aff" ) && total > 0 && a >= total * arch_rule( "cap_focus" ) )
+		{
+			capstone = true;
+			self arch_grant( id, 3 );
+		}
+	}
+
+	// Generalist: no Awakened archetype and no dominant share.
+	any_awake = false;
+	top_share = 0;
+	for ( i = 0; i < ids.size; i++ )
+	{
+		if ( self.bo1sz_arch[ ids[ i ] ] >= 1 )
+		{
+			any_awake = true;
+		}
+		if ( total > 0 && arch_aff( self, ids[ i ] ) / total > top_share )
+		{
+			top_share = arch_aff( self, ids[ i ] ) / total;
+		}
+	}
+	was = self.bo1sz_generalist;
+	self.bo1sz_generalist = ( !any_awake && total > 0 && rnd >= arch_round_gate( "generalist_round" ) && top_share < arch_rule( "generalist_focus" ) );
+	if ( self.bo1sz_generalist && !was )
+	{
+		self arch_queue_popup( "Generalist", "+" + arch_rule( "generalist_kill_points" ) + " points per kill" );
+	}
+
+	self arch_update_hud_name();
+	arch_log( "eval " + self.playername + " round=" + rnd + " total=" + int( total ) + " " + arch_summary( self ) + " generalist=" + self.bo1sz_generalist );
+}
+
+arch_grant( id, tier )
+{
+	self.bo1sz_arch[ id ] = tier;
+	i = arch_index( id );
+	name = level.bo1sz_archetypes_name[ i ];
+	if ( tier == 1 )
+	{
+		self arch_queue_popup( "Awakened: " + name, level.bo1sz_archetypes_awakened[ i ] );
+	}
+	else if ( tier == 2 )
+	{
+		self arch_queue_popup( "Ascended: " + name, level.bo1sz_archetypes_ascended[ i ] );
+	}
+	else
+	{
+		self arch_queue_popup( "Capstone: " + name, level.bo1sz_archetypes_capstone[ i ] );
+	}
+	arch_log( self.playername + " " + id + " -> tier " + tier );
+}
+
+arch_index( id )
+{
+	for ( i = 0; i < level.bo1sz_archetypes_count; i++ )
+	{
+		if ( level.bo1sz_archetypes_id[ i ] == id )
+		{
+			return i;
+		}
+	}
+	return 0;
+}
+
+// Archetype ids sorted by this player's affinity, highest first (simple selection sort).
+arch_sorted_ids()
+{
+	ids = [];
+	for ( i = 0; i < level.bo1sz_archetypes_count; i++ )
+	{
+		ids[ i ] = level.bo1sz_archetypes_id[ i ];
+	}
+	for ( i = 0; i < ids.size; i++ )
+	{
+		best = i;
+		for ( j = i + 1; j < ids.size; j++ )
+		{
+			if ( arch_aff( self, ids[ j ] ) > arch_aff( self, ids[ best ] ) )
+			{
+				best = j;
+			}
+		}
+		tmp = ids[ i ];
+		ids[ i ] = ids[ best ];
+		ids[ best ] = tmp;
+	}
+	return ids;
+}
+
+arch_summary( player )
+{
+	s = "";
+	ids = level.bo1sz_archetypes_id;
+	for ( i = 0; i < ids.size; i++ )
+	{
+		s = s + ids[ i ] + "=" + int( arch_aff( player, ids[ i ] ) ) + "/t" + player.bo1sz_arch[ ids[ i ] ] + " ";
+	}
+	return s;
+}
+
+// Show the leading earned archetype beside the style meter (style module's HUD slot).
+arch_update_hud_name()
+{
+	if ( !isDefined( self.bo1sz_hud_arch ) )
+	{
+		return;
+	}
+	best = "";
+	best_tier = 0;
+	best_aff = -1;
+	ids = level.bo1sz_archetypes_id;
+	for ( i = 0; i < ids.size; i++ )
+	{
+		tier = self.bo1sz_arch[ ids[ i ] ];
+		a = arch_aff( self, ids[ i ] );
+		if ( tier > best_tier || ( tier == best_tier && tier > 0 && a > best_aff ) )
+		{
+			best = level.bo1sz_archetypes_name[ i ];
+			best_tier = tier;
+			best_aff = a;
+		}
+	}
+	if ( best == "" && self.bo1sz_generalist )
+	{
+		best = "Generalist";
+	}
+	if ( best != self.bo1sz_arch_shown )
+	{
+		self.bo1sz_arch_shown = best;
+		self.bo1sz_hud_arch SetText( best );
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Round-break pop-ups: one line plus a short description, one at a time
+// ---------------------------------------------------------------------------
+
+arch_queue_popup( title, desc )
+{
+	self.bo1sz_pop_title[ self.bo1sz_pop_title.size ] = title;
+	self.bo1sz_pop_desc[ self.bo1sz_pop_desc.size ] = desc;
+}
+
+arch_popup_loop()
+{
+	self endon( "disconnect" );
+	for ( ;; )
+	{
+		wait 0.25;
+		if ( self.bo1sz_pop_title.size == 0 )
+		{
+			continue;
+		}
+		title = self.bo1sz_pop_title[ 0 ];
+		desc = self.bo1sz_pop_desc[ 0 ];
+		rest_t = [];
+		rest_d = [];
+		for ( i = 1; i < self.bo1sz_pop_title.size; i++ )
+		{
+			rest_t[ rest_t.size ] = self.bo1sz_pop_title[ i ];
+			rest_d[ rest_d.size ] = self.bo1sz_pop_desc[ i ];
+		}
+		self.bo1sz_pop_title = rest_t;
+		self.bo1sz_pop_desc = rest_d;
+
+		self.bo1sz_arch_pop1 SetText( title );
+		self.bo1sz_arch_pop2 SetText( desc );
+		self.bo1sz_arch_pop1 FadeOverTime( 0.2 );
+		self.bo1sz_arch_pop2 FadeOverTime( 0.2 );
+		self.bo1sz_arch_pop1.alpha = 1;
+		self.bo1sz_arch_pop2.alpha = 1;
+		self PlayLocalSound( "zmb_perks_power_on" );
+		wait arch_rule( "popup_seconds" );
+		self.bo1sz_arch_pop1 FadeOverTime( 0.4 );
+		self.bo1sz_arch_pop2 FadeOverTime( 0.4 );
+		self.bo1sz_arch_pop1.alpha = 0;
+		self.bo1sz_arch_pop2.alpha = 0;
+		wait 0.5;
+	}
+}

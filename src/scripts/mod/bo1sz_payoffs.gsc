@@ -10,6 +10,9 @@
 //   Any       real bonus points for headshot / multi-kill / long-range / melee kills,
 //             plus a per-kill bonus and an ammo-on-kill chance from the style rank
 // Wonder weapons (payoffs.excluded_weapons) get none of the class payoffs.
+// Archetype Awakened traits (bo1sz_archetypes.gsc sets player.bo1sz_arch[id]) are applied
+// here too: Gunslinger cap/timeout, Marksman pierce, Jackie Chan melee, Blaster range,
+// Demolitions explosive damage.
 //
 // Dvars: bo1sz_payoffs 0 disables this module; bo1sz_payoff_debug 1 logs every award.
 // Tunables: data/balance/payoffs.csv, style_ranks.csv (kill_bonus, ammo_chance).
@@ -150,6 +153,39 @@ pay_is_head( hitloc, mod )
 	return ( isDefined( hitloc ) && ( hitloc == "head" || hitloc == "helmet" || hitloc == "neck" ) && pay_is_bullet( mod ) );
 }
 
+// Archetype tier for a player (0 = none, 1 Awakened, 2 Ascended, 3 capstone).
+pay_arch( player, id )
+{
+	if ( isDefined( player.bo1sz_arch ) && isDefined( player.bo1sz_arch[ id ] ) )
+	{
+		return player.bo1sz_arch[ id ];
+	}
+	return 0;
+}
+
+pay_rule( key )
+{
+	return level.bo1sz_bal[ "archetype_rules." + key ];
+}
+
+pay_pistol_max( player )
+{
+	if ( pay_arch( player, "gunslinger" ) >= 1 )
+	{
+		return pay_rule( "gunslinger_t1_max_mult" );
+	}
+	return pay_bal( "pistol_max_mult" );
+}
+
+pay_pistol_timeout( player )
+{
+	if ( pay_arch( player, "gunslinger" ) >= 1 )
+	{
+		return pay_rule( "gunslinger_t1_timeout_ms" );
+	}
+	return pay_bal( "pistol_streak_timeout_ms" );
+}
+
 pay_rank( player )
 {
 	if ( isDefined( player.bo1sz_style_rank ) )
@@ -243,9 +279,10 @@ pay_on_damage( attacker, dmg, mod, weapon, hitloc )
 		if ( streak > 0 )
 		{
 			mult = 1.0 + streak * pay_bal( "pistol_step_mult" );
-			if ( mult > pay_bal( "pistol_max_mult" ) )
+			cap = pay_pistol_max( attacker );
+			if ( mult > cap )
 			{
-				mult = pay_bal( "pistol_max_mult" );
+				mult = cap;
 			}
 		}
 	}
@@ -256,7 +293,12 @@ pay_on_damage( attacker, dmg, mod, weapon, hitloc )
 		if ( isDefined( attacker.bo1sz_pierce_ms ) && attacker.bo1sz_pierce_ms == now )
 		{
 			attacker.bo1sz_pierce_n++;
-			mult = 1.0 + ( attacker.bo1sz_pierce_n - 1 ) * pay_bal( "sniper_pierce_mult" );
+			step = pay_bal( "sniper_pierce_mult" );
+			if ( pay_arch( attacker, "marksman" ) >= 1 )
+			{
+				step = pay_rule( "marksman_t1_pierce_mult" );
+			}
+			mult = 1.0 + ( attacker.bo1sz_pierce_n - 1 ) * step;
 			pay_points( attacker, pay_bal( "sniper_pierce_points" ), "sniper pierce x" + attacker.bo1sz_pierce_n );
 		}
 		else
@@ -264,6 +306,34 @@ pay_on_damage( attacker, dmg, mod, weapon, hitloc )
 			attacker.bo1sz_pierce_ms = now;
 			attacker.bo1sz_pierce_n = 1;
 		}
+	}
+
+	// Jackie Chan Awakened: melee damage.
+	if ( mod == "MOD_MELEE" && pay_arch( attacker, "jackie" ) >= 1 )
+	{
+		mult = mult * pay_rule( "jackie_t1_melee_mult" );
+	}
+
+	// Blaster Awakened: shotgun damage holds up at range (offsets the weapon's falloff).
+	if ( cls == "spread" && pay_arch( attacker, "blaster" ) >= 1 )
+	{
+		start = pay_rule( "blaster_t1_range_start" );
+		d = Distance( attacker.origin, self.origin );
+		if ( d > start )
+		{
+			f = ( d - start ) / ( pay_rule( "blaster_t1_range_full" ) - start );
+			if ( f > 1 )
+			{
+				f = 1;
+			}
+			mult = mult * ( 1 + f * ( pay_rule( "blaster_t1_max_mult" ) - 1 ) );
+		}
+	}
+
+	// Demolitions Awakened: explosive damage (not wonder weapons).
+	if ( cls != "wonder" && ( pay_is_projectile( mod ) || mod == "MOD_GRENADE" || mod == "MOD_GRENADE_SPLASH" || mod == "MOD_EXPLOSIVE" ) && pay_arch( attacker, "demolitions" ) >= 1 )
+	{
+		mult = mult * pay_rule( "demolitions_t1_mult" );
 	}
 
 	// Snipers: big headshot multiplier on top of stock headshot damage.
@@ -427,7 +497,7 @@ pay_pistol_streak( player )
 		player.bo1sz_pistol_streak = 0;
 		player.bo1sz_pistol_ms = 0;
 	}
-	if ( player.bo1sz_pistol_streak > 0 && getTime() - player.bo1sz_pistol_ms > pay_bal( "pistol_streak_timeout_ms" ) )
+	if ( player.bo1sz_pistol_streak > 0 && getTime() - player.bo1sz_pistol_ms > pay_pistol_timeout( player ) )
 	{
 		player.bo1sz_pistol_streak = 0;
 	}
@@ -481,7 +551,7 @@ pay_on_kill( attacker, mod, weapon, hitloc )
 		attacker.bo1sz_pistol_streak = streak + 1;
 		attacker.bo1sz_pistol_ms = now;
 		steps = attacker.bo1sz_pistol_streak;
-		cap = int( ( pay_bal( "pistol_max_mult" ) - 1.0 ) / pay_bal( "pistol_step_mult" ) );
+		cap = int( ( pay_pistol_max( attacker ) - 1.0 ) / pay_bal( "pistol_step_mult" ) );
 		if ( steps > cap )
 		{
 			steps = cap;
@@ -554,6 +624,12 @@ pay_on_kill( attacker, mod, weapon, hitloc )
 			}
 			pay_refund( attacker, weapon, n, "rank ammo" );
 		}
+	}
+
+	if ( isDefined( attacker.bo1sz_generalist ) && attacker.bo1sz_generalist )
+	{
+		pts += pay_rule( "generalist_kill_points" );
+		why = why + " generalist";
 	}
 
 	pay_points( attacker, pts, "kill:" + why );

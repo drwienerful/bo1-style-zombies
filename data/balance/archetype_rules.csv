@@ -1,0 +1,25 @@
+key,value,notes
+awaken_round,5,earliest round for Awakened
+awaken_aff,300,affinity needed for Awakened
+ascend_round,12,earliest round for Ascended
+ascend_aff,1500,affinity needed for Ascended
+cap_round,20,earliest round for the capstone
+cap_aff,4000,affinity needed for the capstone
+cap_focus,0.5,capstone needs this share of total affinity (focused builds only)
+max_ascended,2,at most this many archetypes can be Ascended (hybrids)
+generalist_round,8,generalist check happens from this round
+generalist_focus,0.35,no archetype at or above this share of affinity = generalist
+generalist_kill_points,5,generalist flat bonus points per kill
+popup_seconds,3,round-break pop-up duration
+test_round_scale,0.2,with bo1sz_arch_test 1: round gates are multiplied by this
+test_aff_scale,0.1,with bo1sz_arch_test 1: affinity gates are multiplied by this
+gunslinger_t1_max_mult,4.5,Gunslinger Awakened pistol damage cap
+gunslinger_t1_timeout_ms,6000,Gunslinger Awakened streak timeout
+marksman_t1_pierce_mult,0.75,Marksman Awakened pierce bonus per extra zombie
+jackie_t1_melee_mult,2.0,Jackie Chan Awakened melee damage multiplier
+blaster_t1_range_start,250,Blaster Awakened: shotgun bonus starts at this distance
+blaster_t1_range_full,850,Blaster Awakened: bonus reaches its maximum at this distance
+blaster_t1_max_mult,2.5,Blaster Awakened: shotgun damage multiplier at full range
+demolitions_t1_mult,1.25,Demolitions Awakened explosive damage multiplier
+tech_t1_style_mult,1.5,Tech Awakened style multiplier for wonder weapon kills
+enabled_tier,1,highest tier that can be earned (built in steps: 1 Awakened now)
