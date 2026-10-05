@@ -38,6 +38,12 @@ One kill's events are summed into one award whose tag is the biggest event. Repe
 tag multiplies the award by 0.75 each time (floor 0.3); a different tag resets it. Hits skip
 this penalty because they are rate-capped instead.
 
+## Kill chains and round breaks (after the round-20 playtest, 2026-10-05)
+
+- The meter no longer drains between rounds (it sat at D at nearly every round end).
+- Kills within 3s of the previous kill extend a chain; kill style is multiplied by
+  1 + 0.1 x (links - 1), capped at x3, and "Chain xN" shows under the meter.
+
 ## Penalties
 
 - Taking damage drops one rank (1.5s cooldown). The gauge is kept.

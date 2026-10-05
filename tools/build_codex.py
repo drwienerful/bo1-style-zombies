@@ -55,7 +55,11 @@ def render():
         f"Stylish play fills the meter; each rank holds a {style['gauge_max']}-point gauge. After "
         f"{int(style['idle_grace_ms']) // 1000}s without a hit or kill it drains, faster at higher ranks. "
         "Getting hit drops one rank; going down resets it to D. A low rank is just the normal game, "
-        "never a penalty.",
+        "never a penalty. The meter doesn't drain between rounds.",
+        "",
+        f"**Kill chains:** kills within {int(style['chain_window_ms']) // 1000}s of each other build a chain "
+        f"(\"Chain xN\" under the meter); each link adds {int(float(style['chain_step']) * 100)}% to kill style, "
+        f"up to x{style['chain_max_mult']}.",
         "",
         table(["Rank", "Name", "Bonus points per kill", "Ammo-on-kill chance"],
               [[r["letter"], r["word"], "+" + r["kill_bonus"], r["ammo_chance"] + "%"] for r in ranks]),

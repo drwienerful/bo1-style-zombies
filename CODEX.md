@@ -5,7 +5,9 @@ In game: `set bo1sz_codex 1` (or 2, 3) opens the overlay, `set bo1sz_codex 0` cl
 
 ## Style meter
 
-Stylish play fills the meter; each rank holds a 100-point gauge. After 2s without a hit or kill it drains, faster at higher ranks. Getting hit drops one rank; going down resets it to D. A low rank is just the normal game, never a penalty.
+Stylish play fills the meter; each rank holds a 100-point gauge. After 2s without a hit or kill it drains, faster at higher ranks. Getting hit drops one rank; going down resets it to D. A low rank is just the normal game, never a penalty. The meter doesn't drain between rounds.
+
+**Kill chains:** kills within 3s of each other build a chain ("Chain xN" under the meter); each link adds 10% to kill style, up to x3.0.
 
 | Rank | Name | Bonus points per kill | Ammo-on-kill chance |
 |---|---|---|---|
