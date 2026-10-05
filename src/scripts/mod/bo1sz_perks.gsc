@@ -49,6 +49,7 @@ perks_start()
 	setDvar( "perk_weapRateMultiplier", "" + perks_bal( "dt2_rate_mult" ) );
 
 	perks_build_tiers();
+	perks_record_homes();
 	level thread perks_install_hooks();
 	level thread perks_global_dvars();
 	perks_log( "perks on (minus fn=" + isDefined( level.bo1sz_perk_minus ) + " machines=" + GetEntArray( "zombie_vending", "targetname" ).size + ")" );
@@ -113,7 +114,7 @@ perks_near_machine( player )
 	best_d = perks_bal( "machine_radius" );
 	for ( i = 0; i < trigs.size; i++ )
 	{
-		d = Distance( player.origin, trigs[ i ].origin );
+		d = Distance( player.origin, perks_machine_home( trigs[ i ] ) );
 		if ( d < best_d )
 		{
 			best_d = d;
@@ -121,6 +122,32 @@ perks_near_machine( player )
 		}
 	}
 	return best;
+}
+
+// Where a machine's trigger started. In solo, stock moves the Quick Revive trigger
+// about 10000 units below the map once it is bought (seen at z=-9894 on Kino,
+// 2026-10-05), so distances must use the original position.
+perks_machine_home( trig )
+{
+	if ( !isDefined( trig.bo1sz_home ) )
+	{
+		if ( trig.origin[ 2 ] < -5000 )
+		{
+			return trig.origin;
+		}
+		trig.bo1sz_home = trig.origin;
+	}
+	return trig.bo1sz_home;
+}
+
+// Record every machine's position at load, before any purchase can move it.
+perks_record_homes()
+{
+	trigs = GetEntArray( "zombie_vending", "targetname" );
+	for ( i = 0; i < trigs.size; i++ )
+	{
+		perks_machine_home( trigs[ i ] );
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -626,7 +653,7 @@ perks_debug_use()
 			{
 				continue;
 			}
-			d = Distance( self.origin, trigs[ i ].origin );
+			d = Distance( self.origin, perks_machine_home( trigs[ i ] ) );
 			if ( d < best_d )
 			{
 				best_d = d;
