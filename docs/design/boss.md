@@ -38,8 +38,9 @@ Status: **built and confirmed in game (2026-10-05).** Approved design with one c
 
 ## Victory
 
-When it dies: **"VICTORY"** as the game's centre-screen message, then after `victory_seconds` +5000 points to the killer, then
-stock's own game-over screen (`level notify("end_game")`, confirmed working). Stock's end
+When it dies: **"VICTORY"** as the game's centre-screen message and +5000 points to the killer;
+after `victory_seconds`, stock's own game-over screen (`level notify("end_game")`, confirmed
+working). Stock's end
 screen text can't be changed without replacing `end_game`. A longer on-screen run summary was
 tried and dropped: the user preferred a simple "VICTORY". `end_on_victory 0` keeps playing instead.
 
