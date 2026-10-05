@@ -1,8 +1,8 @@
 # Platform findings (Phase 0)
 
-Status: **probe written, not yet run in game.** Every runtime result below is
-`untested` until a `[PROBE]` line from a real launch is pasted (or read from
-`%LOCALAPPDATA%\Plutonium\storage\t5\games_sp.log`). The "Static evidence" column
+Status: **Batch A done (2026-10-05, solo, zombie_theater). Batches B and C not run.**
+Results come from `[PROBE]` lines in `%LOCALAPPDATA%\Plutonium\storage\t5\main\games.log`,
+cross-checked against Plutonium's loader lines in `main\console.log`. The "Static evidence" column
 is what reading the local reference material suggests. It is a prediction, not a result.
 
 ## Static evidence gathered before any launch
@@ -11,7 +11,7 @@ is what reading the local reference material suggests. It is a prediction, not a
 |---|---|---|
 | S1 | Plutonium ships its own script in `storage\t5\raw\scripts\sp\zm_spawn_fix.gsc` using `main()`/`init()`. So `raw\scripts\sp\` is loaded by Plutonium. | user's Plutonium install |
 | S2 | Plutonium T5 GSC has `getFunction(path, name)`, `replaceFunc(old, new)`, `isDedicated()`, `logprint`, `println`. | same file |
-| S3 | `logprint` output lands in `storage\t5\games_sp.log`, which Claude can read directly after a session. | existing `J;` lines in that log |
+| S3 | **Corrected by Batch A:** `logprint` output lands in `storage\t5\main\games.log` (the old `games_sp.log` hasn't been written since 2024). Claude reads it directly after a session. | Batch A run |
 | S4 | Damage/kill callbacks: `level.overrideActorDamage` (returns damage), `level.overrideActorKilled`, `level.overridePlayerDamage` (returns damage), with 11/8/11 args. They are called from `_callbackglobal`. Per-entity `self.override*` takes priority. | Reimagined `maps/_callbackglobal.gsc`, `_zombiemode.gsc` |
 | S5 | Round notifies are `level` `"start_of_round"`, `"end_of_round"`, `"between_round_over"`. Down and revive are `"player_downed"` and `"player_revived"` (on the player). | Reimagined `_zombiemode.gsc`, `_laststand.gsc` |
 | S6 | The stock perk limit is the line `player.num_perks >= 4` inside `vending_trigger_think`. `give_perk` increments `num_perks`. | Plutonium `zm_spawn_fix.gsc`, Reimagined `_zombiemode_perks.gsc` |
