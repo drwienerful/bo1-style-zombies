@@ -1094,46 +1094,30 @@ perks_handling()
 }
 
 // ---------------------------------------------------------------------------
-// Info panel, bottom left like the stock round counter (user request): "Round N" and the
-// perks the player owns, with
-// tier II marked. Archetype-granted flags (player.bo1sz_grant) are left out. Text is
-// only re-set when it changes.
+// Perk list (user request): one line, top left, naming the perks the player owns with tier
+// II marked. Stock's perk icons are back since the HUD draw-limit fix, but they don't show
+// tier IIs or shop perks (no icons on maps without the machine). The "Round N" line was
+// dropped: stock's chalk counter shows the round and our text overlapped it.
 // ---------------------------------------------------------------------------
 
 perks_panel_init()
 {
-	self.bo1sz_panel_round = NewClientHudElem( self );
-	self.bo1sz_panel_perks = NewClientHudElem( self );
-	elems = [];
-	elems[ 0 ] = self.bo1sz_panel_round;
-	elems[ 1 ] = self.bo1sz_panel_perks;
-	for ( i = 0; i < elems.size; i++ )
-	{
-		e = elems[ i ];
-		e.horzAlign = "user_left";
-		e.vertAlign = "user_bottom";
-		e.alignX = "left";
-		e.alignY = "bottom";
-		e.x = 12;
-		e.foreground = true;
-		e.alpha = 1;
-	}
-	self.bo1sz_panel_round.y = -8;
-	self.bo1sz_panel_round.fontScale = 1.6;
-	self.bo1sz_panel_perks.y = -34;
-	self.bo1sz_panel_perks.fontScale = 1.1;
-	self.bo1sz_panel_round_text = "";
+	e = NewClientHudElem( self );
+	e.horzAlign = "user_left";
+	e.vertAlign = "middle";
+	e.alignX = "left";
+	e.alignY = "middle";
+	e.x = 12;
+	e.y = -150;
+	e.fontScale = 1.1;
+	e.foreground = true;
+	e.alpha = 1;
+	self.bo1sz_panel_perks = e;
 	self.bo1sz_panel_perks_text = "";
 }
 
 perks_panel_tick()
 {
-	r = "Round " + level.round_number;
-	if ( r != self.bo1sz_panel_round_text )
-	{
-		self.bo1sz_panel_round_text = r;
-		self.bo1sz_panel_round SetText( r );
-	}
 	s = "";
 	for ( i = 0; i < level.bo1sz_perk_names_count; i++ )
 	{

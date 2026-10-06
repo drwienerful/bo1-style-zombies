@@ -172,3 +172,8 @@ machine on a map get script re-implemented effects. Double Tap 2.0 is accepted a
   our self-explosive block never logged a hit: the engine's own `specialty_flakjacket` flag most
   likely prevents the damage before the callback. Modifying player damage (B8) therefore stays
   formally unverified; the Brawler capstone (x0.5 damage taken) is the one feature relying on it.
+- **HUD draw limit (confirmed 2026-10-05):** the engine draws only a limited number of HUD
+  elements per player. With ~27 of ours alive (most invisible), stock's chalk round counter and
+  perk icons were created (logged) but never drawn; keeping only the visible ones (now 6) brought
+  them back. The probe that "allowed 100 more" measured creation, not drawing. Rule: create HUD
+  elements on show, destroy on hide. This likely also explains the boss title that never rendered.

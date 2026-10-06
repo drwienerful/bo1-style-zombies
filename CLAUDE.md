@@ -69,8 +69,10 @@ Roguelike-flavoured runs, a style meter, emergent archetypes, weapon payoffs, a 
     follow-up thread *before* the notify (this swallowed the boss victory screen).
   - HUD y at `vertAlign "middle"`: -175 is visible, -212 was not. Not a HUD-count problem:
     a player could take 100 more client HUD elements on top of ours (probe, 2026-10-05).
-  - A HUD title made visible at the boss's death never rendered (cause unknown, see
-    platform findings). For one-off announcements, `iPrintLnBold` works.
+  - **HUD draw limit:** the engine draws only a limited number of HUD elements per player.
+    Keep few alive: create on show, `Destroy()` on hide. Too many hid stock's round counter
+    and perk icons (and likely the boss victory title). Creation still succeeds past the
+    limit, so a creation probe can't detect it.
   - Dvars keep their values between matches in one game session. Never read a "stock" value
     from a dvar the mod changes; keep stock values as constants in the balance CSVs.
 - After each milestone: what works, what feels off, one thing to playtest.
