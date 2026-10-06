@@ -66,6 +66,7 @@ init()
 	level.bo1sz_bal[ "archetype_rules.sniper_ads_mult" ] = 0.3;
 	level.bo1sz_bal[ "archetype_rules.sniper_body_mult" ] = 2.0;
 	level.bo1sz_bal[ "archetype_rules.sniper_no_sway" ] = 1;
+	level.bo1sz_bal[ "archetype_rules.sniper_scope_fovscale" ] = 1.5;
 	// archetypes.csv
 	level.bo1sz_archetypes_id = [];
 	level.bo1sz_archetypes_name = [];
@@ -404,6 +405,10 @@ init()
 	level.bo1sz_bal[ "boss.player_scale" ] = 0.5;
 	level.bo1sz_bal[ "boss.pulse_slow_rate" ] = 0.3;
 	level.bo1sz_bal[ "boss.pulse_recover_seconds" ] = 1.5;
+	level.bo1sz_bal[ "boss.glow_fx" ] = "elec_torso powerup_on character_fire_death_torso tesla_head_light";
+	level.bo1sz_bal[ "boss.glow_tag" ] = "j_spinelower";
+	level.bo1sz_bal[ "boss.glow_interval" ] = 0.6;
+	level.bo1sz_bal[ "boss.marker" ] = 1;
 	// modifiers.csv
 	level.bo1sz_modifiers_id = [];
 	level.bo1sz_modifiers_name = [];

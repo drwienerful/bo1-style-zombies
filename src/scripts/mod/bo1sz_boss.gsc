@@ -191,6 +191,8 @@ boss_arm( health_frac )
 	level thread boss_pulses( boss );
 	level thread boss_armour( boss );
 	level thread boss_watch( boss );
+	level thread boss_glow( boss );
+	boss_marker_create( boss );
 }
 
 boss_sprint( boss )
@@ -527,6 +529,11 @@ boss_hud_hide()
 			p.bo1sz_boss_phase = undefined;
 			p.bo1sz_boss_warn = undefined;
 		}
+		if ( isDefined( p.bo1sz_boss_marker ) )
+		{
+			p.bo1sz_boss_marker Destroy();
+			p.bo1sz_boss_marker = undefined;
+		}
 	}
 }
 
@@ -600,4 +607,64 @@ boss_log_effects()
 		boss_log( "effects: " + line );
 	}
 	boss_log( "effects: " + keys.size + " total" );
+}
+
+// ---------------------------------------------------------------------------
+// Making the boss stand out (user + co-op feedback). Models and colours are game assets
+// we can't change, so it gets a repeating effect the map has already loaded (first
+// available from boss.glow_fx) and its name floating over it.
+// ---------------------------------------------------------------------------
+
+boss_glow( boss )
+{
+	boss endon( "death" );
+	level endon( "bo1sz_boss_gone" );
+	fx = undefined;
+	names = strTok( boss_bal( "glow_fx" ), " " );
+	for ( i = 0; i < names.size; i++ )
+	{
+		if ( isDefined( level._effect ) && isDefined( level._effect[ names[ i ] ] ) )
+		{
+			fx = level._effect[ names[ i ] ];
+			boss_log( "glow effect: " + names[ i ] );
+			break;
+		}
+	}
+	if ( !isDefined( fx ) )
+	{
+		boss_log( "glow effect: none of " + boss_bal( "glow_fx" ) + " is loaded on this map" );
+		return;
+	}
+	for ( ;; )
+	{
+		PlayFXOnTag( fx, boss, boss_bal( "glow_tag" ) );
+		wait boss_bal( "glow_interval" );
+	}
+}
+
+boss_marker_create( boss )
+{
+	if ( boss_bal( "marker" ) != 1 )
+	{
+		return;
+	}
+	players = GetPlayers();
+	for ( i = 0; i < players.size; i++ )
+	{
+		p = players[ i ];
+		if ( isDefined( p.bo1sz_boss_marker ) )
+		{
+			p.bo1sz_boss_marker Destroy();
+		}
+		m = NewClientHudElem( p );
+		m.alpha = 1;
+		m.fontScale = 1.4;
+		m.color = ( 1, 0.3, 0.2 );
+		m.foreground = true;
+		m SetText( boss_bal( "name" ) );
+		m SetTargetEnt( boss );
+		m SetWaypoint( true );
+		p.bo1sz_boss_marker = m;
+	}
+	boss_log( "marker created" );
 }

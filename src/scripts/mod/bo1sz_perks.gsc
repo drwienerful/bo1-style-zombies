@@ -1075,6 +1075,10 @@ perks_handling()
 	// tiers and shop.
 	self thread perks_set_flag( perks_rule( "sniper_fastads_perk" ), sniper );
 	self thread perks_log_fastads( sniper );
+	// Own thread: PlayerADS() compiled in the sweep but its runtime behaviour is unproven,
+	// and this loop also runs the perk limit, tiers and shop.
+	self thread perks_scope_fov( sniper );
+
 	// Scope sway experiment: the engine's weapon-sway switch, per player, while a sniper is held.
 	if ( perks_rule( "sniper_no_sway" ) == 1 )
 	{
@@ -1220,4 +1224,25 @@ perks_log_fastads( sniper )
 	wait 0.3;
 	has = self HasPerk( perks_rule( "sniper_fastads_perk" ) );
 	perks_log( self.playername + " fast ADS perk granted=" + has );
+}
+
+// Lower scope magnification (co-op feedback): widen the view while actually scoped with a
+// sniper. PlayerADS() is the real aim fraction, so this also works with toggle ADS.
+// Note: resets cg_fovScale to 1 when not scoped.
+perks_scope_fov( sniper )
+{
+	fov = "1";
+	if ( sniper )
+	{
+		aim = self PlayerADS();
+		if ( aim > 0.5 )
+		{
+			fov = "" + perks_rule( "sniper_scope_fovscale" );
+		}
+	}
+	if ( !isDefined( self.bo1sz_fov ) || self.bo1sz_fov != fov )
+	{
+		self.bo1sz_fov = fov;
+		self SetClientDvar( "cg_fovScale", fov );
+	}
 }

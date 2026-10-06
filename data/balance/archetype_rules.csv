@@ -57,3 +57,4 @@ sniper_spread_mult,0.15,perk_weapSpreadMultiplier while a sniper is held (stock 
 sniper_ads_mult,0.3,perk_weapAdsMultiplier while a sniper is held (stock 0.5 with fast ADS): faster scoping
 sniper_body_mult,2.0,body-shot damage multiplier for snipers that are not Pack-a-Punched
 sniper_no_sway,1,anim_disableWeaponSway on the player while a sniper is held (experiment: may reduce scope sway)
+sniper_scope_fovscale,1.5,cg_fovScale while scoped with a sniper: wider view = lower magnification (co-op feedback)
