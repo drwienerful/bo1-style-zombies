@@ -162,7 +162,9 @@ boss_arm( health_frac )
 		return;
 	}
 	players = GetPlayers();
-	hp = int( level.zombie_health * boss_bal( "hp_mult" ) * players.size );
+	// +player_scale per extra player (co-op feedback: linear scaling was too tanky).
+	scale = 1 + ( players.size - 1 ) * boss_bal( "player_scale" );
+	hp = int( level.zombie_health * boss_bal( "hp_mult" ) * scale );
 	if ( getDvar( "bo1sz_boss_test" ) == "1" && getDvar( "bo1sz_dev" ) == "1" )
 	{
 		hp = int( hp * boss_bal( "test_hp_scale" ) );
@@ -237,11 +239,14 @@ boss_pulses( boss )
 	level endon( "bo1sz_boss_gone" );
 	for ( ;; )
 	{
-		wait boss_bal( "p2_pulse_interval" ) - boss_bal( "p2_warn_seconds" );
+		wait boss_bal( "p2_pulse_interval" ) - boss_bal( "p2_warn_seconds" ) - boss_bal( "pulse_recover_seconds" );
 		if ( !( level.bo1sz_boss_phase == 2 || ( level.bo1sz_boss_phase == 1 && level.bo1sz_boss_enraged ) ) )
 		{
 			continue;
 		}
+		// Slow down while winding up and recovering (co-op feedback: pulses stun-locked
+		// players with no recovery).
+		boss.moveplaybackrate = boss_bal( "pulse_slow_rate" );
 		boss_hud_text( "warn", "PULSE INCOMING" );
 		players = GetPlayers();
 		for ( i = 0; i < players.size; i++ )
@@ -253,6 +258,8 @@ boss_pulses( boss )
 		d = boss_bal( "p2_pulse_damage" );
 		RadiusDamage( boss.origin + ( 0, 0, 30 ), r, d, d, boss );
 		boss_hud_text( "warn", "" );
+		wait boss_bal( "pulse_recover_seconds" );
+		boss.moveplaybackrate = boss_bal( "sprint_rate" );
 	}
 }
 

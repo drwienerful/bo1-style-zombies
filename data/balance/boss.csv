@@ -6,8 +6,8 @@ phase2_at,0.66,health fraction where phase 2 (Hunt) starts
 phase3_at,0.33,health fraction where phase 3 (Iron Skin) starts
 p1_timer,45,seconds to push the boss below phase2_at before it enrages
 sprint_rate,1.4,movement rate while sprinting (enraged or phase 2+)
-p2_pulse_interval,6,seconds between phase 2 pulses
-p2_warn_seconds,1,warning time before each pulse
+p2_pulse_interval,10,seconds between phase 2 pulses (was 6: stun-locked players in co-op)
+p2_warn_seconds,1.5,warning time before each pulse (the boss slows during it)
 p2_pulse_radius,220,pulse radius
 p2_pulse_damage,60,pulse damage (players inside the radius)
 p3_damage_mult,0.25,phase 3 damage taken except headshots and explosives
@@ -21,3 +21,6 @@ end_on_victory,1,1 = end the game after victory (stock game over); 0 = keep play
 test_hp_scale,0.05,with bo1sz_boss_test 1: boss health multiplier for quick tests
 warn_sound,zmb_switch_flip,sound for the pulse warning (stock alias)
 victory_sound,zmb_perks_power_on,sound on victory (stock alias)
+player_scale,0.5,health per extra player (2 players = 1 + 0.5 = x1.5; was x2, too tanky in co-op)
+pulse_slow_rate,0.3,boss movement rate while winding up a pulse and recovering from it
+pulse_recover_seconds,1.5,slowed recovery after each pulse

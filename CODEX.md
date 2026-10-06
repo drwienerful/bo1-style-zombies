@@ -96,7 +96,7 @@ Your play quietly builds affinity for six archetypes. At round breaks you can ea
 | Archetype | Awakened | Ascended | Capstone |
 |---|---|---|---|
 | Gunslinger | Pistol streak damage cap x4.5 and streaks last 6s | Pistol headshot kills refund 2 bullets | A 5+ streak refills your magazine on every pistol kill |
-| Marksman | Sniper pierce bonus +75% per extra zombie and faster fire rate while holding a sniper | Long-range kills give double style | Every 3rd sniper headshot kill detonates |
+| Marksman | Sniper pierce bonus +75% per extra zombie | Long-range kills give double style | Every 3rd sniper headshot kill detonates |
 | Brawler | Melee damage x2 | Getting hit no longer drops your style rank | All damage taken -50% |
 | Blaster | Shotgun damage holds up at range | Shockwave radius +30% | Shockwave kills set off chain reactions |
 | Demolitions | Explosive damage +25% | Explosive kills of 3+ refund a grenade | Launcher kills set off a second blast |
@@ -114,7 +114,7 @@ At round 25 (or the next normal round), the first zombie becomes **Der Eiserne**
 | Phase | Health | What happens |
 |---|---|---|
 | 1. Onslaught | 100-66% | Push it below 66% within 45s or it enrages and sprints |
-| 2. Hunt | 66-33% | It sprints; every 6s "PULSE INCOMING" warns of a 60-damage pulse around it |
+| 2. Hunt | 66-33% | It sprints; every 10s "PULSE INCOMING" warns of a 60-damage pulse around it |
 | 3. Iron Skin | 33-0% | Only headshots and explosives do full damage; every 12s "ARMOUR DOWN!" gives 4s of x2.0 damage |
 
 No single moment can take more than 10% of its health. Defeating it shows VICTORY, gives the killer 5000 points, and ends the game.

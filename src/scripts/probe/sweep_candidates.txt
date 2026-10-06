@@ -24,3 +24,4 @@ playfxontag | PlayFXOnTag( level._effect[ "x" ], e, "j_head" );
 playfx | PlayFX( level._effect[ "x" ], e.origin );
 settargetent | h = NewClientHudElem( e ); h SetTargetEnt( e );
 setwaypoint | h = NewClientHudElem( e ); h SetWaypoint( true );
+playerads | x = e PlayerADS();

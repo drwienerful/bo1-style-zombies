@@ -41,7 +41,7 @@ demolitions_t3_radius,100,Demolitions capstone second blast radius
 demolitions_t3_frac,0.5,Demolitions capstone second blast damage (fraction of zombie health)
 tech_t3_radius,90,Tech capstone mini shockwave radius
 tech_t3_frac,0.5,Tech capstone mini shockwave damage (fraction of zombie health)
-marksman_t1_rof,1,Marksman Awakened: Double Tap's fire-rate flag while holding a sniper (1 = on)
+sniper_rof_all,1,every sniper gets Double Tap's fire-rate flag while held (co-op feedback; was Marksman Awakened only)
 skirmisher_t2_refund,3,Skirmisher Ascended: bullets refunded per SMG kill
 skirmisher_t3_perk,specialty_bulletpenetration,Skirmisher capstone: engine penetration perk while holding an SMG (unproven)
 rifleman_t1_hs_mult,1.25,Rifleman Awakened: assault rifle headshot multiplier
@@ -54,3 +54,6 @@ gunner_t2_speed,1.1,Gunner Ascended: movement speed while holding an LMG
 gunner_t3_refund,5,Gunner capstone: bullets refunded per LMG kill
 sniper_fastads_perk,specialty_fastads,granted while holding a sniper (faster aim down sights; effect unproven)
 sniper_spread_mult,0.15,perk_weapSpreadMultiplier while a sniper is held (stock 0.65 with steady aim): much smaller hip-fire spread and crosshair (user request)
+sniper_ads_mult,0.3,perk_weapAdsMultiplier while a sniper is held (stock 0.5 with fast ADS): faster scoping
+sniper_body_mult,2.0,body-shot damage multiplier for snipers that are not Pack-a-Punched
+sniper_no_sway,1,anim_disableWeaponSway on the player while a sniper is held (experiment: may reduce scope sway)

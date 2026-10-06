@@ -387,6 +387,11 @@ pay_on_damage( attacker, dmg, mod, weapon, hitloc )
 	{
 		mult = mult * pay_bal( "sniper_headshot_mult" );
 	}
+	// Unpacked snipers: stronger body shots (co-op feedback).
+	if ( cls == "sniper" && pay_is_bullet( mod ) && !pay_is_head( hitloc, mod ) && !isSubStr( weapon, "upgraded" ) )
+	{
+		mult = mult * pay_rule( "sniper_body_mult" );
+	}
 
 	// Shotguns: crowd control on hit (payoffs.shotgun_cc_mode).
 	if ( cls == "spread" )

@@ -1064,8 +1064,8 @@ perks_handling()
 	sniper = ( cls == "sniper" );
 	self.bo1sz_holding_sniper = sniper;
 
-	// Double Tap's fire-rate flag while holding a sniper (Marksman Awakened).
-	self perks_set_flag( "specialty_rof", sniper && perks_arch( self, "marksman" ) >= 1 && perks_rule( "marksman_t1_rof" ) == 1 );
+	// Double Tap's fire-rate flag while holding any sniper (co-op feedback: snipers too slow).
+	self perks_set_flag( "specialty_rof", sniper && perks_rule( "sniper_rof_all" ) == 1 );
 
 	has_dt = self HasPerk( "specialty_rof" );
 	steady = ( has_dt || perks_has_shop( self, "specialty_deadshot" ) || sniper || ( cls == "smg" && perks_arch( self, "skirmisher" ) >= 1 ) );
@@ -1074,6 +1074,21 @@ perks_handling()
 	// in (the faster-melee perk did exactly that), and this loop also runs the perk limit,
 	// tiers and shop.
 	self thread perks_set_flag( perks_rule( "sniper_fastads_perk" ), sniper );
+	self thread perks_log_fastads( sniper );
+	// Scope sway experiment: the engine's weapon-sway switch, per player, while a sniper is held.
+	if ( perks_rule( "sniper_no_sway" ) == 1 )
+	{
+		sway = "0";
+		if ( sniper )
+		{
+			sway = "1";
+		}
+		if ( !isDefined( self.bo1sz_sway ) || self.bo1sz_sway != sway )
+		{
+			self.bo1sz_sway = sway;
+			self SetClientDvar( "anim_disableWeaponSway", sway );
+		}
+	}
 	self thread perks_set_flag( perks_rule( "skirmisher_t3_perk" ), cls == "smg" && perks_arch( self, "skirmisher" ) >= 3 );
 	self perks_set_flag( "specialty_flakjacket", perks_arch( self, "tech" ) >= 1 );
 
@@ -1157,16 +1172,29 @@ perks_sniper_spread()
 {
 	stock = "" + perks_bal( "stock_spread_mult" );
 	tight = "" + perks_rule( "sniper_spread_mult" );
+	stock_ads = "" + perks_bal( "stock_ads_mult" );
+	fast_ads = "" + perks_rule( "sniper_ads_mult" );
 	for ( ;; )
 	{
 		wait 0.2;
 		want = stock;
+		want_ads = stock_ads;
 		players = GetPlayers();
 		for ( i = 0; i < players.size; i++ )
 		{
 			if ( isDefined( players[ i ].bo1sz_holding_sniper ) && players[ i ].bo1sz_holding_sniper )
 			{
 				want = tight;
+				want_ads = fast_ads;
+			}
+		}
+		// Faster scoping (co-op feedback); applies with the fast-ADS perk flag.
+		if ( getDvar( "perk_weapAdsMultiplier" ) != want_ads )
+		{
+			setDvar( "perk_weapAdsMultiplier", want_ads );
+			for ( i = 0; i < players.size; i++ )
+			{
+				players[ i ] SetClientDvar( "perk_weapAdsMultiplier", want_ads );
 			}
 		}
 		if ( getDvar( "perk_weapSpreadMultiplier" ) != want )
@@ -1178,4 +1206,18 @@ perks_sniper_spread()
 			}
 		}
 	}
+}
+
+// Diagnostic, once per player: does the engine accept the fast-ADS perk name? (If the name
+// were unknown, this thread would end at SetPerk/HasPerk before logging.)
+perks_log_fastads( sniper )
+{
+	if ( !sniper || isDefined( self.bo1sz_fastads_logged ) )
+	{
+		return;
+	}
+	self.bo1sz_fastads_logged = true;
+	wait 0.3;
+	has = self HasPerk( perks_rule( "sniper_fastads_perk" ) );
+	perks_log( self.playername + " fast ADS perk granted=" + has );
 }

@@ -50,7 +50,7 @@ init()
 	level.bo1sz_bal[ "archetype_rules.demolitions_t3_frac" ] = 0.5;
 	level.bo1sz_bal[ "archetype_rules.tech_t3_radius" ] = 90;
 	level.bo1sz_bal[ "archetype_rules.tech_t3_frac" ] = 0.5;
-	level.bo1sz_bal[ "archetype_rules.marksman_t1_rof" ] = 1;
+	level.bo1sz_bal[ "archetype_rules.sniper_rof_all" ] = 1;
 	level.bo1sz_bal[ "archetype_rules.skirmisher_t2_refund" ] = 3;
 	level.bo1sz_bal[ "archetype_rules.skirmisher_t3_perk" ] = "specialty_bulletpenetration";
 	level.bo1sz_bal[ "archetype_rules.rifleman_t1_hs_mult" ] = 1.25;
@@ -63,6 +63,9 @@ init()
 	level.bo1sz_bal[ "archetype_rules.gunner_t3_refund" ] = 5;
 	level.bo1sz_bal[ "archetype_rules.sniper_fastads_perk" ] = "specialty_fastads";
 	level.bo1sz_bal[ "archetype_rules.sniper_spread_mult" ] = 0.15;
+	level.bo1sz_bal[ "archetype_rules.sniper_ads_mult" ] = 0.3;
+	level.bo1sz_bal[ "archetype_rules.sniper_body_mult" ] = 2.0;
+	level.bo1sz_bal[ "archetype_rules.sniper_no_sway" ] = 1;
 	// archetypes.csv
 	level.bo1sz_archetypes_id = [];
 	level.bo1sz_archetypes_name = [];
@@ -76,7 +79,7 @@ init()
 	level.bo1sz_archetypes_capstone[ 0 ] = "A 5+ streak refills your magazine on every pistol kill";
 	level.bo1sz_archetypes_id[ 1 ] = "marksman";
 	level.bo1sz_archetypes_name[ 1 ] = "Marksman";
-	level.bo1sz_archetypes_awakened[ 1 ] = "Sniper pierce bonus +75% per extra zombie and faster fire rate while holding a sniper";
+	level.bo1sz_archetypes_awakened[ 1 ] = "Sniper pierce bonus +75% per extra zombie";
 	level.bo1sz_archetypes_ascended[ 1 ] = "Long-range kills give double style";
 	level.bo1sz_archetypes_capstone[ 1 ] = "Every 3rd sniper headshot kill detonates";
 	level.bo1sz_archetypes_id[ 2 ] = "brawler";
@@ -383,8 +386,8 @@ init()
 	level.bo1sz_bal[ "boss.phase3_at" ] = 0.33;
 	level.bo1sz_bal[ "boss.p1_timer" ] = 45;
 	level.bo1sz_bal[ "boss.sprint_rate" ] = 1.4;
-	level.bo1sz_bal[ "boss.p2_pulse_interval" ] = 6;
-	level.bo1sz_bal[ "boss.p2_warn_seconds" ] = 1;
+	level.bo1sz_bal[ "boss.p2_pulse_interval" ] = 10;
+	level.bo1sz_bal[ "boss.p2_warn_seconds" ] = 1.5;
 	level.bo1sz_bal[ "boss.p2_pulse_radius" ] = 220;
 	level.bo1sz_bal[ "boss.p2_pulse_damage" ] = 60;
 	level.bo1sz_bal[ "boss.p3_damage_mult" ] = 0.25;
@@ -398,6 +401,9 @@ init()
 	level.bo1sz_bal[ "boss.test_hp_scale" ] = 0.05;
 	level.bo1sz_bal[ "boss.warn_sound" ] = "zmb_switch_flip";
 	level.bo1sz_bal[ "boss.victory_sound" ] = "zmb_perks_power_on";
+	level.bo1sz_bal[ "boss.player_scale" ] = 0.5;
+	level.bo1sz_bal[ "boss.pulse_slow_rate" ] = 0.3;
+	level.bo1sz_bal[ "boss.pulse_recover_seconds" ] = 1.5;
 	// modifiers.csv
 	level.bo1sz_modifiers_id = [];
 	level.bo1sz_modifiers_name = [];
@@ -539,6 +545,7 @@ init()
 	level.bo1sz_bal[ "perks.staminup_speed" ] = 1.1;
 	level.bo1sz_bal[ "perks.stock_spread_mult" ] = 0.65;
 	level.bo1sz_bal[ "perks.stock_reload_mult" ] = 0.5;
+	level.bo1sz_bal[ "perks.stock_ads_mult" ] = 0.5;
 	// shop.csv
 	level.bo1sz_shop_perk = [];
 	level.bo1sz_shop_name = [];
