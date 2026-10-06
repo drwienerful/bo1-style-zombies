@@ -1,5 +1,7 @@
 // bo1-style-zombies: in-game codex overlay (Milestone 5).
-// Console (or a key bind):  set bo1sz_codex 1 | 2 | 3   opens a page,  set bo1sz_codex 0 closes.
+// Every player: hold ADS + USE for about a second to cycle pages 1 -> 2 -> 3 -> closed.
+// Host console (or a key bind):  set bo1sz_codex 1 | 2 | 3 opens a page, 0 closes. In co-op the
+// console dvar lives on the host's game, so it only drives the host's codex (co-op test).
 //   1  style rank and archetype affinity
 //   2  archetype traits earned
 //   3  augments and perk tiers
@@ -35,6 +37,7 @@ codex_start()
 		return;
 	}
 	setDvar( "bo1sz_codex", "0" );
+	level thread codex_on_connect();
 	shown = "0";
 	for ( ;; )
 	{
@@ -50,10 +53,76 @@ codex_start()
 		}
 		shown = v;
 		players = GetPlayers();
-		for ( i = 0; i < players.size; i++ )
+		if ( players.size > 0 )
 		{
-			players[ i ] codex_show( v );
+			players[ 0 ].bo1sz_codex_page = v;
+			players[ 0 ] codex_show( v );
 		}
+	}
+}
+
+// Per-player toggle: hold ADS + USE ~0.8s to cycle 1 -> 2 -> 3 -> closed.
+codex_player_toggle()
+{
+	self endon( "disconnect" );
+	self.bo1sz_codex_page = "0";
+	hold_ms = 0;
+	for ( ;; )
+	{
+		wait 0.1;
+		ads_held = self AdsButtonPressed();
+		use_held = self UseButtonPressed();
+		if ( !( ads_held && use_held ) )
+		{
+			hold_ms = 0;
+			continue;
+		}
+		if ( hold_ms == 0 )
+		{
+			hold_ms = getTime();
+			continue;
+		}
+		if ( getTime() - hold_ms < 800 )
+		{
+			continue;
+		}
+		nxt = "1";
+		if ( self.bo1sz_codex_page == "1" )
+		{
+			nxt = "2";
+		}
+		else if ( self.bo1sz_codex_page == "2" )
+		{
+			nxt = "3";
+		}
+		else if ( self.bo1sz_codex_page == "3" )
+		{
+			nxt = "0";
+		}
+		self.bo1sz_codex_page = nxt;
+		self codex_show( nxt );
+		// Wait for release before the next step.
+		while ( ads_held && use_held )
+		{
+			wait 0.05;
+			ads_held = self AdsButtonPressed();
+			use_held = self UseButtonPressed();
+		}
+		hold_ms = 0;
+	}
+}
+
+codex_on_connect()
+{
+	players = GetPlayers();
+	for ( i = 0; i < players.size; i++ )
+	{
+		players[ i ] thread codex_player_toggle();
+	}
+	for ( ;; )
+	{
+		level waittill( "connected", player );
+		player thread codex_player_toggle();
 	}
 }
 

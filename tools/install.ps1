@@ -13,6 +13,7 @@
     -Batch B   The probe script in the -Target folder (run Batch B tests).
     -Batch C   Same file as B (choose tests with the probe_batch dvar in game).
     -Batch Sweep  Compile-only files, one per uncertain builtin (see sweep_candidates.txt).
+                  Add -WithMod to install the mod alongside them.
     -Uninstall Remove every bo1sz_* file this installer could have placed.
 
   Canonical path (Batch A, 2026-10-05): A2 = scripts\sp\zom\ (loads in zombies only).
@@ -35,6 +36,7 @@ param(
     [string]$Target = 'A2',
     [string]$Map = 'zombie_theater',
     [string]$StorageRoot = (Join-Path $env:LOCALAPPDATA 'Plutonium\storage\t5'),
+    [switch]$WithMod,
     [switch]$Uninstall
 )
 
@@ -176,6 +178,15 @@ elseif ($Batch -eq 'Sweep') {
         Write-OurFile $rel ('{0}sweep_{1:D2}_{2}.gsc' -f $Prefix, $n, $name) $body
     }
     Write-Host ''
+    if ($WithMod) {
+        # Mod files sort before bo1sz_sweep_*, so they compile first; a failing sweep file still
+        # stops the map, but one launch can test new builtins and run the mod's diagnostics.
+        $files = Get-ChildItem -Path $ModSrcDir -File -Filter "$Prefix*.gsc"
+        foreach ($f in $files) {
+            Write-OurFile $rel $f.Name ([System.IO.File]::ReadAllText($f.FullName))
+        }
+        Write-Host "Mod installed alongside the sweep ($($files.Count) file(s))."
+    }
     Write-Host "Sweep installed ($n files). Load any zombies map once; it may fail to load. Then tell Claude."
 }
 else {

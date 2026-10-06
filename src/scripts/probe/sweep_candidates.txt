@@ -20,3 +20,7 @@ playsound | e PlaySound( "zmb_cha_ching" );
 randomint | x = RandomInt( 5 );
 distance | x = Distance( e.origin, e.origin );
 # PASSED 2026-10-05: setmovespeedscale | e SetMoveSpeedScale( 1.1 );
+playfxontag | PlayFXOnTag( level._effect[ "x" ], e, "j_head" );
+playfx | PlayFX( level._effect[ "x" ], e.origin );
+settargetent | h = NewClientHudElem( e ); h SetTargetEnt( e );
+setwaypoint | h = NewClientHudElem( e ); h SetWaypoint( true );

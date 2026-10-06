@@ -177,3 +177,10 @@ machine on a map get script re-implemented effects. Double Tap 2.0 is accepted a
   perk icons were created (logged) but never drawn; keeping only the visible ones (now 6) brought
   them back. The probe that "allowed 100 more" measured creation, not drawing. Rule: create HUD
   elements on show, destroy on hide. This likely also explains the boss title that never rendered.
+- **Co-op (2026-10-05, private match, 2 players, host has the mod):** both players load and
+  get their own style meter, kill chains, archetypes and augment menus; reviving fills the
+  reviver's meter and the downed player's resets; boss health scales with players; shared
+  game-wide dvars (fire rate, reload, sniper spread) behaved acceptably. The console `bo1sz_codex`
+  dvar is read on the host's game and opened the codex on every screen, so each player now has
+  their own toggle (hold ADS + USE). Only the host needs the mod installed (not yet confirmed
+  by a client without it).

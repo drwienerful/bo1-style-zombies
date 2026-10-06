@@ -47,6 +47,7 @@ boss_start()
 
 	level thread boss_install_hooks();
 	level thread boss_track_max_rank();
+	level thread boss_log_effects();
 	level thread boss_now_command();
 	for ( ;; )
 	{
@@ -564,4 +565,32 @@ boss_victory_screen()
 	self iPrintLnBold( "VICTORY" );
 	self PlayLocalSound( boss_bal( "victory_sound" ) );
 	boss_log( "victory shown to " + self.playername );
+}
+
+// Diagnostic: names of the effects this map has loaded (level._effect), to pick an existing
+// effect for making the boss stand out. Logged once, a few seconds after load.
+boss_log_effects()
+{
+	wait 5;
+	if ( !isDefined( level._effect ) )
+	{
+		boss_log( "effects: level._effect undefined" );
+		return;
+	}
+	keys = getArrayKeys( level._effect );
+	line = "";
+	for ( i = 0; i < keys.size; i++ )
+	{
+		line = line + keys[ i ] + " ";
+		if ( ( i + 1 ) % 12 == 0 )
+		{
+			boss_log( "effects: " + line );
+			line = "";
+		}
+	}
+	if ( line != "" )
+	{
+		boss_log( "effects: " + line );
+	}
+	boss_log( "effects: " + keys.size + " total" );
 }
