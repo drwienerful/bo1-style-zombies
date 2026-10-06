@@ -29,7 +29,8 @@ This repository contains **no game files** of any kind: only scripts and data wr
 
 ## Install
 
-1. Download or clone this repository.
+1. Download the latest zip from **[Releases](https://github.com/drwienerful/bo1-style-zombies/releases/latest)** and unzip it
+   (or clone this repository).
 2. In the repository folder, run:
    ```powershell
    powershell -ExecutionPolicy Bypass -File tools\install.ps1
