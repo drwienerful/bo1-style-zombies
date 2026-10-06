@@ -378,7 +378,7 @@ init()
 	// boss.csv
 	level.bo1sz_bal[ "boss.round" ] = 25;
 	level.bo1sz_bal[ "boss.name" ] = "Der Eiserne";
-	level.bo1sz_bal[ "boss.hp_mult" ] = 40;
+	level.bo1sz_bal[ "boss.hp_mult" ] = 600;
 	level.bo1sz_bal[ "boss.phase2_at" ] = 0.66;
 	level.bo1sz_bal[ "boss.phase3_at" ] = 0.33;
 	level.bo1sz_bal[ "boss.p1_timer" ] = 45;
@@ -638,7 +638,7 @@ init()
 	level.bo1sz_style_ranks_kill_bonus = [];
 	level.bo1sz_style_ranks_ammo_chance = [];
 	level.bo1sz_style_ranks_letter[ 0 ] = "D";
-	level.bo1sz_style_ranks_word[ 0 ] = "Dawdling";
+	level.bo1sz_style_ranks_word[ 0 ] = "Dood";
 	level.bo1sz_style_ranks_gain_mult[ 0 ] = 1.0;
 	level.bo1sz_style_ranks_decay_per_sec[ 0 ] = 3;
 	level.bo1sz_style_ranks_r[ 0 ] = 0.70;

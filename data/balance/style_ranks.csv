@@ -1,5 +1,5 @@
 letter,word,gain_mult,decay_per_sec,r,g,b,kill_bonus,ammo_chance
-D,Dawdling,1.0,3,0.70,0.70,0.70,0,0
+D,Dood,1.0,3,0.70,0.70,0.70,0,0
 C,Cold-Blooded,0.95,5,0.55,0.80,1.00,4,0
 B,Butcher,0.9,6,0.45,1.00,0.55,8,3
 A,Annihilator,0.85,8,1.00,0.90,0.30,12,5

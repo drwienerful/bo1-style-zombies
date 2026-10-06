@@ -1,7 +1,7 @@
 key,value,notes
 round,25,boss round (the next normal round if this one is a dog round)
 name,Der Eiserne,boss name shown on the HUD
-hp_mult,40,boss health = hp_mult x the round's zombie health x players
+hp_mult,600,boss health = hp_mult x the round's zombie health x players (was 40: a round-25 run killed it in ~8s, 2026-10-05)
 phase2_at,0.66,health fraction where phase 2 (Hunt) starts
 phase3_at,0.33,health fraction where phase 3 (Iron Skin) starts
 p1_timer,45,seconds to push the boss below phase2_at before it enrages

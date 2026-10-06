@@ -11,7 +11,7 @@ Stylish play fills the meter; each rank holds a 100-point gauge. After 2s withou
 
 | Rank | Name | Bonus points per kill | Ammo-on-kill chance |
 |---|---|---|---|
-| D | Dawdling | +0 | 0% |
+| D | Dood | +0 | 0% |
 | C | Cold-Blooded | +4 | 0% |
 | B | Butcher | +8 | 3% |
 | A | Annihilator | +12 | 5% |
@@ -109,7 +109,7 @@ Affinity comes from the weapon you use: pistols (Gunslinger), snipers and bolt o
 
 ## Boss
 
-At round 25 (or the next normal round), the first zombie becomes **Der Eiserne**, with 40x that round's zombie health per player. Its name and health bar appear at the top.
+At round 25 (or the next normal round), the first zombie becomes **Der Eiserne**, with 600x that round's zombie health per player. Its name and health bar appear at the top.
 
 | Phase | Health | What happens |
 |---|---|---|
